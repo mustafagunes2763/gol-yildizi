@@ -172,6 +172,44 @@ export function sortedTable(table) {
     .sort((x, y) => y.pts - x.pts || y.gd - x.gd || y.gf - x.gf || x.id.localeCompare(y.id));
 }
 
+// ---------- gol / asist krallığı ----------
+// Golü kim attı: forvetler çok, orta saha orta, defans az; güçlü oyuncu daha sık
+const SCORE_W = { FV: 11, OS: 3, DF: 0.7, KL: 0 };
+const ASSIST_W = { FV: 2.2, OS: 4, DF: 1.5, KL: 0.1 };
+function pickBy(squad, W, not) {
+  const list = squad.filter((x) => x.name !== not && (W[x.pos] || 0) > 0);
+  if (!list.length) return null;
+  const w = list.map((x) => W[x.pos] * ((x.ovr || 60) / 70) ** 5);
+  let r = Math.random() * w.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < list.length; i++) if ((r -= w[i]) < 0) return list[i];
+  return list[list.length - 1];
+}
+export function pickScorer(team) { return pickBy(team.squad, SCORE_W)?.name || 'Oyuncu'; }
+export function pickAssister(team, scorer) { return Math.random() < 0.72 ? pickBy(team.squad, ASSIST_W, scorer)?.name || null : null; }
+export function addStat(state, teamId, name, g, a, me = false) {
+  if (!name) return;
+  const S = (state.season.ps ||= {});
+  const k = `${teamId}|${name}`;
+  const r = (S[k] ||= [0, 0]);
+  r[0] += g; r[1] += a;
+  if (me) r[2] = 1;
+}
+function simGoals(state, teamId, n) {
+  const t = state.teams[teamId];
+  for (let i = 0; i < n; i++) {
+    const sc = pickScorer(t);
+    addStat(state, teamId, sc, 1, 0);
+    addStat(state, teamId, pickAssister(t, sc), 0, 1);
+  }
+}
+// Lig istatistik listesi: [{ name, teamId, g, a, me }]
+export function leagueStats(state, lid) {
+  const ids = new Set(state.leagues[lid]);
+  return Object.entries(state.season.ps || {})
+    .map(([k, v]) => { const i = k.indexOf('|'); return { teamId: k.slice(0, i), name: k.slice(i + 1), g: v[0], a: v[1], me: !!v[2] }; })
+    .filter((x) => ids.has(x.teamId));
+}
+
 // Beklenen gol: güç farkı + iç saha avantajı
 export function expectedGoals(strFor, strAgainst, home) {
   return clamp(1.3 * Math.exp((strFor - strAgainst) / 22) + (home ? 0.2 : 0), 0.2, 4.5);
@@ -399,8 +437,8 @@ export function planMatch(state) {
       return { myColors: fx.home ? k.home : k.away, oppColors: fx.home ? k.away : k.home };
     })(),
     events: [
-      ...minutes(teamGoals).map((min) => ({ min, type: 'teamGoal', scorer: pick(me.squad.filter((s) => s.pos !== 'KL')).name })),
-      ...minutes(oppGoals).map((min) => ({ min, type: 'oppGoal', scorer: pick(opp.squad.filter((s) => s.pos !== 'KL')).name })),
+      ...minutes(teamGoals).map((min) => { const sc = pickScorer(me); return { min, type: 'teamGoal', scorer: sc, assist: pickAssister(me, sc) }; }),
+      ...minutes(oppGoals).map((min) => { const sc = pickScorer(opp); return { min, type: 'oppGoal', scorer: sc, assist: pickAssister(opp, sc) }; }),
       ...moments.map((m) => ({ ...m, type: 'moment' })),
     ].sort((a, b) => a.min - b.min),
     teammates: me.squad.filter((s) => s.pos !== 'KL').map((s) => s.name),
@@ -436,6 +474,19 @@ export function finishMatch(state, plan, res) {
   applyResult(L.table, m);
 
   res.result = myG > opG ? 'W' : myG < opG ? 'L' : 'D';
+  // gol/asist kayıtları
+  for (const e of plan.events) {
+    if (e.type !== 'teamGoal' && e.type !== 'oppGoal') continue;
+    const tid = e.type === 'teamGoal' ? p.clubId : fx.opp;
+    addStat(state, tid, e.scorer, 1, 0); addStat(state, tid, e.assist, 0, 1);
+  }
+  const meName = `${p.name} ${p.surname}`;
+  if (res.goals) addStat(state, p.clubId, meName, res.goals, 0, true);
+  if (res.assists) {
+    addStat(state, p.clubId, meName, 0, res.assists, true);
+    for (let i = 0; i < res.assists; i++) addStat(state, p.clubId, pickScorer(state.teams[p.clubId]), 1, 0);
+  }
+  if (res.goals) for (let i = 0; i < res.goals; i++) if (Math.random() < 0.6) addStat(state, p.clubId, pickAssister(state.teams[p.clubId], meName), 0, 1);
   const rating = matchRating(res);
   res.rating = rating;
 
@@ -467,6 +518,9 @@ export function finishMatch(state, plan, res) {
     p.morale = clamp(p.morale - (plan.suspended ? 1 : 3), 0, 100);
   }
   if (plan.suspended && p.suspended > 0) p.suspended--;
+  if (plan.injured) p.backFrom = 'injury';
+  else if (plan.suspended && p.suspended === 0) p.backFrom = 'ban';
+  p.form = [...(p.form || []), res.result].slice(-5);
   advanceWeek(state);
   return res;
 }
@@ -481,6 +535,7 @@ export function advanceWeek(state) {
     for (const m of round) {
       if (m.hg !== null) continue;
       [m.hg, m.ag] = simScore(state.teams, m.h, m.a);
+      simGoals(state, m.h, m.hg); simGoals(state, m.a, m.ag);
       applyResult(L.table, m);
     }
   }

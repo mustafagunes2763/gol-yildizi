@@ -2,50 +2,68 @@
 
 Gemini kotası dolunca kalan işler. Promptlar aşağıda, sırayla gönderilecek.
 
-## Gazete fotoğrafları (2 kaldı) — 4:3
+## ÖNCELİK SIRASI (2026-11-21)
+1. Gazete fotoğrafları (3) — hemen kullanılır
+2. Muhabir portreleri (6) — röportaj kartında
+3. Karakterler (7) — hoca, menajer, aile, sevgili adayları
+4. Mağaza (11) — EN SON
+(Lig kadroları görsellerden sonra.)
+
+## 1) Gazete fotoğrafları — 4:3
 Şablon:
 ```
 Newspaper sports photo, 4:3, grainy press photo look, slightly desaturated. A footballer seen as a dark backlit silhouette against stadium floodlights, [SAHNE]. Fictional player, plain kit with no logos or sponsor text, no readable text anywhere, no real people.
 ```
-- [ ] `arguing angrily with a referee who is holding up a card`  → img/news/referee.jpg
-- [ ] `walking through the stadium tunnel toward the bright pitch, seen from behind` → img/news/tunnel.jpg
+- [x] `arguing angrily with a referee who is holding up a card` → img/news/referee.jpg
+- [x] `walking through the stadium tunnel toward the bright pitch, seen from behind` → img/news/tunnel.jpg
+- [x] `in mid-air performing an acrobatic bicycle kick, upside down, ball just leaving his foot` → img/news/bicycle.jpg
 
 Gelenler: cheer, slide, sad, trophy, sign, penmiss, injury, press, training ✅
+Ek set ✅: fans, coach, airport, header, freekick, wedding, empty, paparazzi (paparazzi: araba ızgarası ve ayakkabı logosu bulanıklaştırıldı; header: top deseni bulanıklaştırıldı)
+- [x] Kumarbaz → img/news/gambler.jpg — `Newspaper paparazzi photo, 4:3, grainy press photo look, harsh flash, dim smoky casino at night. A young footballer in a dark shirt sitting at a roulette/card table with stacks of chips, head in hands after a big loss, dealer and other gamblers as blurred silhouettes. Fictional people, no logos, no readable text, no real people.` (NEWS_PHOTOS setine eklenecek)
 
-## Mağaza görselleri (Aşama 2) — 4:3
+## 2) Muhabir portreleri — 1:1
+Şablon:
+```
+Semi-realistic digital painting portrait, head and shoulders, 1:1, dark neutral background, soft studio lighting, consistent illustrated mobile-game character style. [KİŞİ]. Fictional person, not resembling any real celebrity, no text, no logos.
+```
+- [ ] Selin Arıkan → img/people/selin.jpg — `a polite, analytical female sports journalist in her early 30s, neat dark bob haircut, glasses, notebook and pen in hand, calm attentive expression`
+- [ ] Kenan "Bomba" Sarp → img/people/kenan.jpg — `a provocative tabloid sports reporter in his 40s, messy dark hair, stubble, leather jacket, holding a recorder forward, mischievous grin`
+- [ ] Duygu Ateş → img/people/duygu.jpg — `a glamorous celebrity gossip reporter in her late 20s, long wavy auburn hair, bold red lipstick, stylish outfit, holding a smartphone, excited curious expression`
+- [ ] Rıza Tekin → img/people/riza.jpg — `a retired football legend turned TV pundit in his early 60s, white hair, thick grey moustache, tweed blazer, warm wise fatherly smile`
+- [ ] Berk Yılmazer → img/people/berk.jpg — `a fast-talking transfer-news journalist in his early 30s, slick short hair, trendy glasses, earbuds, phone pressed to his ear, sharp eager look`
+- [ ] Nur Karaca → img/people/nur.jpg — `an energetic live TV sports presenter in her late 20s, sleek black ponytail, blazer, holding a TV microphone, big bright smile`
+
+## 3) Karakterler — 1:1 (aynı şablon)
+- [ ] `a stern Turkish football head coach in his late 50s, short grey beard, dark club tracksuit, arms crossed` → img/people/coach.jpg
+- [ ] `a sharp football agent in his 50s, slicked-back grey hair, expensive navy suit, phone in hand, sly smile` → img/people/agent.jpg
+- [ ] `a warm Turkish mother in her late 40s, headscarf optional, kind smile` → img/people/mother.jpg
+- [ ] `a proud Turkish father in his early 50s, moustache, flat cap` → img/people/father.jpg
+- [ ] `an elegant woman in her mid-20s, long dark hair, confident smile` → img/people/partner0.jpg
+- [ ] `a sporty woman in her mid-20s, blonde ponytail, casual style` → img/people/partner1.jpg
+- [ ] `a stylish woman in her mid-20s, curly red hair, artistic look` → img/people/partner2.jpg
+
+## 4) Mağaza görselleri — 4:3 (EN SON)
 Arabalar:
 ```
 Studio product photo of a fictional car, 4:3, dark gradient background, dramatic rim lighting, 3/4 front view, glossy reflections on the floor. [ARABA]. No brand logos, no badges, no license plate text, no readable text.
 ```
-- [ ] `a small, slightly used silver hatchback city car`
-- [ ] `a clean dark-blue family sedan`
-- [ ] `a large black luxury SUV`
-- [ ] `a sleek red two-door sports coupe`
-- [ ] `a low, aggressive yellow supercar with scissor doors`
-- [ ] `a futuristic matte-black hypercar with glowing light strips`
+- [ ] `a small, slightly used silver hatchback city car` → img/shop/car1.jpg
+- [ ] `a clean dark-blue family sedan` → car2
+- [ ] `a large black luxury SUV` → car3
+- [ ] `a sleek red two-door sports coupe` → car4
+- [ ] `a low, aggressive yellow supercar with scissor doors` → car5
+- [ ] `a futuristic matte-black hypercar with glowing light strips` → car6
 
 Evler:
 ```
 Real-estate photo of a fictional home in Istanbul, 4:3, golden hour light, inviting and aspirational. [EV]. No people, no readable text, no logos.
 ```
-- [ ] `a small modest studio apartment interior with a single bed and a tiny kitchen`
-- [ ] `a modern two-bedroom apartment living room with city view`
-- [ ] `a luxury high-rise residence apartment with floor-to-ceiling windows overlooking the sea`
-- [ ] `a large modern villa with a pool and garden`
-- [ ] `a historic white Ottoman-style waterfront mansion (yalı) on the Bosphorus with a private pier`
-
-## Karakterler (Aşama 2) — 1:1
-```
-Semi-realistic digital painting portrait, head and shoulders, 1:1, dark neutral background, soft studio lighting, consistent illustrated mobile-game character style. [KİŞİ]. Fictional person, not resembling any real celebrity, no text, no logos.
-```
-- [ ] `a sharp football agent in his 50s, slicked-back grey hair, expensive navy suit, phone in hand, sly smile`
-- [ ] `a stern Turkish football head coach in his late 50s, short grey beard, dark club tracksuit, arms crossed`
-- [ ] `a friendly female sports journalist in her 30s holding a microphone`
-- [ ] `a warm Turkish mother in her late 40s, headscarf optional, kind smile`
-- [ ] `a proud Turkish father in his early 50s, moustache, flat cap`
-- [ ] `an elegant woman in her mid-20s, long dark hair, confident smile`
-- [ ] `a sporty woman in her mid-20s, blonde ponytail, casual style`
-- [ ] `a stylish woman in her mid-20s, curly red hair, artistic look`
+- [ ] `a small modest studio apartment interior with a single bed and a tiny kitchen` → house1
+- [ ] `a modern two-bedroom apartment living room with city view` → house2
+- [ ] `a luxury high-rise residence apartment with floor-to-ceiling windows overlooking the sea` → house3
+- [ ] `a large modern villa with a pool and garden` → house4
+- [ ] `a historic white Ottoman-style waterfront mansion (yalı) on the Bosphorus with a private pier` → house5
 
 ## Veri
 - [ ] Premier Lig kadroları — İLK DENEME REDDEDİLDİ (2024-25 verisi geldi: Wolves/West Ham/Leicester/Southampton

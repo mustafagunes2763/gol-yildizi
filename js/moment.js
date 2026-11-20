@@ -804,15 +804,18 @@ export function playMoment(host, o) {
     let raf = 0;
     let shotFrame = 0, goalFrame = 0;
     function loop(now) {
-      const dt = Math.min(0.033, (now - last) / 1000);
+      // gerçek zamana bağlı: telefon yavaşlasa da oyun hızı sabit kalır (alt adımlarla)
+      const real = Math.min(0.1, Math.max(0, (now - last) / 1000));
       last = now;
+      const steps = Math.max(1, Math.ceil(real / 0.02));
+      const dt = real / steps;
       if (phase === 'replay') {
         elapsed += dt;
         replay.i += 0.35 * dt * 60;            // ~1/3 hız
         if (replay.i >= replay.frames.length + 25) end();
       } else {
         const before = phase;
-        update(dt);
+        for (let k = 0; k < steps && phase !== 'replay'; k++) update(dt);
         if (before === 'aim' && phase === 'flying') shotFrame = history.length;
         if (phase !== 'replay') history.push(snap());
         if (history.length > 400) { history.shift(); shotFrame--; goalFrame--; }

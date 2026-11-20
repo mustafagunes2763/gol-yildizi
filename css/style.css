@@ -276,3 +276,35 @@ body.menu-bg #app { position: relative; }
 .matchinfo > div { background: rgba(255,255,255,.06); border-radius: 10px; padding: 8px; font-size: 13px; }
 .matchinfo small { display: block; opacity: .7; font-size: 11px; margin-top: 3px; }
 .warn { color: #fde047; }
+.feed p.build { color: #cbd5e1; }
+.feed p.build:first-child { color: #fff; font-weight: 700; background: linear-gradient(90deg, rgba(250,204,21,.18), transparent); border-left: 3px solid #facc15; padding-left: 8px; animation: buildIn .35s ease-out; }
+.feed p.build.hot:first-child { animation: buildIn .35s ease-out, hotPulse .45s ease-in-out infinite alternate; }
+.feed p.build.old { color: #94a3b8; }
+@keyframes buildIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: none; } }
+@keyframes hotPulse { from { background-color: rgba(250,204,21,.08); } to { background-color: rgba(250,204,21,.32); } }
+.iv-head { gap: 10px !important; }
+.iv-head b { display: block; color: var(--text); font-size: 14px; }
+.iv-head small { color: var(--muted); font-size: 11px; }
+.iv-ic { font-size: 22px; }
+.iv-hello { font-size: 13px; color: var(--muted); font-style: italic; margin: 8px 0 0; }
+.iv-tone { display: block; font-size: 11px; font-weight: 700; color: var(--acc); margin-bottom: 3px; text-transform: uppercase; letter-spacing: .03em; }
+.iv-react { font-size: 13px; color: #fde68a; margin: 6px 0 2px; }
+.tabs.sub button { font-size: 12px; }
+.tiny { font-size: 11px; display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+.tbl.stats td.l { line-height: 1.2; }
+.tbl tr.gap td { text-align: center; color: var(--muted); }
+.tbl.league { font-size: 13px; table-layout: fixed; width: 100%; }
+.tbl.league th:first-child, .tbl.league td:first-child { width: 22px; }
+.tbl.league th:nth-child(n+3), .tbl.league td:nth-child(n+3) { width: 26px; padding-left: 2px; padding-right: 2px; }
+.tbl.league th:nth-child(7), .tbl.league td:nth-child(7) { width: 32px; }
+.tbl.league td.nm > span { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.tbl.league td.nm > span > span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+/* yeni gazeteler */
+.np-tribun .np-mast b { font-style: italic; letter-spacing: 1px; }
+.np-tribun .np-mast { border-bottom: 5px solid #FDE047; }
+.np-tribun .np-head { color: #166534; text-transform: uppercase; }
+.np-aksam { background: #FBF6EE; }
+.np-aksam .np-mast { border-top: 3px solid #1F2937; border-bottom: 1px solid #1F2937; justify-content: center; flex-direction: column; align-items: center; text-align: center; }
+.np-aksam .np-mast b { font: 700 30px/1 Georgia, 'Times New Roman', serif; letter-spacing: 3px; }
+.np-aksam .np-head { font-family: Georgia, 'Times New Roman', serif; font-weight: 700; color: #1F2937; }
+.np-aksam .np-body, .np-aksam .np-sub { font-family: Georgia, 'Times New Roman', serif; }

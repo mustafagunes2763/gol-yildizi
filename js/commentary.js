@@ -1,3 +1,4 @@
+import { ek } from './news.js';
 // Spiker: heyecanlı + esprili anlatım. Her satırın bir kimliği var;
 // ileride audio/spiker/<id>.mp3 dosyası eklenirse o satır seslendirilir.
 // Yer tutucular: {ad} {takim} {rakip} {kaleci} {defans} {arkadas} {skor} {stad}
@@ -34,7 +35,7 @@ export const LINES = {
     '{rakip} kanatlara yüklenecek, ortalar yağmur gibi gelecek.',
   ],
   intro_acik: [
-    'Top {ad}\'da! Bakalım ne yapacak…',
+    'Top {ad:loc}! Bakalım ne yapacak…',
     '{ad} topla buluştu, önünde {defans} var!',
     'Topu ayağına aldı {ad}, tribünler ayağa kalkıyor!',
   ],
@@ -95,7 +96,7 @@ export const LINES = {
     'GOL! Kaleciyle birebirde affetmedi {ad}!',
   ],
   assist: [
-    'GOL! Pas {ad}\'dan, bitiren {arkadas}! Ortak mülkiyet!',
+    'GOL! Pas {ad:abl}, bitiren {arkadas}! Ortak mülkiyet!',
     'Harika paylaşım! {ad} servis etti, {arkadas} tabağı temizledi!',
   ],
   saved: [
@@ -144,7 +145,7 @@ export const LINES = {
     'Düdük çaldı, faul. Topun başında {ad} olacak!',
   ],
   oppYellow: [
-    'Sarı kart {defans}\'a! Hakem cebine elini attı.',
+    'Sarı kart {defans:dat}! Hakem cebine elini attı.',
     '{defans} sarıyı gördü, bundan sonra dikkatli olmalı.',
   ],
   oppRed: [
@@ -158,8 +159,8 @@ export const LINES = {
     'Kaydı {ad} ama boşluğa! Çimleri biçmiş oldu.',
   ],
   meYellow: [
-    'Sarı kart {ad}\'a! Biraz sert girdi.',
-    'Hakem {ad}\'a sarı gösterdi, tribünler itiraz ediyor.',
+    'Sarı kart {ad:dat}! Biraz sert girdi.',
+    'Hakem {ad:dat} sarı gösterdi, tribünler itiraz ediyor.',
   ],
   meRed: [
     'KIRMIZI! {ad} oyundan atılıyor! Bu ayak orada ne arıyordu?!',
@@ -177,10 +178,10 @@ export const LINES = {
   ],
   teamGoal: [
     'GOL! {takim} öne geçiyor… {skor}!',
-    'Gol {takim}\'dan! Skor {skor}.',
+    'Gol {takim:abl}! Skor {skor}.',
   ],
   oppGoal: [
-    'Gol {rakip}\'dan… Skor {skor}. Soğuk duş!',
+    'Gol {rakip:abl}… Skor {skor}. Soğuk duş!',
     '{rakip} buldu golü. Sessizlik… {skor}.',
   ],
   latePressure: [
@@ -197,11 +198,54 @@ export const LINES = {
   ],
 };
 
+
+// Pozisyon öncesi gerilim: her tür için birkaç sahne, satır satır parlar (NSS tarzı)
+export const BUILD = {
+  acik: [
+    ['{arkadas} orta sahada topu kazandı…', 'Kafasını kaldırdı, {ad:acc} gördü…', 'Top {ad:loc}! Önü açılıyor!'],
+    ['{takim} sabırla paslaşıyor…', 'Sağa, sola… boşluk arıyorlar…', 'Ve top {ad:dat} geldi!'],
+    ['Rakip ataktan döndü, top bizde…', '{arkadas} ileri çıkıyor…', 'Ara pası {ad:dat}!'],
+  ],
+  kontra: [
+    ['{rakip} köşe vuruşu kullanıyor…', 'Kafayla uzaklaştırdık!', 'KONTRA! {ad} tek başına!'],
+    ['{defans} topu kaybetti!', '{arkadas} hemen ileri vurdu…', '{ad} koşuyor, arkasında kimse yok!'],
+  ],
+  birebir: [
+    ['{arkadas} kafasını kaldırdı…', 'Defansın arkasına uzun top…', 'Ofsayt yok! {ad} kaleciyle karşı karşıya!'],
+    ['{ad} ofsayt çizgisinde bekliyor…', 'Pas geldi, tam zamanında…', 'Sıyrıldı! Önünde sadece {kaleci}!'],
+  ],
+  serbest: [
+    ['{ad} ceza sahasına doğru sürüyor…', '{defans} arkadan girdi, düştü!', 'Düdük! Tehlikeli bölgede frikik!'],
+    ['Ceza sahası yayında faul!', 'Rakipler baraj kuruyor…', '{ad} topu yere koydu, geri çekildi…'],
+  ],
+  kafa: [
+    ['Top sağ kanatta {arkadas:loc}…', 'Adamını geçti, çizgiye indi…', 'Ortasını yaptı! {ad} kafaya kalkıyor!'],
+    ['{arkadas} sol kanattan sürüyor…', 'Kafasını kaldırdı…', 'Ortaya gönderdi! {ad} havalandı!'],
+  ],
+  korner: [
+    ['Şut! Defanstan sekti…', 'Korner!', '{arkadas} topun başında, ceza sahası karışık…'],
+    ['{kaleci} topu kornere çeldi!', 'Herkes ceza sahasında…', '{ad} adamını itiyor, top geliyor!'],
+  ],
+  rovasata: [
+    ['Ceza sahasında karambol…', 'Top havaya sekti…', '{ad} sırtı dönük… yoksa?!'],
+    ['{arkadas} kanattan çevirdi, top arkada kaldı…', '{ad} geriye doğru yükseliyor…', 'Havada! Akrobasi zamanı!'],
+  ],
+  penalti: [
+    ['{ad} ceza sahasına girdi…', '{defans} kaydı, {ad} yerde!', 'Hakem beyaz noktayı gösteriyor! PENALTI!'],
+    ['Ceza sahasında el!', 'Hakem VAR\'ı dinliyor…', 'Ve penaltı! Topun başına {ad} geçiyor!'],
+  ],
+};
+export function buildUp(kind, vars = {}) {
+  const seqs = BUILD[kind] || BUILD.acik;
+  const si = Math.floor(Math.random() * seqs.length);
+  return seqs[si].map((t, i) => ({ id: `build_${kind}_${si + 1}_${i + 1}`, text: fill(t, vars) }));
+}
+
 // Seslendirme dosyaları (Chatterbox ile üretilecek): eklenince buraya id yaz
 export const SPIKER_SESLERI = new Set([]);
 
 function fill(t, v) {
-  return t.replace(/\{(\w+)\}/g, (_, k) => (v[k] ?? ''));
+  return t.replace(/\{(\w+)(?::(\w+))?\}/g, (_, k, c) => (v[k] == null ? '' : c ? ek(v[k], c) : v[k]));
 }
 
 // Bir olay için rastgele satır: { id, text }
@@ -227,5 +271,6 @@ export function speak(line) {
 export function allLines() {
   const out = [];
   for (const [ev, list] of Object.entries(LINES)) list.forEach((t, i) => out.push({ id: `${ev}_${i + 1}`, text: t }));
+  for (const [k, seqs] of Object.entries(BUILD)) seqs.forEach((seq, si) => seq.forEach((t, i) => out.push({ id: `build_${k}_${si + 1}_${i + 1}`, text: t })));
   return out;
 }

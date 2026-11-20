@@ -167,7 +167,7 @@ const screens = {
         <button class="tile" data-go="shop">🛍️<span>Mağaza</span></button>
         <button class="tile" data-go="life">❤️<span>İlişkiler</span></button>
         <button class="tile" data-go="casino">🎰<span>Gazino</span></button>
-        <button class="tile" data-go="table">📊<span>Puan durumu</span></button>
+        <button class="tile" data-go="table">📊<span>Ligler</span></button>
         <button class="tile" data-go="profile">👤<span>Profil</span></button>
         <button class="tile" data-go="news">📰<span>Gazete</span></button>
         ${Cloud.SHOW_LEADERBOARD ? '<button class="tile" data-go="leaderboard">🏆<span>Arkadaşlar</span></button>' : ''}
@@ -197,18 +197,36 @@ const screens = {
   table() {
     const myL = E.leagueOf(state, state.player.clubId);
     const lid = ui.tableTab || myL;
-    const rows = E.sortedTable(state.season.leagues[lid].table);
+    const view = ui.tableView || 'puan';
     const L = LEAGUES[lid];
-    return `
-      <header class="top"><button class="back" data-go="hub">‹</button><h2>Puan durumu</h2></header>
-      <div class="tabs">${Object.keys(LEAGUES).map((id) => `<button class="${id === lid ? 'on' : ''}" data-act="tab" data-tab="${id}">${LEAGUES[id].name.replace('Trendyol ', '')}</button>`).join('')}</div>
-      <table class="tbl">
-        <tr><th>#</th><th class="l">Takım</th><th>O</th><th>Av</th><th>P</th></tr>
+    let body;
+    if (view === 'puan') {
+      const rows = E.sortedTable(state.season.leagues[lid].table);
+      body = `<table class="tbl league">
+        <tr><th>#</th><th class="l">Takım</th><th>O</th><th>G</th><th>B</th><th>M</th><th>Av</th><th>P</th></tr>
         ${rows.map((r, i) => {
           const zone = (L.promote && i < L.promote) ? 'up' : (L.relegate && i >= rows.length - L.relegate) ? 'down' : '';
-          return `<tr class="${r.id === state.player.clubId ? 'me' : ''} ${zone}"><td>${i + 1}</td><td class="l">${badge(team(r.id), 20)} ${esc(team(r.id).name)}</td><td>${r.p}</td><td>${r.gd > 0 ? '+' : ''}${r.gd}</td><td><b>${r.pts}</b></td></tr>`;
+          return `<tr class="${r.id === state.player.clubId ? 'me' : ''} ${zone}"><td>${i + 1}</td><td class="l nm"><span>${badge(team(r.id), 20)}<span>${esc(team(r.id).name)}</span></span></td><td>${r.p}</td><td>${r.w ?? '-'}</td><td>${r.d ?? '-'}</td><td>${r.l ?? '-'}</td><td>${r.gd > 0 ? '+' : ''}${r.gd}</td><td><b>${r.pts}</b></td></tr>`;
         }).join('')}
-      </table>`;
+      </table>
+      <p class="muted small pad">${L.promote ? `İlk ${L.promote} takım Süper Lig'e çıkar.` : ''}${L.relegate ? ` Son ${L.relegate} takım küme düşer.` : ''}</p>`;
+    } else {
+      const k = view === 'gol' ? 'g' : 'a', k2 = view === 'gol' ? 'a' : 'g';
+      const all = E.leagueStats(state, lid).filter((x) => x[k] > 0).sort((x, y) => y[k] - x[k] || y[k2] - x[k2] || x.name.localeCompare(y.name, 'tr'));
+      const top = all.slice(0, 25);
+      const meIdx = all.findIndex((x) => x.me);
+      const row = (x, i) => `<tr class="${x.me ? 'me' : ''}"><td>${i + 1}</td><td class="l"><b>${esc(x.name)}</b><div class="muted tiny">${badge(team(x.teamId), 14)} ${esc(team(x.teamId).name)}</div></td><td><b>${x[k]}</b></td><td class="muted">${x[k2]}</td></tr>`;
+      body = all.length ? `<table class="tbl stats">
+        <tr><th>#</th><th class="l">Oyuncu</th><th>${view === 'gol' ? 'Gol' : 'Asist'}</th><th>${view === 'gol' ? 'Asist' : 'Gol'}</th></tr>
+        ${top.map(row).join('')}
+        ${meIdx >= 25 ? `<tr class="gap"><td colspan="4">…</td></tr>${row(all[meIdx], meIdx)}` : ''}
+      </table>` : '<p class="muted pad">Henüz gol atılmadı. Sezon ilerledikçe liste dolacak.</p>';
+    }
+    return `
+      <header class="top"><button class="back" data-go="hub">‹</button><h2>Ligler</h2></header>
+      <div class="tabs">${Object.keys(LEAGUES).map((id) => `<button class="${id === lid ? 'on' : ''}" data-act="tab" data-tab="${id}">${LEAGUES[id].name.replace('Trendyol ', '')}${id === myL ? ' ⭐' : ''}</button>`).join('')}</div>
+      <div class="tabs sub">${[['puan', '📊 Puan durumu'], ['gol', '⚽ Gol krallığı'], ['asist', '🎯 Asist']].map(([v, l]) => `<button class="${v === view ? 'on' : ''}" data-act="tview" data-v="${v}">${l}</button>`).join('')}</div>
+      ${body}`;
   },
 
   profile() {
@@ -410,7 +428,10 @@ const screens = {
   },
 
   prematch() {
-    if (!ui.plan) { ui.plan = E.planMatch(state); ui.iv = Iv.preInterview(state, ui.plan); }
+    if (!ui.plan) {
+      ui.plan = E.planMatch(state); ui.iv = Iv.preInterview(state, ui.plan);
+      if (ui.plan && isDerby(ui.plan.fx.h, ui.plan.fx.a) && Math.random() < 0.7) { addNews([News.derbyPreview(state, ui.plan)], false); persist(); }
+    }
     const plan = ui.plan;
     const roleMsg = {
       starter: 'Hoca seni ilk 11\'e yazdı! Sana gelen pozisyonları değerlendir.',
@@ -452,7 +473,7 @@ const screens = {
             ${m.res.played ? `<div class="statsrow in"><div><span>Puan</span><b>${m.res.rating}</b></div><div><span>Gol</span><b>${m.res.goals}</b></div><div><span>Asist</span><b>${m.res.assists}</b></div></div>` : '<p class="muted">Bu maçta oynamadın.</p>'}
             ${ui.iv ? interviewCard(ui.iv) : ''}
             <button class="btn big" data-act="afterMatch" ${ui.iv && !ui.iv.chosen ? 'disabled' : ''}>Devam</button>
-          </div>` : `<button class="btn ghost" data-act="fast">${m.fast ? 'Normal hız' : 'Hızlandır ⏩'}</button>`}`}
+          </div>` : `<button class="btn ghost" data-act="fast">${m.fast ? '⏩ Hızlı · normale al' : '▶ Normal · hızlandır'}</button>`}`}
     `;
   },
 
@@ -474,6 +495,7 @@ const screens = {
       <div class="card">
         <p>${esc(team(p.clubId).name)} ligi <b>${s.myPos}.</b> sırada bitirdi.</p>
         <p class="small muted">Şampiyonlar: ${esc(team(s.champion.SL).name)} (Süper Lig), ${esc(team(s.champion.L1).name)} (1. Lig)</p>
+        ${['SL', 'L1'].map((lid) => { const k = E.leagueStats(state, lid).sort((x, y) => y.g - x.g)[0]; return k ? `<p class="small muted">⚽ ${LEAGUES[lid].name.replace('Trendyol ', '')} gol kralı: <b>${esc(k.name)}</b> (${esc(team(k.teamId).short || team(k.teamId).name)}, ${k.g} gol)</p>` : ''; }).join('')}
         <div class="statsrow in"><div><span>Maç</span><b>${s.stats.apps}</b></div><div><span>Gol</span><b>${s.stats.goals}</b></div><div><span>Asist</span><b>${s.stats.assists}</b></div><div><span>Ort.</span><b>${s.stats.avg || '-'}</b></div></div>
       </div>
       <h3 class="pad">Transfer teklifleri</h3>
@@ -487,12 +509,14 @@ const screens = {
 };
 
 function interviewCard(iv) {
+  if (!iv.answers?.[0]?.tone) return '';   // eski kayıttan kalma röportaj
   return `<div class="iv">
-    <div class="iv-head">🎙️ <span>${esc(iv.reporter)}</span></div>
+    <div class="iv-head"><span class="iv-ic">${iv.icon}</span><div><b>${esc(iv.reporter)}</b><small>${esc(iv.outlet)} · ${esc(iv.style)}</small></div></div>
+    <p class="iv-hello">${esc(iv.hello)}</p>
     <p class="iv-q">"${esc(iv.q)}"</p>
-    ${iv.chosen ? `<p class="iv-a">"${esc(iv.chosen.text)}"</p><p class="muted small">${esc(iv.summary)}</p>`
+    ${iv.chosen ? `<p class="iv-a">"${esc(iv.chosen.text)}"</p><p class="iv-react">${esc(iv.react || '')}</p><p class="muted small">${esc(iv.summary)}</p>`
       : iv.answers.map((a, i) => `<button class="iv-opt" data-act="ivAns" data-i="${i}">${esc(a.text)}</button>`).join('') +
-        `<button class="iv-skip" data-act="ivAns" data-i="-1">Yorum yapmak istemiyorum</button>`}
+        `<button class="iv-skip" data-act="ivAns" data-i="-1">🚫 Konuşmayacağım</button>`}
   </div>`;
 }
 
@@ -516,7 +540,7 @@ function bjFinish(g, natural = false) {
 async function runMatch() {
   const plan = ui.plan;
   const m = ui.match = {
-    plan, minute: 0, homeG: 0, awayG: 0, feed: [], fast: false, done: false, inMoment: false, choice: null,
+    plan, minute: 0, homeG: 0, awayG: 0, feed: [], fast: localStorage.getItem('golyildizi.fast') === '1', done: false, inMoment: false, choice: null,
     res: { played: plan.role !== 'out', goals: 0, assists: 0, outcomes: [], myGoals: 0, oppGoals: 0, yellows: 0, red: false, cards: [] },
   };
   const p = state.player;
@@ -579,8 +603,21 @@ async function runMatch() {
   const evs = plan.events.slice();
   let lateDone = false, leadTrim = false, oppRed = false;
 
-  async function moment(ev, min) {
-    spk('intro_' + ev.kind, {}, 'hl');
+  const wait = (ms) => new Promise((r) => setTimeout(r, m.fast ? ms * 0.3 : ms * 0.62));
+  async function moment(ev, min, buildup = true) {
+    if (buildup) {
+      // NSS tarzı: pozisyon satır satır gelişir, sonra saha açılır
+      const vars = V({ defans: E.pick(ev.oppNames || ['Defans']).split(' ').slice(-1)[0] });
+      for (const line of Spiker.buildUp(ev.kind, vars)) {
+        m.feed.push({ min, text: line.text, cls: 'build', id: line.id });
+        Spiker.speak(line);
+        render();
+        await wait(1300);
+      }
+      m.feed[m.feed.length - 1].cls = 'build hot';
+      render();
+      await wait(900);
+    }
     m.inMoment = true;
     render();
     window.scrollTo(0, 0);
@@ -594,6 +631,7 @@ async function runMatch() {
 
   for (let min = 1; min <= 90; min++) {
     m.minute = min;
+    const feedBefore = m.feed.length;
     if (plan.role === 'sub' && min === plan.onFrom) m.feed.push({ min, text: 'Oyuna girdin!', cls: 'hl' });
     if (plan.role === 'starter' && plan.onTo < 90 && min === plan.onTo && !m.res.red) m.feed.push({ min, text: 'Yorulduğun için oyundan çıktın.' });
     // skor durumu: geride → son dakika baskısı; 2+ öndeyken bir an eksilir
@@ -611,20 +649,21 @@ async function runMatch() {
     }
     while (evs.length && evs[0].min === min) {
       const ev = evs.shift();
-      if (ev.type === 'teamGoal') { addMine(); m.feed.push({ min, text: `GOL! ${ev.scorer} (${plan.myName})`, cls: 'goal' }); spk('teamGoal'); }
-      else if (ev.type === 'oppGoal') { addOpp(); m.feed.push({ min, text: `Gol: ${ev.scorer} (${plan.oppName})`, cls: 'bad' }); spk('oppGoal'); }
+      if (ev.type === 'teamGoal') { addMine(); m.feed.push({ min, text: `GOL! ${ev.scorer} (${plan.myName})${ev.assist ? ` · asist: ${ev.assist}` : ''}`, cls: 'goal' }); spk('teamGoal'); }
+      else if (ev.type === 'oppGoal') { addOpp(); m.feed.push({ min, text: `Gol: ${ev.scorer} (${plan.oppName})${ev.assist ? ` · asist: ${ev.assist}` : ''}`, cls: 'bad' }); spk('oppGoal'); }
       else if (ev.type === 'moment') {
         if (m.res.red) continue;
         let cur = ev, guard = 0;
         while (cur && guard++ < 3) {
           const next = cur.chain; cur.chain = null;
-          const { outcome, text, foul } = await moment(cur, min);
+          const { outcome, text, foul } = await moment(cur, min, guard === 1);
+          for (const f of m.feed) if (f.cls?.startsWith('build')) f.cls = 'build old';
           m.res.outcomes.push(outcome);
           const vx = { defans: foul?.name || E.pick(cur.oppNames || ['Defans']) };
           if (cur.kind === 'penalti' && outcome !== 'goal') m.res.penMissed = true;
           if (cur.kind === 'rovasata' && outcome === 'goal') m.res.bicycle = true;
           if (outcome === 'goal') {
-            addMine(); m.res.goals++;
+            addMine(); m.res.goals++; (m.res.goalKinds ||= []).push(cur.kind);
             m.feed.push({ min, text: `GOOOL! ${p.name} ${p.surname}!`, cls: 'goal' });
             spk(Spiker.LINES['goal_' + cur.kind] && Math.random() < 0.75 ? 'goal_' + cur.kind : 'goal');
           } else if (outcome === 'assist') {
@@ -634,6 +673,8 @@ async function runMatch() {
             if (foul?.card === 'red') { spk('oppRed', vx, 'card-r'); oppRed = true; for (const e of evs) if (e.type === 'oppGoal' && Math.random() < 0.4) e.type = 'void'; }
             else if (foul?.card === 'yellow') spk('oppYellow', vx, 'card-y');
             cur = { ...cur, kind: outcome === 'foulPen' ? 'penalti' : 'serbest' };
+            render(); await wait(1800);
+            spk('intro_' + cur.kind, {}, 'hl'); render(); await wait(1200);
             continue;
           } else if (outcome === 'offside' || outcome === 'lost') {
             spk(outcome, vx);
@@ -644,12 +685,12 @@ async function runMatch() {
             const c = await ask(outcome === 'offside' ? 'Ofsayt mıydı?' : 'Top gitti! Ne yapıyorsun?', opts, 'no');
             if (c === 'appeal') {
               const r = Math.random();
-              if (r < 0.12) { spk('appealWin', {}, 'hl'); cur = { ...cur, kind: outcome === 'offside' ? 'birebir' : 'serbest' }; continue; }
+              if (r < 0.12) { spk('appealWin', {}, 'hl'); cur = { ...cur, kind: outcome === 'offside' ? 'birebir' : 'serbest' }; render(); await wait(1800); continue; }
               if (r < 0.52) { spk('appealYellow'); myCard('yellow', min); }
               else spk('appealNothing');
             } else if (c === 'tackle') {
               const r = Math.random(), tek = (p.stats.teknik + p.stats.guc) / 200;
-              if (r < 0.3 + tek * 0.2) { spk('tackleWin', {}, 'hl'); cur = { ...cur, kind: E.pick(['acik', 'kontra']) }; continue; }
+              if (r < 0.3 + tek * 0.2) { spk('tackleWin', {}, 'hl'); cur = { ...cur, kind: E.pick(['acik', 'kontra']) }; render(); await wait(1500); continue; }
               if (r < 0.62) { m.feed.push({ min, text: 'Faul! Hakem düdüğü çaldı.' }); const red = Math.random() < (p.energy < 30 ? 0.12 : 0.05); myCard(red ? 'red' : Math.random() < 0.55 ? 'yellow' : 'none', min); }
               else spk('tackleMiss');
             }
@@ -664,7 +705,10 @@ async function runMatch() {
     }
     if (min === 45) { spk('halftime'); Sfx.whistle(); }
     render();
-    await new Promise((r) => setTimeout(r, m.fast ? 25 : 110));
+    // tempo: sakin dakikalar akar, yeni satır gelince okumaya zaman tanır
+    const added = m.feed.length - feedBefore;
+    const lines = Math.min(3, added);
+    await new Promise((r) => setTimeout(r, m.fast ? 60 + lines * 320 : 210 + lines * 800 + (min === 45 ? 700 : 0)));
   }
   m.minute = 90;
   spk('fulltime');
@@ -673,7 +717,12 @@ async function runMatch() {
   E.finishMatch(state, plan, m.res);
   if (m.res.played) { p.recent = [...(p.recent || []), m.res.rating].slice(-5); }
   const recentAvg = p.recent?.length ? p.recent.reduce((a, b) => a + b, 0) / p.recent.length : 0;
-  addNews([...News.matchNews(state, plan, m.res), ...Iv.promiseResult(state, plan, m.res), News.maybeRumor(state, recentAvg), News.cardNews(state, plan, m.res)], false);
+  const lidMe = E.leagueOf(state, p.clubId);
+  addNews([
+    ...(m.res.played && p.career.apps === 1 ? [News.debutNews(state, plan)] : []),
+    ...News.matchNews(state, plan, m.res), ...Iv.promiseResult(state, plan, m.res), News.maybeRumor(state, recentAvg), News.cardNews(state, plan, m.res),
+    ...News.weeklyExtras(state, plan, m.res, E.leagueStats(state, lidMe)), News.leagueNews(state),
+  ], false);
   if (m.res.injury) {
     m.feed.push({ min: 90, text: `Maçın sonunda sakatlandın! ${m.res.injury} hafta yoksun.`, cls: 'bad' });
     addNews([News.injuryNews(state, m.res.injury)], false);
@@ -732,8 +781,9 @@ app.addEventListener('click', async (e) => {
       const r = E.rest(state); persist();
       return toast(r.ok ? 'Dinlendin: +25 enerji' : r.msg);
     }
-    case 'skipWeek': E.advanceWeek(state); persist(); return render();
+    case 'skipWeek': E.advanceWeek(state); addNews([News.leagueNews(state)], false); persist(); return render();
     case 'tab': ui.tableTab = el.dataset.tab; return render();
+    case 'tview': ui.tableView = el.dataset.v; return render();
     case 'lb': ui.lbField = el.dataset.f; return render();
     case 'shopTab': ui.shopTab = el.dataset.t; return render();
     case 'buy': { const r = Life.buy(state, el.dataset.id); persist(); return toast(r.ok ? `${r.item.name} alındı!` : r.msg); }
@@ -783,13 +833,17 @@ app.addEventListener('click', async (e) => {
     case 'ivAns': {
       const iv = ui.iv; if (!iv || iv.chosen) return;
       const i = +el.dataset.i;
-      if (i < 0) { iv.chosen = { text: 'Yorum yapmak istemiyorum.' }; iv.summary = 'Basına konuşmadın'; persist(); return render(); }
+      if (i < 0) {
+        const r = Iv.refuse(state, iv);
+        iv.chosen = { text: 'Konuşmak istemiyorum.' }; iv.summary = r.summary; iv.react = r.react;
+        addNews(r.news, false); persist(); return render();
+      }
       const a = iv.answers[i];
       const r = Iv.applyAnswer(state, iv, a);
-      iv.chosen = a; iv.summary = r.summary;
+      iv.chosen = a; iv.summary = r.summary; iv.react = r.react;
       if (iv.when === 'pre') {
         if (a.promise) ui.plan.promise = true;
-        if (a.provoke) {
+        if (a.target === 'opp') {
           // kışkırtılan rakip daha hırslı oynar
           ui.plan.provoke = true;
           for (const ev of ui.plan.events) if (ev.type === 'moment') ev.keeper = Math.min(95, ev.keeper + 3);
@@ -802,7 +856,7 @@ app.addEventListener('click', async (e) => {
     }
     case 'openNews': ui.popup = [state.news[+el.dataset.i]]; return render();
     case 'npNext': ui.popup.shift(); return render();
-    case 'fast': ui.match.fast = !ui.match.fast; return render();
+    case 'fast': ui.match.fast = !ui.match.fast; localStorage.setItem('golyildizi.fast', ui.match.fast ? '1' : '0'); return render();
     case 'choice': if (ui.match?.choice) ui.match.choice.pick(el.dataset.v); return render();
     case 'afterMatch':
       ui.match = null; ui.plan = null; ui.iv = null;

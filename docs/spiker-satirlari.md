@@ -20,7 +20,7 @@ Her satırı seslendir, dosyayı `audio/spiker/<id>.mp3` olarak kaydet, sonra id
 | tactic_pres_1 | {rakip} önde basıyor, topu alan nefes alamıyor! |
 | tactic_hucum_1 | {rakip} gol için gelmiş, arkalarında koca boşluklar var! |
 | tactic_kanat_1 | {rakip} kanatlara yüklenecek, ortalar yağmur gibi gelecek. |
-| intro_acik_1 | Top {ad}'da! Bakalım ne yapacak… |
+| intro_acik_1 | Top {ad:loc}! Bakalım ne yapacak… |
 | intro_acik_2 | {ad} topla buluştu, önünde {defans} var! |
 | intro_acik_3 | Topu ayağına aldı {ad}, tribünler ayağa kalkıyor! |
 | intro_kontra_1 | KONTRA! KONTRA! {ad} önünde koca bir boşluk! |
@@ -51,7 +51,7 @@ Her satırı seslendir, dosyayı `audio/spiker/<id>.mp3` olarak kaydet, sonra id
 | goal_penalti_1 | Penaltı gol! {ad} soğukkanlı, {kaleci} öbür köşede! |
 | goal_penalti_2 | GOL! Penaltıyı tereyağından kıl çeker gibi attı! |
 | goal_birebir_1 | GOL! Kaleciyle birebirde affetmedi {ad}! |
-| assist_1 | GOL! Pas {ad}'dan, bitiren {arkadas}! Ortak mülkiyet! |
+| assist_1 | GOL! Pas {ad:abl}, bitiren {arkadas}! Ortak mülkiyet! |
 | assist_2 | Harika paylaşım! {ad} servis etti, {arkadas} tabağı temizledi! |
 | saved_1 | Ve {kaleci} çıkardı! Eldivenlerine sağlık! |
 | saved_2 | Kurtarış! {kaleci} bugün duvar örmüş! |
@@ -76,14 +76,14 @@ Her satırı seslendir, dosyayı `audio/spiker/<id>.mp3` olarak kaydet, sonra id
 | foulPen_2 | Bu penaltı! {defans} biçti, hakem tereddüt etmedi! |
 | foulFk_1 | Faul! {defans} arkadan girdi, serbest vuruş! |
 | foulFk_2 | Düdük çaldı, faul. Topun başında {ad} olacak! |
-| oppYellow_1 | Sarı kart {defans}'a! Hakem cebine elini attı. |
+| oppYellow_1 | Sarı kart {defans:dat}! Hakem cebine elini attı. |
 | oppYellow_2 | {defans} sarıyı gördü, bundan sonra dikkatli olmalı. |
 | oppRed_1 | KIRMIZI KART! {defans} oyundan atıldı! {rakip} 10 kişi! |
 | oppRed_2 | Hakem kırmızıyı çıkardı! Son adam faulü, {defans} soyunma odasına! |
 | tackleWin_1 | Kayarak girdi {ad}, topu geri kazandı! Forvetten defans dersi! |
 | tackleMiss_1 | Kaydı {ad} ama boşluğa! Çimleri biçmiş oldu. |
-| meYellow_1 | Sarı kart {ad}'a! Biraz sert girdi. |
-| meYellow_2 | Hakem {ad}'a sarı gösterdi, tribünler itiraz ediyor. |
+| meYellow_1 | Sarı kart {ad:dat}! Biraz sert girdi. |
+| meYellow_2 | Hakem {ad:dat} sarı gösterdi, tribünler itiraz ediyor. |
 | meRed_1 | KIRMIZI! {ad} oyundan atılıyor! Bu ayak orada ne arıyordu?! |
 | meRed_2 | İkinci sarıdan kırmızı! {ad} erken duşa gidiyor. |
 | appealWin_1 | İnanılmaz! Hakem VAR'a gitti ve kararını değiştirdi! {ad} haklı çıktı! |
@@ -91,8 +91,8 @@ Her satırı seslendir, dosyayı `audio/spiker/<id>.mp3` olarak kaydet, sonra id
 | appealNothing_1 | Hakem elini salladı, devam! İtiraz kabul edilmedi. |
 | appealNothing_2 | {ad} kollarını açtı ama hakem duymazdan geldi. |
 | teamGoal_1 | GOL! {takim} öne geçiyor… {skor}! |
-| teamGoal_2 | Gol {takim}'dan! Skor {skor}. |
-| oppGoal_1 | Gol {rakip}'dan… Skor {skor}. Soğuk duş! |
+| teamGoal_2 | Gol {takim:abl}! Skor {skor}. |
+| oppGoal_1 | Gol {rakip:abl}… Skor {skor}. Soğuk duş! |
 | oppGoal_2 | {rakip} buldu golü. Sessizlik… {skor}. |
 | latePressure_1 | Son dakikalar! {takim} yüklenmeye başladı, herkes ileride! |
 | latePressure_2 | Saat işliyor, {takim} geride! Kaleci bile çıkacak neredeyse! |
@@ -100,4 +100,55 @@ Her satırı seslendir, dosyayı `audio/spiker/<id>.mp3` olarak kaydet, sonra id
 | halftime_2 | Devre arası. Teknik direktör soyunma odasında konuşmasını hazırlıyor. |
 | fulltime_1 | Ve maç sona erdi! Skor {skor}. |
 | fulltime_2 | Son düdük! {skor}. Futbol yine konuştu! |
+| build_acik_1_1 | {arkadas} orta sahada topu kazandı… |
+| build_acik_1_2 | Kafasını kaldırdı, {ad:acc} gördü… |
+| build_acik_1_3 | Top {ad:loc}! Önü açılıyor! |
+| build_acik_2_1 | {takim} sabırla paslaşıyor… |
+| build_acik_2_2 | Sağa, sola… boşluk arıyorlar… |
+| build_acik_2_3 | Ve top {ad:dat} geldi! |
+| build_acik_3_1 | Rakip ataktan döndü, top bizde… |
+| build_acik_3_2 | {arkadas} ileri çıkıyor… |
+| build_acik_3_3 | Ara pası {ad:dat}! |
+| build_kontra_1_1 | {rakip} köşe vuruşu kullanıyor… |
+| build_kontra_1_2 | Kafayla uzaklaştırdık! |
+| build_kontra_1_3 | KONTRA! {ad} tek başına! |
+| build_kontra_2_1 | {defans} topu kaybetti! |
+| build_kontra_2_2 | {arkadas} hemen ileri vurdu… |
+| build_kontra_2_3 | {ad} koşuyor, arkasında kimse yok! |
+| build_birebir_1_1 | {arkadas} kafasını kaldırdı… |
+| build_birebir_1_2 | Defansın arkasına uzun top… |
+| build_birebir_1_3 | Ofsayt yok! {ad} kaleciyle karşı karşıya! |
+| build_birebir_2_1 | {ad} ofsayt çizgisinde bekliyor… |
+| build_birebir_2_2 | Pas geldi, tam zamanında… |
+| build_birebir_2_3 | Sıyrıldı! Önünde sadece {kaleci}! |
+| build_serbest_1_1 | {ad} ceza sahasına doğru sürüyor… |
+| build_serbest_1_2 | {defans} arkadan girdi, düştü! |
+| build_serbest_1_3 | Düdük! Tehlikeli bölgede frikik! |
+| build_serbest_2_1 | Ceza sahası yayında faul! |
+| build_serbest_2_2 | Rakipler baraj kuruyor… |
+| build_serbest_2_3 | {ad} topu yere koydu, geri çekildi… |
+| build_kafa_1_1 | Top sağ kanatta {arkadas:loc}… |
+| build_kafa_1_2 | Adamını geçti, çizgiye indi… |
+| build_kafa_1_3 | Ortasını yaptı! {ad} kafaya kalkıyor! |
+| build_kafa_2_1 | {arkadas} sol kanattan sürüyor… |
+| build_kafa_2_2 | Kafasını kaldırdı… |
+| build_kafa_2_3 | Ortaya gönderdi! {ad} havalandı! |
+| build_korner_1_1 | Şut! Defanstan sekti… |
+| build_korner_1_2 | Korner! |
+| build_korner_1_3 | {arkadas} topun başında, ceza sahası karışık… |
+| build_korner_2_1 | {kaleci} topu kornere çeldi! |
+| build_korner_2_2 | Herkes ceza sahasında… |
+| build_korner_2_3 | {ad} adamını itiyor, top geliyor! |
+| build_rovasata_1_1 | Ceza sahasında karambol… |
+| build_rovasata_1_2 | Top havaya sekti… |
+| build_rovasata_1_3 | {ad} sırtı dönük… yoksa?! |
+| build_rovasata_2_1 | {arkadas} kanattan çevirdi, top arkada kaldı… |
+| build_rovasata_2_2 | {ad} geriye doğru yükseliyor… |
+| build_rovasata_2_3 | Havada! Akrobasi zamanı! |
+| build_penalti_1_1 | {ad} ceza sahasına girdi… |
+| build_penalti_1_2 | {defans} kaydı, {ad} yerde! |
+| build_penalti_1_3 | Hakem beyaz noktayı gösteriyor! PENALTI! |
+| build_penalti_2_1 | Ceza sahasında el! |
+| build_penalti_2_2 | Hakem VAR'ı dinliyor… |
+| build_penalti_2_3 | Ve penaltı! Topun başına {ad} geçiyor! |
 
