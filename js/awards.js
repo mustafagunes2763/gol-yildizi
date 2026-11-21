@@ -18,6 +18,8 @@ export const TROPHY = {
   asistkrali: { name: 'Asist Kralı', icon: '🎯' },
   yilin: { name: 'Yılın Oyuncusu', icon: '⭐' },
   genc: { name: 'Yılın Genç Oyuncusu', icon: '🌱' },
+  euro: { name: 'Avrupa Şampiyonası (Milli)', icon: '🇹🇷' },
+  wc: { name: 'Dünya Kupası (Milli)', icon: '🌍' },
 };
 
 // Sezon ödüllerini hesapla, oyuncunun kazandıklarını kupa dolabına ekle (sezon başına bir kez)

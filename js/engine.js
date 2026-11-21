@@ -1,5 +1,7 @@
 // Oyun mantığı — DOM yok, Node'da test edilebilir.
-import { TEAMS, LEAGUES, SEASON_START_YEAR, FIRST_NAMES, LAST_NAMES, clubInfo } from './data.js';
+import { TEAMS, LEAGUES, SEASON_START_YEAR, FIRST_NAMES, LAST_NAMES, clubInfo, isDerby } from './data.js';
+import * as Social from './social.js';
+import * as Career from './career.js';
 import { KADROLAR } from './kadrolar.js';
 import { weeklyLife, initLife, injuryRoll } from './life.js';
 import { NAME_POOLS, UCL_2026, UEL_2026, UECL_2026 } from './data-europe.js';
@@ -327,6 +329,7 @@ export function acceptOffer(state, offer) {
   addInbox(state, old
     ? `${t.name} ile ${offer.years} yıllık sözleşme imzaladın. Haftalık ${money(offer.wage)}.${hoca ? ` Hocan ${hoca} seni bekliyor.` : ''}`
     : `${t.name} ailesine hoş geldin! ${hoca ? `Hoca ${hoca}` : 'Hoca'} seni yedekten deneyecek. Antrenmanlara ağırlık ver.`);
+  Social.onTransfer(state, old);
 }
 
 export function addInbox(state, text) {
@@ -591,6 +594,9 @@ export function finishMatch(state, plan, res) {
   if (plan.injured) p.backFrom = 'injury';
   else if (plan.suspended && p.suspended === 0) p.backFrom = 'ban';
   p.form = [...(p.form || []), res.result].slice(-5);
+  p.lastMatch = { abs: state.season.year * 60 + state.season.week, opp: fx.opp, home: !!fx.home, myG, opG, goals: res.goals || 0, assists: res.assists || 0,
+    rating, result: res.result, played: !!res.played, comp: fx.comp || null, derby: isDerby(p.clubId, fx.opp),
+    oppScorers: plan.events.filter((e) => e.type === 'oppGoal').map((e) => e.scorer), bicycle: !!res.bicycle, fx: fx.comp || null };
   if (!fx.comp) advanceWeek(state);
   return res;
 }
@@ -617,6 +623,7 @@ export function advanceWeek(state) {
   p.energy = clamp(p.energy + WEEKLY_ENERGY, 0, ENERGY_MAX);
   p.rested = false;
   if (s.week >= s.totalWeeks) state.phase = 'seasonEnd';
+  else Career.weekly(state);
   state.updatedAt = Date.now();
 }
 
@@ -695,6 +702,9 @@ export function seasonOffers(state) {
   const free = contractExpiring(state) || !p.contract.release;
   const afford = (t) => free || Math.max(0, t.str - 55) ** 2.4 * 90_000 >= p.contract.release;
   const interested = shuffle(all.filter((t) => t.str <= score + 22 && t.str >= Math.min(score - 5, 78) && afford(t)));
+  // Paslaş'taki transfer söylentilerinde adı geçen kulüpler önce gelir
+  const rum = state.social?.rumors || [];
+  if (rum.length) interested.sort((a, b) => rum.includes(b.id) - rum.includes(a.id));
   return interested.slice(0, 3).map((t) => ({
     clubId: t.id,
     wage: Math.round(Math.max(p.contract.wage * 1.2, (t.str - 50) * 9000 * (1 + p.fame / 50)) / 5000) * 5000,
@@ -703,6 +713,8 @@ export function seasonOffers(state) {
 }
 
 export function endSeason(state) {
+  Career.simRestTournament(state);   // yaz turnuvası oynanmadıysa otomatik
+  state.natTourn = null; state.natMatch = null;
   const sum = seasonSummary(state);
   const p = state.player;
   p.career.seasons.push({
@@ -733,6 +745,7 @@ export function endSeason(state) {
   newSeason(state);
   state.phase = 'hub';
   addInbox(state, `${state.season.year}-${String(state.season.year + 1).slice(2)} sezonu başladı!`);
+  Social.onSeasonStart(state);
   return sum;
 }
 

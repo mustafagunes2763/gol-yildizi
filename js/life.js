@@ -3,6 +3,7 @@ import { clamp, pick, randInt, rand, money, addInbox, expectedGoals, leagueOf } 
 import * as Stories from './stories.js';
 import * as Family from './family.js';
 import * as Betting from './betting.js';
+import * as Social from './social.js';
 
 // ---------- mağaza ----------
 export const CARS = [
@@ -189,6 +190,7 @@ export function weeklyLife(state, weekIndex) {
   }
   Family.weeklyFamily(state);
   // sakatlık iyileşir
+  if (p.fragile > 0) p.fragile--;
   if (p.injury > 0) {
     p.injury--;
     if (p.injury === 0) addInbox(state, 'Sakatlığın geçti, takımla çalışmalara başladın!');
@@ -200,6 +202,8 @@ export function weeklyLife(state, weekIndex) {
   p.casinoWeek = 0;
   // kaptanlık: moral ve ün
   if (p.captain) { p.morale = clamp(p.morale + 0.5, 0, 100); p.fame = clamp(p.fame + 0.1, 0, 100); }
+  // sosyal medya (Paslaş)
+  Social.weekly(state);
   // hikâye bölümü ya da rastgele olay
   if (!state.event) state.event = Stories.weeklyStory(state, randomEvent);
 }
@@ -265,6 +269,7 @@ export function injuryRoll(state, minutes) {
   let risk = 0.025 * (minutes / 90);
   if (p.energy < 30) risk *= 3;
   if (p.age >= 30) risk *= 1.5;
+  if (p.fragile > 0) risk *= 2.5;   // ağrı kesiciyle erken dönüş
   if (Math.random() < risk) {
     p.injury = randInt(1, 6);
     p.morale = clamp(p.morale - 6, 0, 100);

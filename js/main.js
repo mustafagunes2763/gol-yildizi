@@ -4,6 +4,10 @@ import { playMoment, OUTCOME_TEXT } from './moment.js';
 import * as Cloud from './cloud.js';
 import * as News from './news.js';
 import * as Sfx from './audio.js';
+import * as Music from './music.js';
+import * as Voice from './voice.js';
+import * as Trivia from './trivia.js';
+import * as Career from './career.js';
 import * as Look from './look.js';
 import * as Iv from './interview.js';
 import * as Life from './life.js';
@@ -14,6 +18,7 @@ import * as Eu from './europe.js';
 import * as Fam from './family.js';
 import * as Bet from './betting.js';
 import * as CUI from './casino-ui.js';
+import * as SUI from './social-ui.js';
 
 const app = document.getElementById('app');
 // Kaydı yükle ve eski sürümleri güncelle
@@ -51,6 +56,7 @@ function toast(msg) {
 }
 function persist() { Cloud.save(state); }
 CUI.init({ st: () => state, ui, persist, render: () => render(), toast: (m) => toast(m), money: E.money, esc });
+SUI.init({ st: () => state, ui, persist, render: () => render(), toast: (m) => toast(m), money: E.money, esc, badge: (t, n) => badge(t, n), face: (n, z, c) => face(n, z, c) });
 function addNews(list, showNow = true) {
   list = list.filter(Boolean);
   if (!list.length) return;
@@ -73,6 +79,30 @@ function eventCard(ev) {
   return `<div class="card event">${ev.photo ? `<img class="evphoto" src="img/news/${ev.photo}.jpg" alt="" loading="lazy">` : ''}
     ${fk ? `<div class="evface">${face(fk, 64, 'round')}</div>` : ''}${story}<b>${esc(ev.title)}</b><p>${esc(ev.text)}</p>
     <div class="evbtns">${ev.options.map((o, i) => `<button class="btn ${i ? 'ghost' : ''}" data-act="event" data-i="${i}">${esc(o.label)}</button>`).join('')}</div></div>`;
+}
+
+function rehabCard(p) {
+  const done = p.weekFlags?.rehab;
+  return `<div class="card injury"><b>🩹 Sakatsın</b> · ${p.injury} hafta daha yoksun.
+    ${done ? `<p class="small muted">Bu haftaki tedavi kararın verildi.</p>` : `<p class="small muted">Tedavi yöntemini seç:</p><div class="rehab">${Career.rehabOptions(state).filter((o) => o.ok !== false).map((o) => `<button class="${o.risky ? 'risky' : ''}" data-act="rehab" data-id="${o.id}"><span>${o.emoji}</span><b>${esc(o.name)}</b><small>${esc(o.desc)}${o.cost ? ` · ${E.money(o.cost)}` : ''}</small></button>`).join('')}</div>`}</div>`;
+}
+function natCard(m) {
+  const lbl = m.level === 'A' ? 'A Milli Takım' : 'Ümit Milli Takım (U21)';
+  if (!m.res && state.player.injury > 0) return `<div class="card natcard"><div class="muted small">🇹🇷 ${lbl} · ${esc(m.comp)}</div><p>Sakatlığın nedeniyle bu milli arada forma giyemeyeceksin.</p><button class="btn ghost" data-act="natClose">Tamam</button></div>`;
+  if (!m.res) return `<div class="card natcard"><div class="muted small">🇹🇷 ${lbl} · ${esc(m.comp)}</div><div class="vs"><span class="flag">🇹🇷</span><b>Türkiye${m.level === 'U21' ? ' U21' : ''}</b><span>vs</span><b>${esc(m.opp)}</b></div><button class="btn big" data-act="natPlay">Milli maça çık</button></div>`;
+  const r = m.res;
+  return `<div class="card natcard done"><div class="muted small">🇹🇷 ${lbl} · ${esc(m.comp)}</div><div class="natscore">Türkiye ${r.my} - ${r.op} ${esc(m.opp)}</div>
+    <p class="small">${r.g ? `⚽ ${r.g} gol` : 'Gol yok'}${r.a ? ` · 🅰️ ${r.a} asist` : ''} · Puan ${String(r.rating).replace('.', ',')}</p><button class="btn ghost" data-act="natClose">Tamam</button></div>`;
+}
+
+function musicCard() {
+  const m = Music.settings();
+  return `<div class="card"><div class="row"><b>🎵 Menü müziği</b><button class="btn sm ${m.on ? '' : 'ghost'}" data-act="music">${m.on ? '🔊 Açık' : '🔇 Kapalı'}</button></div>
+    <div class="seg mt"><button class="${m.src === 'theme' ? 'on' : ''}" data-act="musicTheme">🎼 Gol Yıldızı teması</button><button class="${m.src === 'custom' ? 'on' : ''}" data-act="musicCustom" ${m.name ? '' : 'disabled'}>📁 Kendi müziğin</button></div>
+    ${m.name ? `<p class="small">Seçili dosya: <b>${esc(m.name)}</b> <button class="linkbtn" data-act="musicClear">Kaldır</button></p>` : ''}
+    <label class="btn ghost filebtn mt">${m.name ? 'Başka dosya seç' : 'Telefonundan müzik seç'}<input type="file" accept="audio/*" id="musicFile" hidden></label>
+    <div class="row mt"><span class="small">Ses</span><input type="range" id="musicVol" min="0" max="100" value="${Math.round(m.vol * 100)}" class="grow"></div>
+    <p class="muted small">Kendi seçtiğin müzik sadece bu cihazda saklanır, hiçbir yere yüklenmez.</p></div>`;
 }
 
 const screens = {
@@ -152,7 +182,7 @@ const screens = {
         ${badge(t, 54)}
         <div class="grow">
           <div class="pname">${esc(p.name)} ${esc(p.surname)}${p.captain ? ' <span title="Kaptan">©️</span>' : ''}</div>
-          <div class="small">${esc(t.name)} · ${p.age} yaş · FV</div>
+          <div class="small">${esc(t.name)} · ${p.age} yaş · FV${p.shirt ? ` · #${p.shirt}` : ''}${p.nat?.caps ? ` · 🇹🇷 ${p.nat.caps} maç` : ''}</div>
         </div>
         <div class="ovr"><b>${E.overall(p)}</b><span>GÜÇ</span></div>
       </header>
@@ -166,7 +196,9 @@ const screens = {
         <div class="row mt"><span>Moral</span><b>${Math.round(p.morale)}</b></div>${bar(p.morale, 100, 'blue')}
         <div class="row mt"><span>Taraftar sevgisi</span><b>${Math.round(p.fans ?? 50)}</b></div>${bar(p.fans ?? 50, 100, 'orange')}
       </div>
-      ${p.injury > 0 ? `<div class="card injury"><b>🩹 Sakatsın</b> · ${p.injury} hafta daha yoksun. Antrenman yapamazsın, ama dinlenebilirsin.</div>` : ''}
+      ${p.injury > 0 ? rehabCard(p) : p.fragile > 0 ? `<div class="card injury small">💉 Ağrı kesiciyle oynuyorsun: ${p.fragile} hafta daha sakatlık riskin yüksek.</div>` : ''}
+      ${Career.campAvailable(state) ? `<div class="card campcard"><b>🏕️ Sezon öncesi kamp</b><p class="muted small">Kamp yerini ve antrenman odağını seç, hazırlık maçlarına çık, forma numaranı al.</p><button class="btn" data-go="camp">Kampa git</button></div>` : ''}
+      ${state.natMatch ? natCard(state.natMatch) : ''}
       ${state.event ? eventCard(state.event) : ui.evResult ? `<div class="card event evresult"><b>${esc(ui.evResult.title)}</b>${ui.evResult.result ? `<p>${esc(ui.evResult.result)}</p>` : ''}${ui.evResult.summary ? `<p class="small evsum">${esc(ui.evResult.summary)}</p>` : ''}<button class="btn ghost" data-act="evOk">Tamam</button></div>` : ''}
       ${state.phase === 'seasonEnd' ? `
         <div class="card next"><b>Sezon bitti!</b><p class="muted small">Sezon özetini ve teklifleri gör.</p>
@@ -180,7 +212,7 @@ const screens = {
           ${fx.knockout ? `<div class="derby">🏆 ${fx.final ? 'FİNAL · tek maç' : 'RÖVANŞ'} · toplam skor eşitse uzatma ve penaltılar</div>` : fx.leg === 1 ? '<div class="derby">🏆 ELEME 1. MAÇ · rövanş haftaya</div>' : ''}
           <div class="muted small">🏟️ ${esc(clubInfo(fx.h).stadyum || (fx.home ? 'İç saha' : 'Deplasman'))}</div>
           <div class="muted small">${fx.home ? 'İç saha' : 'Deplasman'} · Rakip gücü ${team(fx.opp).str} · Hoca kararı: <b>${roleText}</b></div>
-          <button class="btn big" data-go="prematch">Maça çık</button>
+          ${state.natMatch && !state.natMatch.res && !(p.injury > 0) ? '<button class="btn big" disabled>Önce milli maç 🇹🇷</button>' : '<button class="btn big" data-go="prematch">Maça çık</button>'}
         </div>` : `
         <div class="card next"><b>Bu hafta maçın yok</b><p class="muted small">Ligin bitti, diğer lig devam ediyor.</p>
         <button class="btn big" data-act="skipWeek">Haftayı geç</button></div>`}
@@ -190,6 +222,7 @@ const screens = {
         <button class="tile" data-go="shop">🛍️<span>Mağaza</span></button>
         <button class="tile" data-go="life">❤️<span>İlişkiler</span></button>
         <button class="tile" data-go="casino">🎰<span>Gazino</span></button>
+        <button class="tile rel" data-go="social"><img class="ticon" src="img/social/logo96.png" alt="" width="28" height="28"><span>Paslaş</span>${SUI.badgeCount(state) ? `<em class="tbadge">${SUI.badgeCount(state)}</em>` : ''}</button>
         <button class="tile" data-go="table">📊<span>Ligler</span></button>
         <button class="tile" data-go="europe">🏆<span>Avrupa</span></button>
         <button class="tile" data-go="profile">👤<span>Profil</span></button>
@@ -364,6 +397,8 @@ const screens = {
              <button class="btn" data-act="login">Google ile giriş yap</button>`;
     return `
       <header class="top"><button class="back" data-go="${back}">‹</button><h2>Ayarlar</h2></header>
+      ${musicCard()}
+      ${Voice.supported() ? `<div class="card"><div class="row"><b>🎙️ Sesli maç anlatımı</b><button class="btn sm ${Voice.isOn() ? '' : 'ghost'}" data-act="voice">${Voice.isOn() ? '🔊 Açık' : '🔇 Kapalı'}</button></div><p class="muted small">Spiker ve yorumcu ${Trivia.NAME} maçı sesli anlatır. Telefonun Türkçe sesini kullanır${Voice.hasTurkish() ? '' : ' (bu cihazda Türkçe ses bulunamadı, varsayılan ses kullanılır)'}.</p></div>` : ''}
       <div class="card"><div class="row"><b>Ses efektleri</b><button class="btn sm ${Sfx.soundOn() ? '' : 'ghost'}" data-act="sound">${Sfx.soundOn() ? '🔊 Açık' : '🔇 Kapalı'}</button></div></div>
       <div class="card"><h3>☁️ Bulut yedeği</h3>${cloud}</div>
       <div class="card"><h3>💾 Dosya yedeği</h3>
@@ -464,6 +499,37 @@ const screens = {
       <button class="btn ghost" data-act="cancelEngage">Nişanı boz</button>`;
   },
 
+  social() { return SUI.screen(); },
+
+  camp() {
+    const c = Career.camp(state);
+    const steps = ['Kamp yeri', 'Antrenman odağı', 'Hazırlık maçları', 'Forma numarası'];
+    let body = '';
+    if (c.step === 0) body = Career.CAMP_PLACES.map((x) => `<button class="compose" data-act="campPick" data-k="place" data-id="${x.id}"><span class="cemo">${x.emoji}</span><span class="grow"><b>${esc(x.name)}</b><small>${esc(x.desc)}</small></span></button>`).join('');
+    else if (c.step === 1) body = Career.CAMP_FOCUS.map((x) => `<button class="compose" data-act="campPick" data-k="focus" data-id="${x.id}"><span class="cemo">${x.emoji}</span><span class="grow"><b>${esc(x.name)}</b><small>${esc(x.desc)}</small></span></button>`).join('');
+    else if (c.step === 2) body = `<div class="card"><p>Kampta iki hazırlık maçı oynayacaksın. Golün hocanın gözüne girmeni sağlar.</p><button class="btn big" data-act="campPick" data-k="friendly" data-id="1">Hazırlık maçlarını oyna</button></div>`;
+    else if (c.step >= 3) body = `${c.friendlies.map((f) => `<div class="card fr"><b>${esc(team(state.player.clubId).short)} ${f.my}-${f.op} ${esc(f.opp)}</b><div class="small">${f.g ? `⚽ ${f.g} gol` : 'Gol yok'} · Puan ${String(f.rating).replace('.', ',')}</div></div>`).join('')}
+      ${c.step === 3 ? `<h3 class="sect">👕 Forma numaranı seç</h3><div class="shirts">${Career.shirtOptions(state).map((n) => `<button data-act="campPick" data-k="shirt" data-id="${n}">${n}</button>`).join('')}</div><p class="muted small">9 ve 10 numaralar ün ya da kaptanlık ister.</p>`
+        : `<div class="card"><b>✅ Kamp tamamlandı!</b><p class="small">Forma numaran: <b>#${c.shirt}</b></p><button class="btn big" data-go="hub">Sezona başla</button></div>`}`;
+    return `<header class="top"><button class="back" data-go="hub">‹</button><h2>🏕️ Sezon öncesi kamp</h2></header>
+      <div class="campsteps">${steps.map((t, i) => `<span class="${i < c.step ? 'ok' : i === c.step ? 'on' : ''}">${i + 1}. ${t}</span>`).join('')}</div>
+      ${c.place ? `<p class="muted small pad">${Career.CAMP_PLACES.find((x) => x.id === c.place).emoji} ${esc(Career.CAMP_PLACES.find((x) => x.id === c.place).name)}${c.focus ? ` · ${esc(Career.CAMP_FOCUS.find((x) => x.id === c.focus).name)}` : ''}</p>` : ''}
+      ${body}`;
+  },
+
+  tourn() {
+    const t = state.natTourn || Career.startTournament(state);
+    if (!t) return `<header class="top"><button class="back" data-go="seasonEnd">‹</button><h2>Turnuva</h2></header><p class="pad">Bu yaz turnuva yok.</p>`;
+    const last = t.games[t.games.length - 1];
+    return `<header class="top"><button class="back" data-go="seasonEnd">‹</button><h2>${t.icon} ${esc(t.name)}</h2></header>
+      <div class="card"><b>🇹🇷 Türkiye</b> · ${t.i < 3 ? `Grup puanı: ${t.pts}` : 'Eleme turları'}</div>
+      ${t.games.map((g) => `<div class="card fr ${g.my > g.op || g.pens?.startsWith('5') ? 'w' : g.my < g.op || g.pens ? 'l' : ''}"><div class="muted small">${esc(g.stage)}</div><b>Türkiye ${g.my}-${g.op} ${esc(g.opp)}</b>${g.pens ? ` <small>(pen. ${g.pens})</small>` : ''}<div class="small">${g.g ? `⚽ ${g.g} gol` : 'Gol yok'} · Puan ${String(g.rating).replace('.', ',')}</div></div>`).join('')}
+      ${t.champion ? `<div class="card natcard done"><b>🏆 ŞAMPİYONUZ!</b><p>Türkiye ${esc(t.name)} şampiyonu! Tarihe geçtin.</p></div>`
+        : t.out ? `<div class="card"><b>Turnuvaya veda ettik.</b><p class="small">${esc(last.stage)} turunda elendik.</p></div>`
+        : `<button class="btn big" data-act="tournNext">${['Grup 1. maç', 'Grup 2. maç', 'Grup 3. maç', 'Son 16', 'Çeyrek final', 'Yarı final', 'Final'][t.i]}: Türkiye - ${esc(t.opps[t.i][0])}</button>`}
+      <button class="btn ghost" data-go="seasonEnd">Sezon sonuna dön</button>`;
+  },
+
   casino() {
     const p = state.player;
     const t = ui.casinoTab;
@@ -516,7 +582,7 @@ const screens = {
         <div class="sb-score">${m.homeG} - ${m.awayG}<small>${m.pens ? `pen. ${m.plan.fx.home ? m.pens[0] : m.pens[1]}-${m.plan.fx.home ? m.pens[1] : m.pens[0]}` : m.minute + "'"}</small>${m.plan.fx.comp ? `<em class="sbcomp">${Eu.COMP[m.plan.fx.comp].icon} ${Eu.COMP[m.plan.fx.comp].short} · ${m.plan.fx.round}${m.plan.fx.agg ? ` · toplam ${m.res.myGoals + m.plan.fx.agg.my}-${m.res.oppGoals + m.plan.fx.agg.opp}` : ''}</em>` : ''}</div>
         <div class="sb-team">${esc(team(m.plan.fx.a).short)}</div>
       </div>
-      ${!m.done && !m.inMoment ? `<button class="btn ghost speedbtn ${m.fast ? 'on' : ''}" data-act="fast">${m.fast ? '⏩ Hızlı · normale al' : '▶ Normal · hızlandır'}</button>` : ''}
+      ${!m.done && !m.inMoment ? `<div class="mbtns"><button class="btn ghost speedbtn ${m.fast ? 'on' : ''}" data-act="fast">${m.fast ? '⏩ Hızlı · normale al' : '▶ Normal · hızlandır'}</button>${Voice.supported() ? `<button class="btn ghost speedbtn vbtn ${Voice.isOn() ? 'on' : ''}" data-act="voice">${Voice.isOn() ? '🎙️ Spiker açık' : '🔇 Spiker kapalı'}</button>` : ''}</div>` : ''}
       <div id="momentHost" class="moment-host ${m.inMoment ? 'on' : ''}"></div>
       ${m.inMoment ? '' : `
         ${m.choice ? `<div class="card choice"><b>${esc(m.choice.title)}</b><div class="evbtns">${m.choice.options.map((c, i) => `<button class="btn ${i ? 'ghost' : ''}" data-act="choice" data-v="${c.v}">${esc(c.label)}</button>`).join('')}</div><div class="cbar"></div></div>` : ''}
@@ -582,6 +648,7 @@ const screens = {
     const expiring = E.contractExpiring(state);
     return `
       <header class="top"><h2>${seasonLabel()} sezonu bitti</h2></header>
+      ${(() => { const d = state.natTourn || Career.tournamentFor(state); return d ? `<div class="card natcard"><b>${d.icon} ${esc(d.name)} başlıyor!</b><p class="small">Milli takım kadrosundasın. Türkiye'yi turnuvada temsil et.</p><button class="btn big" data-go="tourn">${state.natTourn ? 'Turnuvaya devam' : 'Turnuvaya git'}</button></div>` : ''; })()}
       <div class="card">
         <p>${esc(team(p.clubId).name)} ligi <b>${s.myPos}.</b> sırada bitirdi.</p>
         <p class="small muted">Şampiyonlar: ${Object.entries(s.champion).map(([l, id]) => `${esc(team(id).name)} (${LEAGUES[l].name.replace('Trendyol ', '')})`).join(', ')}</p>
@@ -827,6 +894,10 @@ async function runMatch() {
     if (!line) return;
     m.feed.push({ min: m.minute, text: line.text, cls: cls || 'spk', id: line.id });
     Spiker.speak(line);
+    if (!Spiker.SPIKER_SESLERI.has(line.id)) {
+      const big = /goal|assist|Red|fulltime|halftime/.test(ev);
+      if (!m.fast || big) Voice.say(line.text, 'spiker', big);
+    }
   };
   // Maç içi seçim (kayarak gir / itiraz): 6 sn içinde seçilmezse varsayılan
   const ask = (title, options, def) => new Promise((resolve) => {
@@ -870,7 +941,11 @@ async function runMatch() {
   const radio = plan.fx.comp ? [] : E.preSimRound(state, lidMe0).map((x) => ({ m: x, hg: 0, ag: 0 }));
   m.posBefore = plan.fx.comp ? null : E.sortedTable(state.season.leagues[lidMe0].table).findIndex((r) => r.id === p.clubId) + 1;
   m.week = state.season.week;
-  if (radio.length) m.feed.push({ min: 0, text: `📻 Rakipler de sahada: ${radio.map((r) => `${team(r.m.h).short}-${team(r.m.a).short}`).join(', ')}`, cls: 'radio' });
+  // yorumcu: maç boyunca birkaç "ilginç bilgi"
+  const triv = Trivia.pool(state, plan);
+  const trivMins = new Set(E.shuffle([6, 13, 21, 28, 34, 41, 52, 58, 64, 71, 78, 84]).slice(0, 4));
+  const yorum = (min) => { const t = Trivia.line(triv); if (!t) return; m.feed.push({ min, text: `🎙️ ${Trivia.NAME}: ${t}`, cls: 'yorum' }); if (!m.fast) Voice.say(t, 'yorum'); };
+  yorum(0);
   screen = 'match';
   render();
 
@@ -981,16 +1056,15 @@ async function runMatch() {
     for (const r of radio) for (const g of r.m.preGoals || []) {
       if (g.min !== min) continue;
       if (g.side === 'h') r.hg++; else r.ag++;
-      const scorerT = team(g.side === 'h' ? r.m.h : r.m.a);
-      m.feed.push({ min, text: `📻 Diğer sahalardan: ${team(r.m.h).name} ${r.hg}-${r.ag} ${team(r.m.a).name} · golü ${scorerT.short} attı`, cls: 'radio' });
     }
-    if (min === 45 && radio.length) m.feed.push({ min, text: `📻 Devre arası diğer skorlar: ${radio.map((r) => `${team(r.m.h).short} ${r.hg}-${r.ag} ${team(r.m.a).short}`).join(' · ')}`, cls: 'radio' });
     if (min === 45) { spk('halftime'); Sfx.whistle(); }
+    if (trivMins.has(min) && m.feed.length === feedBefore) yorum(min);
     render();
     // tempo: sakin dakikalar akar, yeni satır gelince okumaya zaman tanır
     const added = m.feed.length - feedBefore;
     const lines = Math.min(3, added);
     await new Promise((r) => setTimeout(r, m.fast ? 60 + lines * 320 : 210 + lines * 800 + (min === 45 ? 700 : 0)));
+    if (!m.fast && lines) await Voice.idle(7000);   // sesli anlatım bitsin
   }
   m.minute = 90;
   // eleme maçı: uzatma + penaltılar
@@ -1098,6 +1172,10 @@ app.addEventListener('click', async (e) => {
       return;
     case 'logout': await Cloud.signOut(); return render();
     case 'sound': Sfx.setSound(!Sfx.soundOn()); if (Sfx.soundOn()) Sfx.unlock(); return render();
+    case 'music': Music.unlock(); Music.toggle(); return render();
+    case 'musicTheme': Music.useTheme(); return render();
+    case 'musicCustom': Music.useCustom(); return render();
+    case 'musicClear': await Music.clearCustom(); return render();
     case 'accept': {
       const o = state.offers[+el.dataset.i];
       E.acceptOffer(state, o);
@@ -1155,6 +1233,8 @@ app.addEventListener('click', async (e) => {
     case 'divorce': { ui.divorceAsk = false; Fam.divorce(state, 'senin isteğinle'); persist(); return render(); }
     case 'kidsTime': { const r = Life.kidsTime(state); persist(); return toast(r.msg || ''); }
     case 'breakup': Life.breakUp(state); persist(); return render();
+    case 'socTab': case 'socPost': case 'socReply': case 'socDm': case 'socProf': case 'socProfClose': case 'socStory': case 'socStoryClose':
+    case 'socStoryPost': case 'socLive': case 'socLiveAns': case 'socLiveEnd': case 'socVote': SUI.handle(act, el); return;
     case 'casinoTab': ui.casinoTab = el.dataset.t; return render();
     case 'slot': case 'barbut': case 'rBet': case 'rUndo': case 'rClear': case 'rRepeat': case 'rSpin': case 'bjDeal': case 'bjHit': case 'bjStand': case 'bjDouble':
     case 'kPrice': case 'kBuy': case 'kAll': case 'pkSit': case 'pkRebuy': case 'pkMove': case 'pkNext': case 'pkLeave':
@@ -1200,9 +1280,16 @@ app.addEventListener('click', async (e) => {
     }
     case 'openNews': ui.popup = [state.news[+el.dataset.i]]; return render();
     case 'npNext': ui.popup.shift(); return render();
-    case 'fast': ui.match.fast = !ui.match.fast; localStorage.setItem('golyildizi.fast', ui.match.fast ? '1' : '0'); return render();
+    case 'fast': ui.match.fast = !ui.match.fast; localStorage.setItem('golyildizi.fast', ui.match.fast ? '1' : '0'); if (ui.match.fast) Voice.stop(); return render();
+    case 'campPick': Career.campPick(state, el.dataset.k, el.dataset.id); persist(); return render();
+    case 'natPlay': Career.playNat(state); persist(); return render();
+    case 'natClose': Career.closeNat(state); persist(); return render();
+    case 'tournNext': Career.nextTournamentGame(state); persist(); return render();
+    case 'rehab': { const r = Career.rehab(state, el.dataset.id); if (r.ok) persist(); return toast(r.msg); }
+    case 'voice': Voice.setOn(!Voice.isOn()); if (Voice.isOn()) Voice.say('Sesli anlatım açık', 'spiker'); return render();
     case 'choice': if (ui.match?.choice) ui.match.choice.pick(el.dataset.v); return render();
     case 'afterMatch':
+      Voice.stop();
       ui.match = null; ui.plan = null; ui.iv = null;
       ui.popup.push(...ui.pending); ui.pending = [];
       return go(state.phase === 'seasonEnd' ? 'seasonEnd' : 'hub');
@@ -1291,7 +1378,15 @@ function readLook(form) {
   const f = new FormData(form);
   return { skin: +(f.get('skin') ?? 1), hair: f.get('hair') || 'kisa', hairColor: f.get('hairColor') || 'siyah' };
 }
+app.addEventListener('input', (e) => { if (e.target.id === 'musicVol') Music.setVolume(e.target.value / 100); });
+document.addEventListener('pointerdown', () => Music.unlock(), { capture: true });
 app.addEventListener('change', async (e) => {
+  if (e.target.id === 'musicFile' && e.target.files?.[0]) {
+    const f = e.target.files[0];
+    if (f.size > 25 * 1024 * 1024) return toast('Dosya çok büyük (en fazla 25 MB).');
+    try { await Music.setCustom(f); toast('Menü müziği ayarlandı 🎵'); } catch { toast('Müzik kaydedilemedi.'); }
+    return render();
+  }
   if (e.target.id === 'importFile' && e.target.files?.[0]) {
     try {
       const n = Cloud.importAll(await e.target.files[0].text());
@@ -1329,6 +1424,7 @@ function render() {
       <button class="btn big" data-act="npNext">${ui.popup.length > 1 ? `Sonraki haber (${ui.popup.length - 1})` : 'Kapat'}</button></div>` : '';
   app.innerHTML = html + pop + (ui.toast ? `<div class="toast">${esc(ui.toast)}</div>` : '');
   if (screen === 'casino') CUI.afterRender(ui.casinoTab);
+  Music.onScreen(screen);
   // maç bitince röportaj ve sonuçlar en altta: otomatik aşağı kaydır
   if (screen === 'match' && ui.match?.done) {
     const first = !ui.match.scrolledEnd;

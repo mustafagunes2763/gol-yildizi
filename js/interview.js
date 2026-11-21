@@ -4,6 +4,7 @@
 import { clamp, pick, sortedTable } from './engine.js';
 import { clip, ek } from './news.js';
 import { isDerby, clubInfo } from './data.js';
+import * as Social from './social.js';
 
 const UP = (s) => s.toLocaleUpperCase('tr-TR');
 const fill = (t, v) => t.replace(/\{(\w+)\}/g, (_, k) => v[k] ?? '');
@@ -530,6 +531,7 @@ export function applyAnswer(state, iv, ans) {
     body: `${ek(R.name, 'dat')} konuşan ${p.surname}: "${quote}"`,
     caption: `${p.surname} flaşlar arasında`, pose: 'stand', photo: 'paparazzi',
   }));
+  try { Social.onInterview(state, ans); } catch { /* sosyal medya isteğe bağlı */ }
   return { news, summary: effectSummary(fx), react: R.react[ans.tone] };
 }
 
