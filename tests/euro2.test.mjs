@@ -38,7 +38,7 @@ for (let run = 0; run < 6; run++) {
   s.offers = []; s.player.clubId = target; s.phase = 'hub';
   if (s.phase !== 'hub' || !s.season || s.season.week !== 0) E.newSeason(s);
   const q = s.euro.quals;
-  assert(q.length >= 3 && q.length <= 4, 'TR eleme sayısı');
+  assert(q.length >= 2 && q.length <= 4, 'TR eleme sayısı ' + q.length);   // Türk takımı kupa şampiyonu olursa eleme sayısı azalır
   for (const c of Object.values(s.euro.comps)) { assert.equal(c.teams.length, 36, c.id); assert.equal(new Set(c.teams).size, 36, c.id + ' tekrar'); }
   const ms = playSeason(s);
   seenQual += ms.filter((x) => x.includes('(Q)')).length;

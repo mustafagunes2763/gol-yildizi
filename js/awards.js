@@ -8,6 +8,7 @@ export const TROPHY = {
   champ_SL: { name: 'Süper Lig Şampiyonluğu', icon: '🏆' },
   champ_L1: { name: '1. Lig Şampiyonluğu', icon: '🥇' },
   champ_PL: { name: 'Premier Lig Şampiyonluğu', icon: '🦁' },
+  champ_LL: { name: 'La Liga Şampiyonluğu', icon: '🇪🇸' },
   ucl: { name: 'Şampiyonlar Ligi', icon: '⭐' },
   uel: { name: 'Avrupa Ligi', icon: '🟠' },
   uecl: { name: 'Konferans Ligi', icon: '🟢' },
@@ -43,7 +44,7 @@ export function seasonAwards(state, sum) {
 
   // takım kupaları
   const team = [];
-  if (sum.myPos === 1) team.push({ SL: 'champ_SL', L1: 'champ_L1', PL: 'champ_PL' }[lid]);
+  if (sum.myPos === 1) team.push({ SL: 'champ_SL', L1: 'champ_L1', PL: 'champ_PL', LL: 'champ_LL' }[lid]);
   else if (lid === 'L1' && sum.myPos <= LEAGUES.L1.promote) team.push('promo_L1');
 
   p.trophies ||= [];
@@ -52,7 +53,7 @@ export function seasonAwards(state, sum) {
   for (const a of out) if (a.winner.me) won.push(a.key);
   for (const k of won) {
     p.trophies.push({ key: k, year: sum.year, club: p.clubId, league: lid });
-    const bonus = { golkrali: 12, yilin: 15, asistkrali: 8, genc: 8, champ_SL: 20, champ_L1: 10, promo_L1: 6, champ_PL: 25 }[k] || 0;
+    const bonus = { golkrali: 12, yilin: 15, asistkrali: 8, genc: 8, champ_SL: 20, champ_L1: 10, promo_L1: 6, champ_PL: 25, champ_LL: 25 }[k] || 0;
     p.fame = clamp((p.fame || 0) + bonus / 2, 0, 100);
     p.money += Math.round(p.contract.wage * bonus);
   }
@@ -82,6 +83,7 @@ export function retire(state) {
     trophies: (p.trophies || []).length, trophyList: p.trophies || [], clubs, money: p.money, fame: Math.round(p.fame || 0),
     best: best ? { year: best.year, goals: best.goals, club: state.teams[best.club]?.name } : null, ovr: overall(p),
     date: Date.now(),
+    children: (p.children || []).map((c) => ({ name: c.name, gender: c.gender, rel: c.rel, talent: c.talent || 0 })),
   };
   state.legacy = [...(state.legacy || []), summary];
   try {
@@ -96,20 +98,23 @@ export function retire(state) {
 }
 
 // Oğlu 17 yaşında aynı dünyada kariyere başlar: soyadı, ünün ve paranın bir kısmı ona geçer
-export function newSon(state, firstName) {
+export function newSon(state, firstName, child = null) {
   const f = state.player;
   const son = newPlayer({
     name: firstName, surname: f.surname, foot: f.foot, nation: f.nation,
     look: { skin: f.look?.skin ?? 1, hair: pick(['kisa', 'kazitma', 'kivircik', 'uzun', 'mohikan']), hairColor: f.look?.hairColor || 'siyah' },
   });
-  const talent = Math.round((f.fame || 0) / 20);
+  // gerçek çocuk: babasıyla bağı ve küçükken aldığı futbol eğitimi yeteneğine yansır
+  const talent = Math.round((f.fame || 0) / 20) + (child ? Math.round(((child.rel ?? 60) - 50) / 15) + (child.talent || 0) : 0);
   for (const k of Object.keys(son.stats)) son.stats[k] += talent;
   son.money = Math.round(f.money * 0.25);
   son.fame = Math.round((f.fame || 0) * 0.2);
   son.gen = (f.gen || 1) + 1;
   son.fatherName = `${f.name} ${f.surname}`;
   initLife(son);
-  son.rel.family = 85;
+  son.rel.family = child ? clamp(50 + (child.rel ?? 60) / 2, 30, 100) : 85;
+  // kardeşleri aile olarak kalır
+  if (child) son.siblings = (f.children || []).filter((c) => c.name !== child.name).map((c) => ({ name: c.name, gender: c.gender }));
   state.player = son;
   state.phase = 'offers';
   state.offers = startingOffers(state);

@@ -27,9 +27,9 @@ Ek set ✅: fans, coach, airport, header, freekick, wedding, empty, paparazzi (p
 ```
 Semi-realistic digital painting portrait, head and shoulders, 1:1, dark neutral background, soft studio lighting, consistent illustrated mobile-game character style. [KİŞİ]. Fictional person, not resembling any real celebrity, no text, no logos.
 ```
-- [ ] Selin Arıkan → img/people/selin.jpg — `a polite, analytical female sports journalist in her early 30s, neat dark bob haircut, glasses, notebook and pen in hand, calm attentive expression`
-- [ ] Kenan "Bomba" Sarp → img/people/kenan.jpg — `a provocative tabloid sports reporter in his 40s, messy dark hair, stubble, leather jacket, holding a recorder forward, mischievous grin`
-- [ ] Duygu Ateş → img/people/duygu.jpg — `a glamorous celebrity gossip reporter in her late 20s, long wavy auburn hair, bold red lipstick, stylish outfit, holding a smartphone, excited curious expression`
+- [x] Selin Arıkan → img/people/selin.jpg — `a polite, analytical female sports journalist in her early 30s, neat dark bob haircut, glasses, notebook and pen in hand, calm attentive expression`
+- [x] Kenan "Bomba" Sarp → img/people/kenan.jpg — `a provocative tabloid sports reporter in his 40s, messy dark hair, stubble, leather jacket, holding a recorder forward, mischievous grin`
+- [x] Duygu Ateş → img/people/duygu.jpg — `a glamorous celebrity gossip reporter in her late 20s, long wavy auburn hair, bold red lipstick, stylish outfit, holding a smartphone, excited curious expression`
 - [ ] Rıza Tekin → img/people/riza.jpg — `a retired football legend turned TV pundit in his early 60s, white hair, thick grey moustache, tweed blazer, warm wise fatherly smile`
 - [ ] Berk Yılmazer → img/people/berk.jpg — `a fast-talking transfer-news journalist in his early 30s, slick short hair, trendy glasses, earbuds, phone pressed to his ear, sharp eager look`
 - [ ] Nur Karaca → img/people/nur.jpg — `an energetic live TV sports presenter in her late 20s, sleek black ponytail, blazer, holding a TV microphone, big bright smile`
@@ -84,3 +84,10 @@ Real-estate photo of a fictional home in Istanbul, 4:3, golden hour light, invit
 - [ ] 34 KL takımı + 14 ön eleme rakibi şimdilik uydurma isimli. Aynı CSV promptuyla istenebilir.
   KL: ata frb mon get bra aja twe gnt stv jab pao agf fck fcm fcn brn pfs lug thu hea mjb haj czv ucr kai csk kup bor rig egn kau lri ies ibe
   Eleme rakipleri: rap leg mta par ros bas yb shr gor rij mal lud fcsb qar
+
+## La Liga (2026-11-21 eklendi) — 12 yeni takım uydurma isimli
+- [x] ath sev val osa ray esp ala elc lvt dep rac mlg — gerçek kadrolar geldi (2026-11-21)
+- Sonra sırayla: Serie A, Bundesliga, Ligue 1
+
+## Yeni gazete fotoğrafları (2026-11-21) — 4:3, aynı şablon
+- [x] proposal, baby, divorce, family, radio, captain, documentary, podcast ✅

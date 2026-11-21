@@ -1,6 +1,8 @@
 // Aşama 2: mağaza, ilişkiler, haftalık olaylar, sakatlık, bahis kuponları.
 import { clamp, pick, randInt, rand, money, addInbox, expectedGoals, leagueOf } from './engine.js';
 import * as Stories from './stories.js';
+import * as Family from './family.js';
+import * as Betting from './betting.js';
 
 // ---------- mağaza ----------
 export const CARS = [
@@ -84,6 +86,16 @@ export function treatTeam(state) {
   return { ok: true, msg: `Takıma yemek ısmarladın (${money(cost)}). Takım +8` };
 }
 export const teamCost = (p) => Math.max(20_000, Math.round(p.contract.wage * 1.5));
+export function kidsTime(state) {
+  const p = state.player;
+  const kids = (p.children || []).filter((c) => !c.exOf || state.season.year - c.born < 18);
+  if (!kids.length) return { ok: false };
+  if (p.weekFlags.kids) return { ok: false, msg: 'Bu hafta çocuklarla zaten vakit geçirdin.' };
+  p.weekFlags.kids = true;
+  for (const c of kids) c.rel = clamp((c.rel ?? 70) + 5, 0, 100);
+  p.morale = clamp(p.morale + 4, 0, 100); p.energy = clamp(p.energy - 6, 0, 100);
+  return { ok: true, msg: 'Parkta top oynadınız, dondurma yediniz. Çocuklar +5, moral +4' };
+}
 export function callFamily(state) {
   const p = state.player;
   if (p.weekFlags.family) return { ok: false, msg: 'Bu hafta aileni zaten aradın.' };
@@ -147,6 +159,7 @@ export function breakUp(state) {
   const p = state.player;
   if (!p.partner) return;
   addInbox(state, `${p.partner.name} ile yollarınızı ayırdınız.`);
+  p.exes = [...(p.exes || []), { name: p.partner.name, how: 'ayrılık', year: state.season?.year }];
   p.partner = null;
   p.morale = clamp(p.morale - 10, 0, 100);
 }
@@ -174,13 +187,14 @@ export function weeklyLife(state, weekIndex) {
       p.partner = null; p.morale = clamp(p.morale - 10, 0, 100);
     }
   }
+  Family.weeklyFamily(state);
   // sakatlık iyileşir
   if (p.injury > 0) {
     p.injury--;
     if (p.injury === 0) addInbox(state, 'Sakatlığın geçti, takımla çalışmalara başladın!');
   }
   // bahisler
-  resolveBets(state, weekIndex);
+  Betting.resolve(state);
   // haftalık bayraklar sıfırlanır
   p.weekFlags = {};
   p.casinoWeek = 0;

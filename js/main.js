@@ -11,6 +11,8 @@ import * as Spiker from './commentary.js';
 import * as K from './contract.js';
 import * as Aw from './awards.js';
 import * as Eu from './europe.js';
+import * as Fam from './family.js';
+import * as Bet from './betting.js';
 
 const app = document.getElementById('app');
 // Kaydı yükle ve eski sürümleri güncelle
@@ -61,6 +63,8 @@ function go(s) { screen = s; render(); window.scrollTo(0, 0); }
 // Gemini portreleri (img/people)
 const face = (name, size = 44, cls = '') => `<img class="face ${cls}" src="img/people/${name}.jpg" width="${size}" height="${size}" alt="" loading="lazy">`;
 const EVENT_FACE = { family_money: 'mother', extra_training: 'coach' };
+// Gemini'den gelen muhabir portreleri (img/people/<id>.jpg)
+const REPORTER_FACES = new Set(['selin', 'kenan', 'duygu']);
 function eventCard(ev) {
   const fk = ev.face || EVENT_FACE[ev.id] || (ev.id === 'partner_trip' ? 'partner' + (state.player.partner?.portrait ?? 0) : null);
   const story = ev.story ? '<span class="evtag">Hikâye</span>' : '';
@@ -185,6 +189,7 @@ const screens = {
         <button class="tile" data-go="life">❤️<span>İlişkiler</span></button>
         <button class="tile" data-go="casino">🎰<span>Gazino</span></button>
         <button class="tile" data-go="table">📊<span>Ligler</span></button>
+        <button class="tile" data-go="europe">🏆<span>Avrupa</span></button>
         <button class="tile" data-go="profile">👤<span>Profil</span></button>
         <button class="tile" data-go="news">📰<span>Gazete</span></button>
         ${Cloud.SHOW_LEADERBOARD ? '<button class="tile" data-go="leaderboard">🏆<span>Arkadaşlar</span></button>' : ''}
@@ -212,39 +217,64 @@ const screens = {
   },
 
   table() {
-    const myL = E.leagueOf(state, state.player.clubId);
-    const lid = ui.tableTab || myL;
-    if (Eu.COMP[lid]) return euroTable(lid, myL);
-    const view = ui.tableView || 'puan';
-    const L = LEAGUES[lid];
-    let body;
+    const p = state.player, myL = E.leagueOf(state, p.clubId);
+    let lid = ui.tableTab && LEAGUES[ui.tableTab] ? ui.tableTab : myL;
+    const L = LEAGUES[lid], SL = state.season.leagues[lid];
+    const view = ['puan', 'fikstur', 'gol', 'asist'].includes(ui.tableView) ? ui.tableView : 'puan';
+    const rows = E.sortedTable(SL.table);
+    const played = Math.max(0, ...rows.map((r) => r.p));
+    const myIdx = rows.findIndex((r) => r.id === p.clubId);
+    const zones = leagueZones(lid, rows.length);
+    let body = '';
     if (view === 'puan') {
-      const rows = E.sortedTable(state.season.leagues[lid].table);
-      body = `<table class="tbl league">
-        <tr><th>#</th><th class="l">Takım</th><th>O</th><th>G</th><th>B</th><th>M</th><th>Av</th><th>P</th></tr>
+      const form = teamForms(SL, state.season.week);
+      const full = !!ui.tableFull;
+      body = `<div class="tblwrap"><table class="tbl league ${full ? 'full' : 'compact'}">
+        <tr><th>#</th><th class="l">Takım</th><th>O</th>${full ? '<th>G</th><th>B</th><th>M</th>' : ''}<th>Av</th><th>P</th>${full ? '' : '<th class="fm">Form</th>'}</tr>
         ${rows.map((r, i) => {
-          const zone = (L.promote && i < L.promote) ? 'up' : (L.relegate && i >= rows.length - L.relegate) ? 'down' : '';
-          return `<tr class="${r.id === state.player.clubId ? 'me' : ''} ${zone}"><td>${i + 1}</td><td class="l nm"><span>${badge(team(r.id), 20)}<span>${esc(team(r.id).name)}</span></span></td><td>${r.p}</td><td>${r.w ?? '-'}</td><td>${r.d ?? '-'}</td><td>${r.l ?? '-'}</td><td>${r.gd > 0 ? '+' : ''}${r.gd}</td><td><b>${r.pts}</b></td></tr>`;
+          const z = zones[i];
+          return `<tr class="${r.id === p.clubId ? 'me' : ''}" ${r.id === p.clubId ? 'id="myrow"' : ''}><td class="pos" style="${z ? `box-shadow: inset 3px 0 ${z.c}` : ''}">${i + 1}</td><td class="l nm"><span>${badge(team(r.id), 20)}<span>${esc(team(r.id).name)}</span></span></td><td>${r.p}</td>${full ? `<td>${r.w ?? 0}</td><td>${r.d ?? 0}</td><td>${r.l ?? 0}</td>` : ''}<td>${r.gd > 0 ? '+' : ''}${r.gd}</td><td><b>${r.pts}</b></td>${full ? '' : `<td class="fm">${(form[r.id] || []).map((x) => `<i class="f${x}"></i>`).join('')}</td>`}</tr>`;
         }).join('')}
-      </table>
-      <p class="muted small pad">${L.promote ? `İlk ${L.promote} takım Süper Lig'e çıkar.` : ''}${L.relegate ? ` Son ${L.relegate} takım küme düşer.` : ''}</p>`;
+      </table></div>
+      <div class="legend">${[...new Map(zones.filter(Boolean).map((z) => [z.t, z])).values()].map((z) => `<span><i style="background:${z.c}"></i>${z.t}</span>`).join('')}</div>
+      <button class="linkbtn" data-act="tableFull">${full ? 'Kısa görünüm (form)' : 'Detaylı görünüm (G/B/M)'}</button>`;
+    } else if (view === 'fikstur') {
+      const total = SL.fixtures.length;
+      const wk = Math.max(0, Math.min(total - 1, ui.fxWeek ?? Math.min(state.season.week, total - 1)));
+      const ms = SL.fixtures[wk] || [];
+      body = `<div class="weeknav"><button class="btn ghost sm" data-act="fxWeek" data-d="-1" ${wk <= 0 ? 'disabled' : ''}>‹</button><b>${wk + 1}. hafta</b><button class="btn ghost sm" data-act="fxWeek" data-d="1" ${wk >= total - 1 ? 'disabled' : ''}>›</button></div>
+        <div class="card fxlist">${ms.map((m) => `<div class="fxrow ${m.h === p.clubId || m.a === p.clubId ? 'me' : ''}"><span class="t h">${esc(team(m.h).name)} ${badge(team(m.h), 18)}</span><b class="sc">${m.hg === null ? '–' : `${m.hg} - ${m.ag}`}</b><span class="t a">${badge(team(m.a), 18)} ${esc(team(m.a).name)}</span></div>`).join('')}</div>`;
     } else {
       const k = view === 'gol' ? 'g' : 'a', k2 = view === 'gol' ? 'a' : 'g';
       const all = E.leagueStats(state, lid).filter((x) => x[k] > 0).sort((x, y) => y[k] - x[k] || y[k2] - x[k2] || x.name.localeCompare(y.name, 'tr'));
-      const top = all.slice(0, 25);
       const meIdx = all.findIndex((x) => x.me);
+      const pod = all.slice(0, 3);
       const row = (x, i) => `<tr class="${x.me ? 'me' : ''}"><td>${i + 1}</td><td class="l"><b>${esc(x.name)}</b><div class="muted tiny">${badge(team(x.teamId), 14)} ${esc(team(x.teamId).name)}</div></td><td><b>${x[k]}</b></td><td class="muted">${x[k2]}</td></tr>`;
-      body = all.length ? `<table class="tbl stats">
-        <tr><th>#</th><th class="l">Oyuncu</th><th>${view === 'gol' ? 'Gol' : 'Asist'}</th><th>${view === 'gol' ? 'Asist' : 'Gol'}</th></tr>
-        ${top.map(row).join('')}
-        ${meIdx >= 25 ? `<tr class="gap"><td colspan="4">…</td></tr>${row(all[meIdx], meIdx)}` : ''}
-      </table>` : '<p class="muted pad">Henüz gol atılmadı. Sezon ilerledikçe liste dolacak.</p>';
+      body = all.length ? `<div class="podium">${[1, 0, 2].filter((i) => pod[i]).map((i) => `<div class="pod p${i + 1} ${pod[i].me ? 'me' : ''}"><span class="medal">${['🥇', '🥈', '🥉'][i]}</span>${badge(team(pod[i].teamId), 28)}<b>${esc(pod[i].name.split(' ').slice(-1)[0])}</b><span class="num">${pod[i][k]}</span></div>`).join('')}</div>
+        <table class="tbl stats"><tr><th>#</th><th class="l">Oyuncu</th><th>${k === 'g' ? 'Gol' : 'Asist'}</th><th>${k === 'g' ? 'Asist' : 'Gol'}</th></tr>
+        ${all.slice(3, 25).map((x, i) => row(x, i + 3)).join('')}
+        ${meIdx >= 25 ? `<tr class="gap"><td colspan="4">…</td></tr>${row(all[meIdx], meIdx)}` : ''}</table>` : '<p class="muted pad">Henüz gol atılmadı. Sezon ilerledikçe liste dolacak.</p>';
     }
     return `
-      <header class="top"><button class="back" data-go="hub">‹</button><h2>Ligler</h2></header>
-      ${leagueTabs(lid, myL)}
-      <div class="tabs sub">${[['puan', '📊 Puan durumu'], ['gol', '⚽ Gol krallığı'], ['asist', '🎯 Asist']].map(([v, l]) => `<button class="${v === view ? 'on' : ''}" data-act="tview" data-v="${v}">${l}</button>`).join('')}</div>
+      <header class="top"><button class="back" data-go="hub">‹</button><h2>Ligler</h2><button class="hdrbtn" data-go="europe">🏆 Avrupa</button></header>
+      <div class="lgpick">${Object.values(LEAGUES).map((x) => `<button class="${x.id === lid ? 'on' : ''}" data-act="tab" data-tab="${x.id}"><span class="flag">${{ ENG: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', ESP: '🇪🇸', ITA: '🇮🇹', GER: '🇩🇪', FRA: '🇫🇷' }[x.country] || '🇹🇷'}</span><b>${x.name.replace('Trendyol ', '')}</b>${x.id === myL ? '<small>Senin ligin</small>' : '<small>&nbsp;</small>'}</button>`).join('')}</div>
+      <div class="lghead card"><div><b>${L.name}</b><div class="muted small">${seasonLabel()} · ${played}/${SL.fixtures.length} hafta</div></div>${myIdx >= 0 ? `<div class="mypos"><span>${myIdx + 1}.</span><small>${rows[myIdx].pts} puan</small></div>` : ''}</div>
+      <div class="seg">${[['puan', 'Tablo'], ['fikstur', 'Maçlar'], ['gol', 'Goller'], ['asist', 'Asistler']].map(([v, l]) => `<button class="${v === view ? 'on' : ''}" data-act="tview" data-v="${v}">${l}</button>`).join('')}</div>
       ${body}`;
+  },
+
+  europe() {
+    const E2 = state.euro, me = state.player.clubId;
+    const mine = Eu.myEuroStatus(state)?.comp;
+    const cid = ['UCL', 'UEL', 'UECL'].includes(ui.euroTab) ? ui.euroTab : (mine && mine !== 'USC' ? mine : 'UCL');
+    const comp = E2?.comps[cid];
+    const view = ['puan', 'ko', 'gol'].includes(ui.euroView) ? ui.euroView : (comp && comp.md > (comp.mds || 8) ? 'ko' : 'puan');
+    return `
+      <header class="top"><button class="back" data-go="table">‹</button><h2>🏆 Avrupa kupaları</h2></header>
+      <div class="lgpick">${['UCL', 'UEL', 'UECL'].map((id) => `<button class="${id === cid ? 'on' : ''}" data-act="euroTab" data-tab="${id}"><span class="flag">${Eu.COMP[id].icon}</span><b>${Eu.COMP[id].name}</b><small>${id === mine ? 'Takımın burada' : '&nbsp;'}</small></button>`).join('')}</div>
+      ${E2?.super ? superCard(E2.super) : ''}
+      <div class="seg">${[['puan', 'Lig aşaması'], ['ko', 'Eleme'], ['gol', 'Goller']].map(([v, l]) => `<button class="${v === view ? 'on' : ''}" data-act="euroView" data-v="${v}">${l}</button>`).join('')}</div>
+      ${euroBody(cid, view)}`;
   },
 
   profile() {
@@ -382,10 +412,13 @@ const screens = {
         <div class="evbtns mt">
           <button class="btn" data-act="date">Buluş (${E.money(Life.dateCost(p))})</button>
           <button class="btn ghost" data-act="gift">Hediye al (${E.money(Life.giftCost(p))})</button>
-          ${Life.canPropose(p) ? `<button class="btn" data-act="propose">💍 Evlenme teklif et (${E.money(Life.weddingCost(p))})</button>` : ''}
-          ${!partner.married ? `<button class="btn ghost" data-act="breakup">Ayrıl</button>` : ''}
+          ${Fam.canPropose(p) ? `<button class="btn" data-go="propose">💍 Evlilik teklifi</button>` : ''}
+          ${partner.engaged ? `<button class="btn" data-go="wedding">💒 Düğünü planla</button>` : ''}
+          ${!partner.married ? `<button class="btn ghost" data-act="breakup">Ayrıl</button>` : `<button class="btn ghost" data-act="divorceAsk">Boşan</button>`}
         </div>
-        ${!partner.married && !Life.canPropose(p) ? '<p class="muted small">Evlilik için ilişki 80+ ve en az 16 hafta birlikte olmalısınız.</p>' : ''}`;
+        ${ui.divorceAsk && partner.married ? (() => { const t = Fam.divorceTerms(state); return `<div class="card warnbox"><b>Boşanmak istediğine emin misin?</b><p class="small">Mal paylaşımı: <b>${E.money(t.share)}</b>${t.house ? ` · Evin (${esc(Life.HOUSES.find((h) => h.id === t.house)?.name || '')}) eşinde kalır` : ''}<br>Nafaka: haftalık <b>${E.money(t.alimony)}</b> × ${t.alimonyWeeks} hafta${t.kids ? ` + çocuk nafakası <b>${E.money(t.childSupport)}</b>/hafta (18 yaşına kadar)` : ''}</p><div class="evbtns"><button class="btn danger" data-act="divorce">Evet, boşan</button><button class="btn ghost" data-act="divorceNo">Vazgeç</button></div></div>`; })() : ''}
+        ${!partner.married && !partner.engaged && !Fam.canPropose(p) ? `<p class="muted small">${partner.cooldown > 0 ? `Teklifin reddedildi. ${partner.cooldown} hafta sonra tekrar deneyebilirsin.` : 'Evlilik teklifi için ilişki 55+ ve en az 10 hafta birlikte olmalısınız. İlişki ne kadar yüksekse "evet" ihtimali o kadar artar.'}</p>` : ''}
+        ${partner.engaged ? '<p class="muted small">💍 Nişanlısınız!</p>' : ''}`;
     }
     const car = Life.CARS.filter((x) => p.owned.includes(x.id)).pop(), house = Life.HOUSES.filter((x) => p.owned.includes(x.id)).pop();
     return `
@@ -394,7 +427,39 @@ const screens = {
       ${relRow('team', `<button class="btn ghost sm" data-act="treatTeam" ${p.weekFlags.team ? 'disabled' : ''}>Takıma yemek ısmarla (${E.money(Life.teamCost(p))})</button>`)}
       ${relRow('family', `<button class="btn ghost sm" data-act="callFamily" ${p.weekFlags.family ? 'disabled' : ''}>Aileni ara</button>`)}
       <div class="card"><h3>❤️ Özel hayat</h3>${love}</div>
+      ${(p.children || []).length ? `<div class="card"><h3>👨‍👩‍👧 Çocukların</h3>${p.children.map((c) => `<div class="row kid"><span class="grow">${c.gender === 'k' ? '👧' : '👦'} <b>${esc(c.name)}</b> <span class="muted small">${Fam.childAge(state, c) < 1 ? 'bebek' : Fam.childAge(state, c) + ' yaş'}${c.exOf ? ' · annesiyle' : ''}${c.talent ? ' · ⚽ yetenekli' : ''}</span></span><b>${Math.round(c.rel ?? 70)}</b></div>${bar(c.rel ?? 70, 100, 'orange')}`).join('')}
+        <button class="btn ghost sm mt" data-act="kidsTime" ${p.weekFlags.kids ? 'disabled' : ''}>Çocuklarla vakit geçir</button></div>` : ''}
+      ${p.alimony ? `<div class="card small"><div class="row"><span>Nafaka (${esc(p.alimony.to)})</span><b class="warn">−${E.money(p.alimony.weekly + p.alimony.child)}/hafta</b></div></div>` : ''}
       <div class="card small"><div class="row"><span>Araban</span><b>${car ? esc(car.name) : '—'}</b></div><div class="row"><span>Evin</span><b>${house ? esc(house.name) : 'Kulüp lojmanı'}</b></div></div>`;
+  },
+
+  propose() {
+    const p = state.player, pt = p.partner;
+    if (!pt || !Fam.canPropose(p)) return screens.life();
+    ui.ring ||= 'r2'; ui.place ||= 'home';
+    const ring = Fam.RINGS.find((r) => r.id === ui.ring), place = Fam.PLACES.find((x) => x.id === ui.place);
+    const cost = Fam.ringCost(p, ring) + Fam.placeCost(p, place);
+    const ch = Fam.acceptChance(p, ring, place);
+    const hint = ch > 0.8 ? 'Neredeyse kesin "evet"' : ch > 0.6 ? 'Büyük ihtimalle "evet"' : ch > 0.4 ? 'Yazı tura…' : 'Riskli, "hayır" diyebilir';
+    return `
+      <header class="top"><button class="back" data-go="life">‹</button><h2>💍 Evlilik teklifi</h2></header>
+      <div class="card center">${face('partner' + (pt.portrait ?? 0), 72, 'round love')}<h3>${esc(pt.name)}</h3><p class="muted small">${esc(pt.job)} · ${pt.weeks} haftadır birliktesiniz · ${pt.likesFame ? 'Şöhreti seviyor' : 'Gözlerden uzak durmayı seviyor'}</p></div>
+      <div class="card"><h3>Yüzük</h3>${Fam.RINGS.map((r) => `<button class="pickrow ${r.id === ui.ring ? 'on' : ''}" data-act="pickRing" data-id="${r.id}"><span class="big">${r.emoji}</span><span class="grow"><b>${r.name}</b><small>${r.desc}</small></span><b>${E.money(Fam.ringCost(p, r))}</b></button>`).join('')}</div>
+      <div class="card"><h3>Nerede?</h3>${Fam.PLACES.map((x) => `<button class="pickrow ${x.id === ui.place ? 'on' : ''}" data-act="pickPlace" data-id="${x.id}"><span class="grow"><b>${x.name}</b><small>${x.desc}${x.public ? ' · Ün +' + x.fame : ''}</small></span><b>${E.money(Fam.placeCost(p, x))}</b></button>`).join('')}</div>
+      <div class="card"><div class="row"><span>Toplam</span><b>${E.money(cost)}</b></div><div class="row"><span>Tahmin</span><b>${hint}</b></div>
+        <button class="btn big mt" data-act="proposeGo" ${p.money < cost ? 'disabled' : ''}>Diz çök 💍</button>${p.money < cost ? '<p class="muted small">Paran yetmiyor.</p>' : ''}</div>`;
+  },
+
+  wedding() {
+    const p = state.player, pt = p.partner;
+    if (!pt?.engaged) return screens.life();
+    return `
+      <header class="top"><button class="back" data-go="life">‹</button><h2>💒 Düğün</h2></header>
+      <div class="card center">${face('partner' + (pt.portrait ?? 0), 64, 'round love')}<p>${esc(pt.name)} ile nasıl bir düğün?</p></div>
+      ${Fam.WEDDINGS.map((w) => `<div class="card"><div class="row"><b>${w.name}</b><b>${E.money(Fam.weddingCost(p, w))}</b></div><p class="muted small">${w.desc}</p>
+        <p class="small">${[w.fame ? `Ün +${w.fame}` : '', w.fans ? `Taraftar +${w.fans}` : '', `Aile ${w.family > 0 ? '+' : ''}${w.family}`, `Eşin +${w.partner}`].filter(Boolean).join(' · ')}</p>
+        <button class="btn" data-act="wed" data-id="${w.id}" ${p.money < Fam.weddingCost(p, w) ? 'disabled' : ''}>Bu düğünü yap</button></div>`).join('')}
+      <button class="btn ghost" data-act="cancelEngage">Nişanı boz</button>`;
   },
 
   casino() {
@@ -404,15 +469,7 @@ const screens = {
     if (ui.stake > p.money) ui.stake = stakes.filter((x) => x <= p.money).pop() || 10_000;
     const stakeBar = `<div class="stakes">${stakes.map((x) => `<button class="${x === ui.stake ? 'on' : ''}" data-act="stake" data-v="${x}">${E.money(x).replace('₺', '')}</button>`).join('')}</div>`;
     let body = '';
-    if (t === 'bahis') {
-      const list = Life.bettable(state);
-      const mine = p.bets.filter((b) => b.week === state.season.week && b.year === state.season.year);
-      body = `<p class="muted small pad">Bu haftanın diğer maçları. Kendi maçına bahis yok! Kupon hafta sonunda sonuçlanır.</p>${stakeBar}
-        ${list.map((m, i) => { const b = mine.find((x) => x.h === m.h && x.a === m.a); return `<div class="card betrow">
-          <div class="small"><b>${esc(team(m.h).short)}</b> - <b>${esc(team(m.a).short)}</b> <span class="muted">${({ SL: 'SL', L1: '1.L', PL: 'PL' })[m.lid] || m.lid}</span></div>
-          <div class="odds">${['1', 'X', '2'].map((k) => `<button class="${b?.pick === k ? 'on' : ''}" data-act="bet" data-i="${i}" data-pick="${k}" ${b ? 'disabled' : ''}>${k}<small>${m.odds[k].toFixed(2)}</small></button>`).join('')}</div>
-          ${b ? `<div class="muted small">${E.money(b.stake)} oynadın · olası kazanç ${E.money(b.stake * b.odd)}</div>` : ''}
-        </div>`; }).join('') || '<p class="muted pad">Bu hafta oynanacak maç yok.</p>'}`;
+    if (t === 'bahis') { body = betScreen(stakeBar);
     } else if (t === 'rulet') {
       const r = ui.roulette;
       body = `${stakeBar}<div class="card center">
@@ -483,6 +540,7 @@ const screens = {
         <div class="sb-score">${m.homeG} - ${m.awayG}<small>${m.pens ? `pen. ${m.plan.fx.home ? m.pens[0] : m.pens[1]}-${m.plan.fx.home ? m.pens[1] : m.pens[0]}` : m.minute + "'"}</small>${m.plan.fx.comp ? `<em class="sbcomp">${Eu.COMP[m.plan.fx.comp].icon} ${Eu.COMP[m.plan.fx.comp].short} · ${m.plan.fx.round}${m.plan.fx.agg ? ` · toplam ${m.res.myGoals + m.plan.fx.agg.my}-${m.res.oppGoals + m.plan.fx.agg.opp}` : ''}</em>` : ''}</div>
         <div class="sb-team">${esc(team(m.plan.fx.a).short)}</div>
       </div>
+      ${!m.done && !m.inMoment ? `<button class="btn ghost speedbtn ${m.fast ? 'on' : ''}" data-act="fast">${m.fast ? '⏩ Hızlı · normale al' : '▶ Normal · hızlandır'}</button>` : ''}
       <div id="momentHost" class="moment-host ${m.inMoment ? 'on' : ''}"></div>
       ${m.inMoment ? '' : `
         ${m.choice ? `<div class="card choice"><b>${esc(m.choice.title)}</b><div class="evbtns">${m.choice.options.map((c, i) => `<button class="btn ${i ? 'ghost' : ''}" data-act="choice" data-v="${c.v}">${esc(c.label)}</button>`).join('')}</div><div class="cbar"></div></div>` : ''}
@@ -491,9 +549,11 @@ const screens = {
           <div class="card ft">
             <h3>Maç sonu</h3>
             ${m.res.played ? `<div class="statsrow in"><div><span>Puan</span><b>${m.res.rating}</b></div><div><span>Gol</span><b>${m.res.goals}</b></div><div><span>Asist</span><b>${m.res.assists}</b></div></div>` : '<p class="muted">Bu maçta oynamadın.</p>'}
-            ${ui.iv ? interviewCard(ui.iv) : ''}
-            <button class="btn big" data-act="afterMatch" ${ui.iv && !ui.iv.chosen ? 'disabled' : ''}>Devam</button>
-          </div>` : `<button class="btn ghost" data-act="fast">${m.fast ? '⏩ Hızlı · normale al' : '▶ Normal · hızlandır'}</button>`}`}
+          </div>
+          ${m.round ? roundCard(m) : ''}
+          ${ui.iv ? interviewCard(ui.iv) : ''}
+          <button class="btn big" data-act="afterMatch" ${ui.iv && !ui.iv.chosen ? 'disabled' : ''}>Devam</button>
+          <div id="matchEnd"></div>` : ''}`}
     `;
   },
 
@@ -588,9 +648,12 @@ const screens = {
       </div>
       <div class="card"><h3>👑 Ölümsüzler</h3>${hof.slice(0, 10).map((h, i) => `<div class="row small"><span>${i + 1}. ${esc(h.name)}</span><span class="muted">${h.goals} gol · ${h.trophies} kupa</span></div>`).join('')}</div>
       <div class="card"><h3>👶 Oğlunla devam et</h3>
-        <p class="small muted">Oğlun 17 yaşında, aynı dünyada kariyere başlar. Soyadını, ününün bir kısmını, paranın %25'ini ve biraz da yeteneğini miras alır.</p>
+        <p class="small muted">Oğlun 17 yaşında, aynı dünyada kariyere başlar. Soyadını, ününün bir kısmını, paranın %25'ini ve biraz da yeteneğini miras alır. Onunla bağın ve küçükken aldığı futbol eğitimi yeteneğini artırır.</p>
+        ${(() => { const ss = (sum.children || []).filter((c) => c.gender === 'e'); return ss.length
+          ? ss.map((c, i) => `<button class="pickrow" data-act="newSonKid" data-i="${(sum.children || []).indexOf(c)}"><span class="big">👦</span><span class="grow"><b>${esc(c.name)}</b><small>Bağınız ${Math.round(c.rel ?? 70)}${c.talent ? ' · ⚽ futbol okulunda yetişti' : ''}</small></span><b>Başla ›</b></button>`).join('')
+          : `<p class="small muted">Hiç oğlun olmadı. Yine de bir oğulla devam edebilirsin (hikâyede evlat edinildi).</p>
         <input id="sonName" class="textin" placeholder="Oğlunun adı" maxlength="16" value="${esc(ui.sonName || '')}">
-        <button class="btn big" data-act="newSon">Yeni kariyere başla</button>
+        <button class="btn big" data-act="newSon">Yeni kariyere başla</button>`; })()}
       </div>
       <button class="btn ghost big" data-go="start">Ana menüye dön</button>`;
   },
@@ -610,29 +673,135 @@ const screens = {
   },
 };
 
-function leagueTabs(lid, myL) {
-  const myE = Eu.myEuroStatus(state)?.comp;
-  return `<div class="tabs scroll">${Object.keys(LEAGUES).map((id) => `<button class="${id === lid ? 'on' : ''}" data-act="tab" data-tab="${id}">${LEAGUES[id].name.replace('Trendyol ', '')}${id === myL ? ' ⭐' : ''}</button>`).join('')}${Object.keys(Eu.COMP).filter((id) => !Eu.COMP[id].cup).map((id) => `<button class="${id === lid ? 'on' : ''}" data-act="tab" data-tab="${id}">${Eu.COMP[id].icon} ${Eu.COMP[id].short}${id === myE ? ' ⭐' : ''}</button>`).join('')}</div>`;
+// Maç sonu: haftanın sonuçları + sıralamadaki değişim
+function roundCard(m) {
+  const R = m.round, me = state.player.clubId;
+  const d = (m.posBefore || R.posAfter) - R.posAfter;
+  const i = R.posAfter - 1, from = Math.max(0, Math.min(R.rows.length - 5, i - 2));
+  const slice = R.rows.slice(from, from + 5);
+  const mine = R.matches.find((x) => x.h === me || x.a === me);
+  const others = R.matches.filter((x) => x !== mine).sort((a, b) => (R.near.has(b.h) || R.near.has(b.a)) - (R.near.has(a.h) || R.near.has(a.a)));
+  return `<div class="card roundcard"><img class="evphoto" src="img/news/radio.jpg" alt="" loading="lazy"><h3>📻 Haftanın sonuçları</h3>
+    <div class="posmove ${d > 0 ? 'up' : d < 0 ? 'down' : ''}">Sıralaman: <b>${m.posBefore}.</b> → <b>${R.posAfter}.</b> ${d > 0 ? `▲${d}` : d < 0 ? `▼${-d}` : '='}</div>
+    <table class="tbl league compact mini">${slice.map((r, k) => `<tr class="${r.id === me ? 'me' : ''}"><td class="pos">${from + k + 1}</td><td class="l nm"><span>${badge(team(r.id), 18)}<span>${esc(team(r.id).name)}</span></span></td><td>${r.p}</td><td>${r.gd > 0 ? '+' : ''}${r.gd}</td><td><b>${r.pts}</b></td></tr>`).join('')}</table>
+    <div class="fxlist">${others.map((x) => `<div class="fxrow ${R.near.has(x.h) || R.near.has(x.a) ? 'near' : ''}"><span class="t h">${esc(team(x.h).name)} ${badge(team(x.h), 16)}</span><b class="sc">${x.hg} - ${x.ag}</b><span class="t a">${badge(team(x.a), 16)} ${esc(team(x.a).name)}</span></div>`).join('')}</div>
+    <p class="muted tiny">Sarı çizgili maçlar sıralamada sana yakın rakiplerin.</p></div>`;
 }
 
-function euroTable(cid, myL) {
+// ---------- bahis (iddaa tarzı) ----------
+function betScreen(stakeBar) {
+  const p = state.player;
+  ui.slip ||= []; ui.betMode ||= 'kombine';
+  const view = ['bulten', 'kupon', 'gecmis'].includes(ui.betView) ? ui.betView : 'bulten';
+  const list = Bet.bulletin(state);
+  // bülten değişti mi (yeni hafta): kupondaki eski seçimleri at
+  ui.slip = ui.slip.filter((l) => list.some((m) => m.key === l.key));
+  const pending = p.bets.filter((b) => b.year === state.season.year);
+  const seg = `<div class="seg">${[['bulten', 'Bülten'], ['kupon', `Kuponum${ui.slip.length ? ` (${ui.slip.length})` : ''}`], ['gecmis', 'Geçmiş']].map(([v, l]) => `<button class="${v === view ? 'on' : ''}" data-act="betView" data-v="${v}">${l}</button>`).join('')}</div>`;
+  const dots = (f) => f.map((x) => `<i class="f${x}"></i>`).join('');
+  const sel = (m, mk, k) => ui.slip.some((l) => l.key === m.key && l.mk === mk && l.pick === k);
+  const oddBtn = (m, mk, k, lab = k) => `<button class="${sel(m, mk, k) ? 'on' : ''}" data-act="pickOdd" data-key="${m.key}" data-mk="${mk}" data-pick="${esc(k)}"><span>${esc(lab)}</span><b>${m.mk[mk][k].toFixed(2)}</b></button>`;
+  let body = '';
+  if (view === 'bulten') {
+    const lg = ui.betLg && ui.betLg !== 'all' ? ui.betLg : 'all';
+    const shown = list.filter((m) => lg === 'all' || m.lid === lg);
+    body = `<div class="chips">${[['all', 'Tümü'], ...Object.keys(Bet.LG).filter((l) => list.some((m) => m.lid === l)).map((l) => [l, Bet.LG[l]])].map(([k, l]) => `<button class="${k === lg ? 'on' : ''}" data-act="betLg" data-v="${k}">${l}</button>`).join('')}</div>
+      ${shown.map((m) => {
+        const open = ui.betOpen === m.key;
+        return `<div class="card betcard">
+          <div class="bm-head"><span class="muted tiny">${Bet.LG[m.lid]} · ${state.season.week + 1}. hafta</span><span class="muted tiny">${ui.slip.some((l) => l.key === m.key) ? '🎟️ kuponda' : ''}</span></div>
+          <div class="bm-teams"><div>${badge(team(m.h), 22)}<b>${esc(team(m.h).name)}</b><small>${m.posH}. · <span class="fdots">${dots(m.formH)}</span></small></div>
+            <div>${badge(team(m.a), 22)}<b>${esc(team(m.a).name)}</b><small>${m.posA}. · <span class="fdots">${dots(m.formA)}</span></small></div></div>
+          <div class="odds3">${['1', 'X', '2'].map((k) => oddBtn(m, 'MS', k)).join('')}</div>
+          ${open ? `<div class="mkts">
+            <h4>${Bet.MARKETS.CS}</h4><div class="odds3">${['1X', '12', 'X2'].map((k) => oddBtn(m, 'CS', k)).join('')}</div>
+            <h4>Gol sayısı</h4><div class="odds4">${oddBtn(m, 'AU', 'Alt', '2,5 Alt')}${oddBtn(m, 'AU', 'Üst', '2,5 Üst')}${oddBtn(m, 'AU35', 'Alt', '3,5 Alt')}${oddBtn(m, 'AU35', 'Üst', '3,5 Üst')}</div>
+            <h4>${Bet.MARKETS.KG}</h4><div class="odds2">${oddBtn(m, 'KG', 'Var')}${oddBtn(m, 'KG', 'Yok')}</div>
+            <h4>${Bet.MARKETS.IY}</h4><div class="odds3">${['1', 'X', '2'].map((k) => oddBtn(m, 'IY', k)).join('')}</div>
+            <h4>${Bet.MARKETS.SK}</h4><div class="odds4">${Object.keys(m.mk.SK).map((k) => oddBtn(m, 'SK', k)).join('')}</div>
+          </div>` : ''}
+          <button class="linkbtn" data-act="betOpen" data-key="${m.key}">${open ? 'Daha az ▲' : 'Tüm bahisler (+21) ▼'}</button>
+        </div>`;
+      }).join('') || '<p class="muted pad">Bu hafta bültende maç yok.</p>'}
+      ${ui.slip.length ? `<button class="slipbar" data-act="betView" data-v="kupon"><span>🎟️ ${ui.slip.length} seçim</span><b>Oran ${Bet.comboOdd(ui.slip).toFixed(2)}</b><span>Kupona git ›</span></button>` : ''}`;
+  } else if (view === 'kupon') {
+    const legs = ui.slip;
+    const mode = legs.length < 2 ? 'tekli' : ui.betMode;
+    const total = mode === 'tekli' ? ui.stake * legs.length : ui.stake;
+    const win = mode === 'tekli' ? legs.reduce((a, l) => a + ui.stake * l.odd, 0) : ui.stake * Bet.comboOdd(legs);
+    body = legs.length ? `<div class="card slip">${legs.map((l, i) => `<div class="sliprow"><div class="grow"><b>${esc(l.label)}</b><div class="muted tiny">${esc(team(l.h).short)} - ${esc(team(l.a).short)} · ${Bet.MARKETS[l.mk]}</div></div><b>${l.odd.toFixed(2)}</b><button class="x" data-act="slipDel" data-i="${i}">✕</button></div>`).join('')}
+        ${legs.length > 1 ? `<div class="seg mini">${[['kombine', `Kombine · ${Bet.comboOdd(legs).toFixed(2)}`], ['tekli', 'Tekli (her maça ayrı)']].map(([v, l]) => `<button class="${v === mode ? 'on' : ''}" data-act="betMode" data-v="${v}">${l}</button>`).join('')}</div>` : ''}
+        <p class="muted tiny">${mode === 'kombine' ? 'Kombinede tüm maçlar tutmalı; oranlar çarpılır.' : 'Her seçim ayrı kupon; tutanlar ayrı ayrı öder.'}</p>
+        ${stakeBar}
+        <div class="row"><span>Toplam yatırılan</span><b>${E.money(total)}</b></div>
+        <div class="row"><span>Olası kazanç</span><b class="winc">${E.money(Math.round(win))}</b></div>
+        <div class="evbtns mt"><button class="btn" data-act="betPlace" ${total > p.money ? 'disabled' : ''}>Kuponu yatır</button><button class="btn ghost" data-act="slipClear">Temizle</button></div></div>`
+      : '<div class="card center muted">Kupon boş. Bültenden oranlara dokunarak seçim ekle.</div>';
+    body += pending.length ? `<h3 class="pad">Bu haftaki kuponların</h3>${pending.map((b) => couponCard(b)).join('')}` : '';
+  } else {
+    const st = p.betStats || { staked: 0, won: 0, coupons: 0, hits: 0 };
+    const net = st.won - st.staked;
+    body = `<div class="statsrow in"><div><span>Yatırılan</span><b>${E.money(st.staked)}</b></div><div><span>Kazanılan</span><b>${E.money(st.won)}</b></div></div>
+      <div class="statsrow in"><div><span>Net</span><b class="${net >= 0 ? 'winc' : 'losec'}">${net >= 0 ? '+' : '−'}${E.money(Math.abs(net))}</b></div><div><span>Tutan kupon</span><b>${st.hits}/${st.coupons}${st.coupons ? ` · %${Math.round(st.hits / st.coupons * 100)}` : ''}</b></div></div>
+      ${(p.betHistory || []).map((b) => couponCard(b, true)).join('') || '<p class="muted pad">Henüz sonuçlanmış kupon yok.</p>'}`;
+  }
+  return `${seg}${body}`;
+}
+function couponCard(b, done) {
+  const legs = b.legs || [{ h: b.h, a: b.a, label: `MS ${b.pick}`, odd: b.odd }];
+  return `<div class="card coupon ${done ? (b.won ? 'won' : 'lost') : ''}"><div class="row small"><b>${b.kind === 'kombine' ? `Kombine · ${legs.length} maç` : 'Tekli'}</b><span class="muted">${b.week + 1}. hafta</span></div>
+    ${legs.map((l) => `<div class="row tiny"><span>${done ? (l.won ? '✅' : '❌') : '⏳'} ${esc(team(l.h).short)}-${esc(team(l.a).short)} ${l.score ? `<b>${l.score}</b>` : ''}</span><span>${esc(l.label)} · ${l.odd.toFixed(2)}</span></div>`).join('')}
+    <div class="row small"><span>${E.money(b.stake)} × ${b.odd.toFixed(2)}</span><b class="${done ? (b.won ? 'winc' : 'losec') : ''}">${done ? (b.won ? '+' + E.money(b.payout) : 'Yattı') : 'Olası ' + E.money(Math.round(b.stake * b.odd))}</b></div></div>`;
+}
+
+// Lig bölgeleri (Avrupa / düşme) — FotMob tarzı renkli şerit
+function leagueZones(lid, n) {
+  const Z = { ucl: { t: 'Şampiyonlar Ligi', c: '#3b82f6' }, uclq: { t: 'ŞL ön eleme', c: '#60a5fa' }, uel: { t: 'Avrupa Ligi', c: '#f97316' }, uelq: { t: 'AL ön eleme', c: '#fdba74' }, uecl: { t: 'Konferans Ligi', c: '#22c55e' }, ueclq: { t: 'KL ön eleme', c: '#86efac' }, up: { t: 'Süper Lig\'e çıkış', c: '#22c55e' }, down: { t: 'Küme düşme', c: '#ef4444' } };
+  const out = Array(n).fill(null);
+  if (lid === 'SL') { out[0] = Z.ucl; out[1] = Z.uclq; out[2] = Z.uelq; out[3] = Z.uelq; out[4] = Z.ueclq; }
+  if (lid === 'PL' || lid === 'LL') { for (let i = 0; i < 5; i++) out[i] = Z.ucl; out[5] = out[6] = Z.uel; out[7] = Z.uecl; }
+  const L = LEAGUES[lid];
+  for (let i = 0; i < (L.promote || 0); i++) out[i] = Z.up;
+  for (let i = 0; i < (L.relegate || 0); i++) out[n - 1 - i] = Z.down;
+  return out;
+}
+// Son 5 maç: G / B / M
+function teamForms(SL, week) {
+  const f = {};
+  for (let w = 0; w < Math.min(week + 1, SL.fixtures.length); w++) for (const m of SL.fixtures[w]) {
+    if (m.hg === null) continue;
+    (f[m.h] ||= []).push(m.hg > m.ag ? 'w' : m.hg === m.ag ? 'd' : 'l');
+    (f[m.a] ||= []).push(m.ag > m.hg ? 'w' : m.hg === m.ag ? 'd' : 'l');
+  }
+  for (const k of Object.keys(f)) f[k] = f[k].slice(-5);
+  return f;
+}
+function superCard(sc) {
+  const m = sc.legs[0], me = state.player.clubId;
+  return `<div class="card supercard ${sc.hi === me || sc.lo === me ? 'me' : ''}"><div class="muted small">🏆 UEFA Süper Kupa · ${sc.week + 1}. hafta</div>
+    <div class="fxrow"><span class="t h">${esc(team(m.h).short)} ${badge(team(m.h), 20)}</span><b class="sc">${m.hg === null ? 'vs' : `${m.hg} - ${m.ag}`}${m.pens ? `<small> (p. ${m.pens[0]}-${m.pens[1]})</small>` : ''}</b><span class="t a">${badge(team(m.a), 20)} ${esc(team(m.a).short)}</span></div>
+    ${sc.w ? `<div class="small center">Kupa: <b>${esc(team(sc.w).name)}</b></div>` : ''}</div>`;
+}
+
+function euroBody(cid, view) {
   const comp = state.euro?.comps[cid];
   const me = state.player.clubId;
-  const view = ['puan', 'ko', 'gol'].includes(ui.tableView) ? ui.tableView : 'puan';
   let body = '';
-  if (!comp) body = '<p class="muted pad">Bu sezon kupa yok.</p>';
-  else if (view === 'puan') {
+  if (!comp) return '<p class="muted pad">Bu sezon kupa yok.</p>';
+  if (view === 'puan') {
     const rows = Eu.sortedEuro(comp);
     const q = (state.euro.quals || []).filter((x) => x.comp === cid && x.ties.length);
     body = `${q.map((x) => `<div class="card"><h3>🇹🇷 ${esc(team(x.team).name)} · ön eleme</h3>${x.ties.map((t, i) => `<div class="komatch ${x.team === me ? 'me' : ''}"><span>${esc(x.rounds[i])}</span><b>${t.legs.map((l) => l.hg === null ? '-' : `${l.h === x.team ? l.hg : l.ag}-${l.h === x.team ? l.ag : l.hg}`).join(' · ')}</b><span class="${t.w === x.team ? 'win' : ''}">${t.w ? (t.w === x.team ? '✅' : '❌') : ''} ${esc(team(t.hi).short)} ${badge(team(t.hi), 16)}</span></div>`).join('')}${x.done ? `<p class="small muted">${x.result === 'in' ? 'Lig aşamasına kaldı!' : x.result === 'down' ? 'Elendi, bir alt kupada devam ediyor.' : 'Elendi, Avrupa defteri kapandı.'}</p>` : ''}</div>`).join('')}
-      <p class="muted small pad">Lig aşaması · ${Math.min(comp.md, comp.mds || 8)}/${comp.mds || 8} maç oynandı. İlk 8 son 16'ya, 9-24 play-off'a.</p><table class="tbl league">
-      <tr><th>#</th><th class="l">Takım</th><th>O</th><th>G</th><th>B</th><th>M</th><th>Av</th><th>P</th></tr>
-      ${rows.map((r, i) => `<tr class="${r.id === me ? 'me' : ''} ${i < 8 ? 'up' : i < 24 ? 'mid' : 'down'}"><td>${i + 1}</td><td class="l nm"><span>${badge(team(r.id), 20)}<span>${esc(team(r.id).name)}</span></span></td><td>${r.p}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td>${r.gd > 0 ? '+' : ''}${r.gd}</td><td><b>${r.pts}</b></td></tr>`).join('')}</table>`;
+      <p class="muted small pad">${Math.min(comp.md, comp.mds || 8)}/${comp.mds || 8} maç oynandı</p>
+      <div class="tblwrap"><table class="tbl league compact">
+      <tr><th>#</th><th class="l">Takım</th><th>O</th><th>Av</th><th>P</th></tr>
+      ${rows.map((r, i) => `<tr class="${r.id === me ? 'me' : ''}" ${r.id === me ? 'id="myrow"' : ''}><td class="pos" style="box-shadow: inset 3px 0 ${i < 8 ? '#3b82f6' : i < 24 ? '#f59e0b' : '#ef4444'}">${i + 1}</td><td class="l nm"><span>${badge(team(r.id), 20)}<span>${esc(team(r.id).name)}</span></span></td><td>${r.p}</td><td>${r.gd > 0 ? '+' : ''}${r.gd}</td><td><b>${r.pts}</b></td></tr>`).join('')}</table></div>
+      <div class="legend"><span><i style="background:#3b82f6"></i>Son 16</span><span><i style="background:#f59e0b"></i>Play-off</span><span><i style="background:#ef4444"></i>Elendi</span></div>`;
   } else if (view === 'ko') {
     const sc = (l) => l.hg === null ? '-' : `${l.hg}-${l.ag}`;
     body = comp.ko.length ? comp.ko.map((ties, i) => `<div class="card"><h3>${Eu.STAGE_NAME[i]}</h3>${ties.map((t) => {
       const last = t.legs[t.legs.length - 1], two = t.legs.length === 2;
-      const done = t.w, aggHi = Eu.aggFor(t, t.hi), aggLo = Eu.aggFor(t, t.lo);
+      const aggHi = Eu.aggFor(t, t.hi), aggLo = Eu.aggFor(t, t.lo);
       return `<div class="komatch ${t.hi === me || t.lo === me ? 'me' : ''}"><span class="${t.w === t.hi ? 'win' : ''}">${badge(team(t.hi), 16)} ${esc(team(t.hi).short)}</span>
         <b>${two ? `${t.legs[0].hg === null ? '-' : aggHi + '-' + aggLo}` : sc(last)}${last.pens ? `<small> (p. ${last.h === t.hi ? last.pens[0] : last.pens[1]}-${last.h === t.hi ? last.pens[1] : last.pens[0]})</small>` : last.et ? '<small> uz.</small>' : ''}
         ${two ? `<small class="legs">${sc(t.legs[0]).split('-').reverse().join('-')} · ${sc(t.legs[1])}</small>` : ''}</b>
@@ -645,17 +814,13 @@ function euroTable(cid, myL) {
       .filter((x) => comp.teams.includes(x.teamId) && x.g > 0).sort((x, y) => y.g - x.g || y.a - x.a).slice(0, 20);
     body = all.length ? `<table class="tbl stats"><tr><th>#</th><th class="l">Oyuncu</th><th>Gol</th><th>Asist</th></tr>${all.map((x, i) => `<tr class="${x.me ? 'me' : ''}"><td>${i + 1}</td><td class="l"><b>${esc(x.name)}</b><div class="muted tiny">${badge(team(x.teamId), 14)} ${esc(team(x.teamId).name)}</div></td><td><b>${x.g}</b></td><td class="muted">${x.a}</td></tr>`).join('')}</table>` : '<p class="muted pad">Henüz gol yok.</p>';
   }
-  return `
-    <header class="top"><button class="back" data-go="hub">‹</button><h2>${Eu.COMP[cid].icon} ${Eu.COMP[cid].name}</h2></header>
-    ${leagueTabs(cid, myL)}
-    <div class="tabs sub">${[['puan', '📊 Lig aşaması'], ['ko', '🏆 Eleme'], ['gol', '⚽ Gol krallığı']].map(([v, l]) => `<button class="${v === view ? 'on' : ''}" data-act="tview" data-v="${v}">${l}</button>`).join('')}</div>
-    ${body}`;
+  return body;
 }
 
 function interviewCard(iv) {
   if (!iv.answers?.[0]?.tone) return '';   // eski kayıttan kalma röportaj
   return `<div class="iv">
-    <div class="iv-head"><span class="iv-ic">${iv.icon}</span><div><b>${esc(iv.reporter)}</b><small>${esc(iv.outlet)} · ${esc(iv.style)}</small></div></div>
+    <div class="iv-head">${REPORTER_FACES.has(iv.rid) ? face(iv.rid, 44, 'round') : `<span class="iv-ic">${iv.icon}</span>`}<div><b>${esc(iv.reporter)}</b><small>${esc(iv.outlet)} · ${esc(iv.style)}</small></div></div>
     <p class="iv-hello">${esc(iv.hello)}</p>
     <p class="iv-q">"${esc(iv.q)}"</p>
     ${iv.chosen ? `<p class="iv-a">"${esc(iv.chosen.text)}"</p><p class="iv-react">${esc(iv.react || '')}</p><p class="muted small">${esc(iv.summary)}</p>`
@@ -741,6 +906,12 @@ async function runMatch() {
   Sfx.whistle(); Sfx.startCrowd();
   if (plan.role === 'sub') m.feed.push({ min: 0, text: 'Yedek kulübesindesin.' });
   if (plan.suspended) m.feed.push({ min: 0, text: 'Cezalısın, maçı tribünden izliyorsun.', cls: 'bad' });
+  // diğer sahalar: sıralamada sana yakın takımların maçları (canlı gol haberleri)
+  const lidMe0 = E.leagueOf(state, p.clubId);
+  const radio = plan.fx.comp ? [] : E.preSimRound(state, lidMe0).map((x) => ({ m: x, hg: 0, ag: 0 }));
+  m.posBefore = plan.fx.comp ? null : E.sortedTable(state.season.leagues[lidMe0].table).findIndex((r) => r.id === p.clubId) + 1;
+  m.week = state.season.week;
+  if (radio.length) m.feed.push({ min: 0, text: `📻 Rakipler de sahada: ${radio.map((r) => `${team(r.m.h).short}-${team(r.m.a).short}`).join(', ')}`, cls: 'radio' });
   screen = 'match';
   render();
 
@@ -848,6 +1019,13 @@ async function runMatch() {
         }
       }
     }
+    for (const r of radio) for (const g of r.m.preGoals || []) {
+      if (g.min !== min) continue;
+      if (g.side === 'h') r.hg++; else r.ag++;
+      const scorerT = team(g.side === 'h' ? r.m.h : r.m.a);
+      m.feed.push({ min, text: `📻 Diğer sahalardan: ${team(r.m.h).name} ${r.hg}-${r.ag} ${team(r.m.a).name} · golü ${scorerT.short} attı`, cls: 'radio' });
+    }
+    if (min === 45 && radio.length) m.feed.push({ min, text: `📻 Devre arası diğer skorlar: ${radio.map((r) => `${team(r.m.h).short} ${r.hg}-${r.ag} ${team(r.m.a).short}`).join(' · ')}`, cls: 'radio' });
     if (min === 45) { spk('halftime'); Sfx.whistle(); }
     render();
     // tempo: sakin dakikalar akar, yeni satır gelince okumaya zaman tanır
@@ -920,6 +1098,11 @@ async function runMatch() {
   }
   if (p.casinoWeek < -Math.max(2_000_000, p.contract.wage * 10) && Math.random() < 0.5) addNews([News.casinoNews(state)], false);
   ui.iv = Iv.postInterview(state, plan, m.res);
+  if (!plan.fx.comp) {
+    const L = state.season.leagues[lidMe];
+    const rows = E.sortedTable(L.table);
+    m.round = { lid: lidMe, week: m.week, matches: (L.fixtures[m.week] || []).filter((x) => x.hg !== null), near: new Set(radio.map((r) => [r.m.h, r.m.a]).flat()), rows, posAfter: rows.findIndex((r) => r.id === p.clubId) + 1 };
+  }
   m.done = true;
   persist();
   render();
@@ -973,8 +1156,12 @@ app.addEventListener('click', async (e) => {
       return toast(r.ok ? 'Dinlendin: +25 enerji' : r.msg);
     }
     case 'skipWeek': E.advanceWeek(state); addNews([News.leagueNews(state)], false); persist(); return render();
-    case 'tab': ui.tableTab = el.dataset.tab; return render();
+    case 'tab': ui.tableTab = el.dataset.tab; ui.fxWeek = null; return render();
     case 'tview': ui.tableView = el.dataset.v; return render();
+    case 'tableFull': ui.tableFull = !ui.tableFull; return render();
+    case 'fxWeek': { const SLx = state.season.leagues[ui.tableTab && LEAGUES[ui.tableTab] ? ui.tableTab : E.leagueOf(state, state.player.clubId)]; ui.fxWeek = Math.max(0, Math.min(SLx.fixtures.length - 1, (ui.fxWeek ?? Math.min(state.season.week, SLx.fixtures.length - 1)) + +el.dataset.d)); return render(); }
+    case 'euroTab': ui.euroTab = el.dataset.tab; ui.euroView = null; return render();
+    case 'euroView': ui.euroView = el.dataset.v; return render();
     case 'lb': ui.lbField = el.dataset.f; return render();
     case 'shopTab': ui.shopTab = el.dataset.t; return render();
     case 'buy': { const r = Life.buy(state, el.dataset.id); persist(); return toast(r.ok ? `${r.item.name} alındı!` : r.msg); }
@@ -993,14 +1180,36 @@ app.addEventListener('click', async (e) => {
     case 'meetCancel': ui.candidates = null; return render();
     case 'meet': { Life.startDating(state, ui.candidates[+el.dataset.i]); ui.candidates = null; persist(); return render(); }
     case 'date': case 'gift': { const r = Life.datePartner(state, act); persist(); return toast(r.msg || ''); }
-    case 'propose': { const r = Life.propose(state); if (r.ok) addNews([News.weddingNews(state)]); persist(); return toast(r.msg); }
+    case 'pickRing': ui.ring = el.dataset.id; return render();
+    case 'pickPlace': ui.place = el.dataset.id; return render();
+    case 'proposeGo': {
+      const r = Fam.propose(state, ui.ring, ui.place);
+      if (!r.ok) return toast(r.msg);
+      if (r.yes) addNews([News.proposalNews(state, r.place)]);
+      persist(); ui.evResult = { title: r.yes ? '💍 EVET!' : '💔 Hayır…', result: r.msg, summary: r.yes ? 'Nişanlısınız. Düğünü planlayabilirsin.' : 'İlişki −18 · Moral −12. Yüzük yarı fiyatına satıldı.' };
+      return go(r.yes ? 'wedding' : 'hub');
+    }
+    case 'wed': { const r = Fam.wed(state, el.dataset.id); if (!r.ok) return toast(r.msg); addNews([News.weddingNews(state, r.wedding)]); persist(); toast(r.msg); return go('life'); }
+    case 'cancelEngage': Fam.cancelEngagement(state); persist(); return go('life');
+    case 'divorceAsk': ui.divorceAsk = true; return render();
+    case 'divorceNo': ui.divorceAsk = false; return render();
+    case 'divorce': { ui.divorceAsk = false; Fam.divorce(state, 'senin isteğinle'); persist(); return render(); }
+    case 'kidsTime': { const r = Life.kidsTime(state); persist(); return toast(r.msg || ''); }
     case 'breakup': Life.breakUp(state); persist(); return render();
     case 'casinoTab': ui.casinoTab = el.dataset.t; return render();
     case 'stake': ui.stake = +el.dataset.v; return render();
-    case 'bet': {
-      const m = Life.bettable(state)[+el.dataset.i];
-      const r = Life.placeBet(state, m, el.dataset.pick, ui.stake); persist();
-      return r.ok ? render() : toast(r.msg);
+    case 'betView': ui.betView = el.dataset.v; return render();
+    case 'betLg': ui.betLg = el.dataset.v; return render();
+    case 'betOpen': ui.betOpen = ui.betOpen === el.dataset.key ? null : el.dataset.key; return render();
+    case 'pickOdd': { const m = Bet.bulletin(state).find((x) => x.key === el.dataset.key); if (m) Bet.toggleSlip(ui.slip ||= [], m, el.dataset.mk, el.dataset.pick); return render(); }
+    case 'slipDel': ui.slip.splice(+el.dataset.i, 1); return render();
+    case 'slipClear': ui.slip = []; return render();
+    case 'betMode': ui.betMode = el.dataset.v; return render();
+    case 'betPlace': {
+      const mode = ui.slip.length < 2 ? 'tekli' : ui.betMode;
+      const r = Bet.place(state, ui.slip, ui.stake, mode);
+      if (!r.ok) return toast(r.msg);
+      ui.slip = []; persist(); toast(`Kupon yatırıldı (${E.money(r.total)})`); return render();
     }
     case 'spin': {
       if (ui.stake > state.player.money) return toast('Paran yetmiyor.');
@@ -1064,6 +1273,13 @@ app.addEventListener('click', async (e) => {
       const sum = Aw.retire(state);
       addNews([News.retireNews(state, sum)], false);
       ui.summary = null; persist(); return go('retired');
+    }
+    case 'newSonKid': {
+      const sum = (state.legacy || []).slice(-1)[0];
+      const c = sum?.children?.[+el.dataset.i];
+      if (!c) return;
+      Aw.newSon(state, c.name, c);
+      persist(); return go('offers');
     }
     case 'newSon': {
       const name = (document.getElementById('sonName')?.value || '').trim();
@@ -1161,6 +1377,11 @@ app.addEventListener('submit', (e) => {
 });
 
 function render() {
+  // aile olaylarından gelen haberler (bebek, boşanma)
+  if (state?.newsQueue?.length && screen !== 'match') {
+    const q = state.newsQueue.splice(0);
+    addNews(q.map((n) => n.kind === 'baby' ? News.babyNews(state, n.name, n.gender) : n.kind === 'divorce' ? News.divorceNews(state, n.name, n.share) : null));
+  }
   const html = (screens[screen] || screens.start)();
   document.body.classList.toggle('menu-bg', screen === 'start');
   // maç sırasında canvas'ı yeniden oluşturma
@@ -1169,6 +1390,12 @@ function render() {
     <div class="np-overlay"><div class="np-wrap">${News.clippingHtml(ui.popup[0])}</div>
       <button class="btn big" data-act="npNext">${ui.popup.length > 1 ? `Sonraki haber (${ui.popup.length - 1})` : 'Kapat'}</button></div>` : '';
   app.innerHTML = html + pop + (ui.toast ? `<div class="toast">${esc(ui.toast)}</div>` : '');
+  // maç bitince röportaj ve sonuçlar en altta: otomatik aşağı kaydır
+  if (screen === 'match' && ui.match?.done) {
+    const first = !ui.match.scrolledEnd;
+    ui.match.scrolledEnd = true;
+    requestAnimationFrame(() => document.getElementById('matchEnd')?.scrollIntoView({ behavior: first ? 'smooth' : 'auto', block: 'end' }));
+  }
 }
 
 // ---------- başlat ----------

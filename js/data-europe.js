@@ -90,6 +90,23 @@ export const EURO_TEAMS = {
   plz: { name: 'Viktoria Plzeň',      short: 'PLZ', c1: '#E30613', c2: '#1E4AA8', str: 74, country: 'CZE' },
 };
 
+// La Liga 2026-27: kupa takımlarında olmayan 12 kulüp (Real Madrid, Barcelona, Atlético, Betis, Villarreal,
+// Real Sociedad, Celta ve Getafe zaten EURO/UECL listelerinde)
+export const LL_NEW = {
+  ath: { name: 'Athletic Bilbao',     short: 'ATH', c1: '#EE2523', c2: '#FFFFFF', str: 80, country: 'ESP' },
+  sev: { name: 'Sevilla',             short: 'SEV', c1: '#FFFFFF', c2: '#D81920', str: 77, country: 'ESP' },
+  val: { name: 'Valencia',            short: 'VAL', c1: '#FFFFFF', c2: '#111111', str: 77, country: 'ESP' },
+  osa: { name: 'Osasuna',             short: 'OSA', c1: '#C8102E', c2: '#0A2240', str: 75, country: 'ESP' },
+  ray: { name: 'Rayo Vallecano',      short: 'RAY', c1: '#FFFFFF', c2: '#E30613', str: 75, country: 'ESP' },
+  esp: { name: 'Espanyol',            short: 'ESP', c1: '#1E5AA8', c2: '#FFFFFF', str: 74, country: 'ESP' },
+  ala: { name: 'Alavés',              short: 'ALA', c1: '#1E5AA8', c2: '#FFFFFF', str: 74, country: 'ESP' },
+  elc: { name: 'Elche',               short: 'ELC', c1: '#FFFFFF', c2: '#0A7A3E', str: 73, country: 'ESP' },
+  lvt: { name: 'Levante',             short: 'LEV', c1: '#1E3C8C', c2: '#B7102E', str: 73, country: 'ESP' },
+  dep: { name: 'Deportivo La Coruña', short: 'DEP', c1: '#1E5AA8', c2: '#FFFFFF', str: 73, country: 'ESP' },
+  rac: { name: 'Racing Santander',    short: 'RAC', c1: '#0A7A3E', c2: '#FFFFFF', str: 72, country: 'ESP' },
+  mlg: { name: 'Málaga',              short: 'MAL', c1: '#6CACE4', c2: '#FFFFFF', str: 72, country: 'ESP' },
+};
+
 // Konferans Ligi 2026-27 lig aşaması (gerçek katılımcılar) + ön eleme rakipleri (yedek havuz)
 export const UECL_TEAMS = {
   ata: { name: 'Atalanta',            short: 'ATA', c1: '#1E71B8', c2: '#111111', str: 83, country: 'ITA' },
@@ -155,7 +172,7 @@ export const UEL_2026 = ['cry', 'bou', 'sun', 'mil', 'juv', 'rso', 'cel', 'hof',
   'lyo', 'nec', 'oly', 'spa', 'stg', 'usg', 'and', 'ara', 'ben', 'bjk', 'fer', 'jag', 'lch', 'lil2', 'ofi', 'omo', 'rbs', 'plz'];
 // Kontenjan: Türkiye UCL 2 / UEL 1, İngiltere UCL 5 / UEL 3
 // Kontenjan (lig sırası): doğrudan katılanlar. Türkiye'nin elemeli yolları QUAL_PATHS'te.
-export const EURO_SLOTS = { TUR: { UCL: 1, UEL: 0, UECL: 0, league: 'SL' }, ENG: { UCL: 5, UEL: 2, UECL: 1, league: 'PL' } };
+export const EURO_SLOTS = { TUR: { UCL: 1, UEL: 0, UECL: 0, league: 'SL' }, ENG: { UCL: 5, UEL: 2, UECL: 1, league: 'PL' }, ESP: { UCL: 5, UEL: 2, UECL: 1, league: 'LL' } };
 // TFF 2026-27 erişim listesi (Türkiye Kupası oyunda yok: kupa şampiyonunun yerini lig 3.'sü alır).
 // 2. ön eleme Temmuz'da oynandığı için oyunda 3. ön elemeden başlanır.
 export const QUAL_PATHS = [

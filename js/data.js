@@ -3,7 +3,7 @@
 // Değiştirmek istersen buradaki değerleri düzenlemen yeterli.
 
 import { KULUPLER } from './kulupler.js';
-import { PL_TEAMS, EURO_TEAMS, UECL_TEAMS } from './data-europe.js';
+import { PL_TEAMS, EURO_TEAMS, UECL_TEAMS, LL_NEW } from './data-europe.js';
 
 export const SEASON_START_YEAR = 2026;
 
@@ -49,7 +49,7 @@ export const TEAMS = {
   ist:  { name: 'İstanbulspor',    short: 'İST', c1: '#FFD200', c2: '#111111', str: 57 },
   bol:  { name: 'Boluspor',        short: 'BOL', c1: '#D71920', c2: '#FFFFFF', str: 56 },
 };
-Object.assign(TEAMS, PL_TEAMS, EURO_TEAMS, UECL_TEAMS);
+Object.assign(TEAMS, PL_TEAMS, EURO_TEAMS, UECL_TEAMS, LL_NEW);
 
 // Kulüp bilgisi: gerçek ana renk, stadyum, şehir, hoca, ezeli rakipler
 for (const [id, k] of Object.entries(KULUPLER)) {
@@ -75,6 +75,8 @@ export const LEAGUES = {
         promote: 3, relegate: 0 },
   PL: { id: 'PL', name: 'Premier Lig', tier: 1, country: 'ENG',
         teams: Object.keys(PL_TEAMS), promote: 0, relegate: 0 },
+  LL: { id: 'LL', name: 'La Liga', tier: 1, country: 'ESP',
+        teams: ['rma', 'bar', 'atm', 'bet', 'vil', 'rso', 'cel', 'get', 'ath', 'sev', 'val', 'osa', 'ray', 'esp', 'ala', 'elc', 'lvt', 'dep', 'rac', 'mlg'], promote: 0, relegate: 0 },
 };
 
 // Takım arkadaşı / rakip isimleri (gerçek kadrolar sonraki aşamada js/kadrolar.js ile gelecek)

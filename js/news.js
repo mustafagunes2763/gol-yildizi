@@ -1,5 +1,5 @@
 // Gazete kupürleri: 3 uydurma gazete, abartılı Türk spor basını dili.
-import { overall, pick, randInt } from './engine.js';
+import { overall, pick, randInt, money } from './engine.js';
 import { isDerby, clubInfo } from './data.js';
 import { headSvg, skinColor, lookOf } from './look.js';
 
@@ -68,7 +68,8 @@ export function clip(state, paper, data) {
 }
 // Gemini fotoğrafları (img/news). Yeni gelen fotoğraf buraya eklenir.
 export const NEWS_PHOTOS = new Set(['cheer', 'slide', 'sad', 'trophy', 'sign', 'penmiss', 'injury', 'press', 'training', 'referee', 'tunnel', 'bicycle',
-  'fans', 'coach', 'airport', 'header', 'freekick', 'wedding', 'empty', 'paparazzi', 'gambler', 'protest', 'rain', 'champions']);
+  'fans', 'coach', 'airport', 'header', 'freekick', 'wedding', 'empty', 'paparazzi', 'gambler', 'protest', 'rain', 'champions',
+  'proposal', 'baby', 'divorce', 'family', 'radio', 'captain', 'documentary', 'podcast']);
 // Adaylardan mevcut olanlardan birini seç
 export const ph = (...c) => pick(c.filter((x) => NEWS_PHOTOS.has(x))) || null;
 // 'stand' pozunda çizim kullanılır.
@@ -327,7 +328,7 @@ export function leagueNews(state) {
   for (const [lid, L] of Object.entries(s.leagues)) {
     const round = L.fixtures[wk];
     if (!round) continue;
-    const lname = ({ SL: 'Süper Lig', L1: '1. Lig', PL: 'Premier Lig' })[lid] || lid;
+    const lname = ({ SL: 'Süper Lig', L1: '1. Lig', PL: 'Premier Lig', LL: 'La Liga' })[lid] || lid;
     for (const m of round) {
       if (m.hg == null) continue;
       const H = state.teams[m.h], A = state.teams[m.a];
@@ -426,12 +427,41 @@ export function casinoNews(state) {
   });
 }
 
-export function weddingNews(state) {
+export function weddingNews(state, w) {
+  const p = state.player, id = w?.id || 'buyuk';
+  const T = {
+    buyuk: { h: `${UP(p.surname)} DÜNYAEVİNE GİRDİ!`, s: `${p.partner.name} ile görkemli düğün`, b: `Futbol dünyasının yıldız ismi ${p.name} ${p.surname}, ${p.partner.name} ile bin davetlinin katıldığı düğünle hayatını birleştirdi. Takım arkadaşları piste ilk çıkanlar oldu.` },
+    nikah: { h: 'SADE VE MUTLU', s: `${p.surname} ile ${p.partner.name.split(' ')[0]} nikâh masasında`, b: `${p.name} ${p.surname} ve ${p.partner.name}, sadece ailelerin katıldığı sade bir nikâhla evlendi. Çift, "Bizim için önemli olan birlikte olmak" dedi.` },
+    gizli: { h: 'GİZLİ DÜĞÜN!', s: `${p.surname} yurtdışında sessiz sedasız evlendi`, b: `${p.name} ${p.surname} ile ${p.partner.name}, Toskana'daki bir bağ evinde basına kapalı törenle dünyaevine girdi. Fotoğraflar ancak ertesi gün sosyal medyada paylaşıldı.` },
+  }[id];
+  return clip(state, id === 'gizli' ? 'aksam' : 'golsporu', { headline: T.h, sub: T.s, body: T.b, caption: 'Mutlu çift düğün gecesinde', pose: 'trophy', photo: 'wedding' });
+}
+export function divorceNews(state, exName, share) {
   const p = state.player;
-  return clip(state, 'golsporu', {
-    headline: `${UP(p.surname)} DÜNYAEVİNE GİRDİ!`, sub: `${p.partner.name} ile görkemli düğün`,
-    body: `Futbol dünyasının yıldız ismi ${p.name} ${p.surname}, ${p.partner.name} ile hayatını birleştirdi. Düğüne takım arkadaşları da katıldı.`,
-    caption: 'Mutlu çift düğün gecesinde', pose: 'trophy', photo: 'wedding',
+  return clip(state, pick(['sertsut', 'aksam']), {
+    headline: pick([`${UP(p.surname)} İÇİN YOLLAR AYRILDI`, 'MAGAZİNDE DEPREM: BOŞANDILAR', `${UP(p.surname)} BEKÂRLIĞA DÖNDÜ`]),
+    sub: `${exName} ile resmen boşandı`,
+    body: `${p.name} ${p.surname} ve ${exName} mahkemede yollarını ayırdı. Kulislere göre mal paylaşımı ${money(share)} civarında. Yıldız futbolcu çıkışta basına açıklama yapmadı.`,
+    caption: `${p.surname} adliye çıkışında`, photo: 'divorce',
+  });
+}
+export function babyNews(state, name, gender) {
+  const p = state.player;
+  return clip(state, pick(['golsporu', 'aksam']), {
+    headline: pick([`${UP(p.surname)} BABA OLDU!`, `HOŞ GELDİN MİNİK ${UP(name)}!`]),
+    sub: `${gender === 'k' ? 'Kızı' : 'Oğlu'} ${name} dünyaya geldi`,
+    body: `${p.name} ${p.surname}, ${gender === 'k' ? 'kızı' : 'oğlu'} ${ek(name, 'gen')} doğumunu sosyal medyadan duyurdu: "Hayatımın en güzel golü." Takım arkadaşları da tebrik mesajı yağdırdı.`,
+    caption: `${p.surname} ilk kez kucağında`, photo: 'baby',
+  });
+}
+export function proposalNews(state, place) {
+  const p = state.player, pn = p.partner.name;
+  const where = { home: 'evde mum ışığında', boat: "Boğaz'da tekne turunda", stad: 'maç sonrası stadyumun dev ekranında', trip: "Kapadokya'da sıcak hava balonunda" }[place?.id] || '';
+  return clip(state, place?.public ? 'tribun' : 'aksam', {
+    headline: place?.public ? 'STADYUMDA EVLİLİK TEKLİFİ!' : `${UP(p.surname)} DİZ ÇÖKTÜ!`,
+    sub: `${pn} "evet" dedi`,
+    body: `${p.name} ${p.surname}, ${ek(pn, 'dat')} ${where} evlilik teklif etti. ${place?.public ? 'Tribünler "Evet! Evet!" diye tezahürat yaptı.' : 'Mutlu haberi sosyal medyadan paylaştılar.'}`,
+    caption: `${p.surname} ve ${pn.split(' ')[0]}`, photo: 'proposal',
   });
 }
 
@@ -461,7 +491,7 @@ export function seasonNews(state, sum) {
   if (sum.myPos === 1) {
     out.push(clip(state, 'golsporu', {
       headline: `ŞAMPİYON ${UP(T.name)}!`,
-      sub: `${({ SL: 'Süper Lig', L1: '1. Lig', PL: 'Premier Lig' })[lid]} kupası ${ek(T.name, 'gen')} müzesinde`,
+      sub: `${({ SL: 'Süper Lig', L1: '1. Lig', PL: 'Premier Lig', LL: 'La Liga' })[lid]} kupası ${ek(T.name, 'gen')} müzesinde`,
       body: `Sezon boyunca istikrarlı bir grafik çizen ${T.name}, ligi zirvede tamamladı. ${p.surname} sezonu ${s.goals} gol ve ${s.assists} asistle kapattı.`,
       caption: `${p.surname} şampiyonluk kupasını havaya kaldırdı`, pose: 'trophy',
     }));
@@ -582,6 +612,7 @@ export function awardNews(state, key, value) {
     genc: [`YILIN GENCİ ${AD}`, 'Genç yeteneğe büyük ödül', 'cheer'],
     champ_SL: [`${UP(state.teams[p.clubId].name)} ŞAMPİYON!`, `${p.surname} şampiyonluğun mimarlarından`, 'champions'],
     champ_PL: [`${UP(state.teams[p.clubId].name)} İNGİLTERE ŞAMPİYONU!`, `${p.surname} Premier Lig'in zirvesinde`, 'champions'],
+    champ_LL: [`${UP(state.teams[p.clubId].name)} İSPANYA ŞAMPİYONU!`, `${p.surname} La Liga'nın zirvesinde`, 'champions'],
     champ_L1: [`${UP(state.teams[p.clubId].name)} LİG ŞAMPİYONU`, "Süper Lig'e şampiyon olarak çıktılar", 'champions'],
     promo_L1: [`${UP(state.teams[p.clubId].name)} SÜPER LİG'DE!`, 'Yükselme sevinci', 'trophy'],
   }[key];

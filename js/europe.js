@@ -76,6 +76,9 @@ export function ensureUECL(state) {
 // Gelecek sezon katılımcıları: İngiltere ve Türkiye puan durumuna göre, diğerleri sabit havuz,
 // kupa şampiyonları bir üst kupaya (AL → ŞL, KL → AL). Türk takımlarının bir kısmı ön eleme oynar.
 export function nextParticipants(state, sum) {
+  // oyundaki liglerin takımları sabit havuzdan değil puan durumundan gelir
+  const inLeague = new Set(Object.values(state.leagues).flat());
+  const FOREIGN = (id) => !!(EURO_TEAMS[id] || UECL_TEAMS[id]) && !inLeague.has(id);
   const last = state.euro ? Object.fromEntries(Object.entries(state.euro.comps).map(([c, x]) => [c, x.winner])) : {};
   const used = new Set();
   const lists = { UCL: [], UEL: [], UECL: [] };

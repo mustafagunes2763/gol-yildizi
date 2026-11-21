@@ -605,7 +605,8 @@ export function advanceWeek(state) {
     if (!round) continue;
     for (const m of round) {
       if (m.hg !== null) continue;
-      [m.hg, m.ag] = simScore(state.teams, m.h, m.a);
+      [m.hg, m.ag] = m.pre || simScore(state.teams, m.h, m.a);
+      delete m.pre; delete m.preGoals;
       simGoals(state, m.h, m.hg); simGoals(state, m.a, m.ag);
       applyResult(L.table, m);
     }
@@ -617,6 +618,32 @@ export function advanceWeek(state) {
   p.rested = false;
   if (s.week >= s.totalWeeks) state.phase = 'seasonEnd';
   state.updatedAt = Date.now();
+}
+
+// Oyuncunun maçıyla aynı anda oynanan lig maçlarını önceden belirle (canlı "diğer sahalar" haberleri için).
+// Sonuçlar advanceWeek'te aynen kullanılır. Döner: sıralamada sana yakın takımların maçları.
+export function preSimRound(state, lid) {
+  const s = state.season, L = s.leagues[lid];
+  const round = L?.fixtures[s.week];
+  if (!round) return [];
+  const me = state.player.clubId;
+  for (const m of round) {
+    if (m.hg !== null || m.h === me || m.a === me) continue;
+    if (!m.pre) {
+      m.pre = simScore(state.teams, m.h, m.a);
+      const mins = new Set();
+      m.preGoals = [];
+      for (const side of ['h', 'a']) for (let i = 0; i < m.pre[side === 'h' ? 0 : 1]; i++) {
+        let t; do t = randInt(3, 90); while (mins.has(t)); mins.add(t);
+        m.preGoals.push({ min: t, side });
+      }
+      m.preGoals.sort((x, y) => x.min - y.min);
+    }
+  }
+  const tbl = sortedTable(L.table).map((r) => r.id);
+  const my = tbl.indexOf(me);
+  const near = new Set(tbl.filter((id, i) => id !== me && Math.abs(i - my) <= 3));
+  return round.filter((m) => m.pre && (near.has(m.h) || near.has(m.a)));
 }
 
 // ---------- antrenman ----------

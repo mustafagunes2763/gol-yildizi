@@ -3,6 +3,7 @@
 // Kişiler kurgusal (Barış Kocaman, Tolga, Lara Ses, Cengiz Demirel...). Gerçek isimler sadece olumlu olaylarda geçer.
 import { clamp, pick, randInt, money, addInbox, overall } from './engine.js';
 import { ek } from './news.js';
+import * as Fam from './family.js';
 
 const ABS = (s) => s.season.year * 60 + s.season.week;
 const first = (n) => (n || '').split(' ')[0];
@@ -234,7 +235,7 @@ const SINGLES = {
   },
   podcast() {
     return {
-      title: '🎙️ Podcast', photo: 'press',
+      title: '🎙️ Podcast', photo: 'podcast',
       text: 'Gençler arasında popüler bir futbol podcast\'i seni üç saatlik sohbete çağırıyor.',
       options: [
         { label: 'Kariyerini anlat', fx: { fans: 5, fame: 2, energy: -6 }, result: 'Altyapı hikâyelerin çok sevildi.' },
@@ -307,6 +308,129 @@ const SINGLES = {
         { label: 'Oyna ve prim bağışla', fx: { money: -ask(state.player, 2, 4), fans: 8, fame: 3, energy: -10 }, result: 'Tribünler doldu, okul inşaatı başladı.' },
         { label: 'Sadece bağış yap', fx: { money: -ask(state.player, 1, 3), fans: 4 }, result: 'Bağışın teşekkür listesinde.' },
         { label: 'Katılamam', fx: { fans: -3 }, result: '' },
+      ],
+    };
+  },
+  // ---------- aile ----------
+  anniversary(state) {
+    const p = state.player, pt = p.partner;
+    if (!pt?.married) return null;
+    const c = ask(p, 2, 5), pn = first(pt.name);
+    return {
+      title: '💐 Evlilik yıl dönümü', face: 'partner' + (pt.portrait ?? 0),
+      text: `Bugün ${ek(pn, 'dat')} evlendiğiniz günün yıl dönümü. Takvimine bakınca fark ettin…`,
+      options: [
+        { label: `Sürpriz akşam yemeği (${money(c)})`, fx: { money: -c, partner: 12, morale: 4 }, result: `${pn} gözyaşlarını tutamadı.` },
+        { label: 'Çiçek ve kart', fx: { money: -2_000, partner: 5 }, result: 'Kartı buzdolabının üstüne astı.' },
+        { label: 'Antrenman var, sonra kutlarız', fx: { partner: -12 }, result: `${pn}: "Yine mi futbol?"` },
+      ],
+    };
+  },
+  in_laws(state) {
+    const pt = state.player.partner;
+    if (!pt?.married) return null;
+    return {
+      title: '🧳 Kayınvalide geliyor', face: 'partner' + (pt.portrait ?? 0),
+      text: 'Kayınvaliden "bir haftalığına" kalmaya geliyor. Bavullar bir aylık gibi görünüyor.',
+      options: [
+        { label: 'Güler yüzle ağırla', fx: { partner: 8, energy: -8, morale: -2 }, result: 'Kayınvaliden herkese seni övüyor.' },
+        { label: 'Otel ayarla', fx: { money: -ask(state.player, 1, 2), partner: -4 }, result: 'Kibarca otele yerleştirdin. Eşin biraz bozuldu.' },
+        { label: 'Deplasmanı bahane et, kaç', fx: { partner: -10, coach: 2 }, result: 'Kaçtın ama dönünce soğuk savaş başladı.' },
+      ],
+    };
+  },
+  away_much(state) {
+    const pt = state.player.partner;
+    if (!pt?.married || state.player.fame < 25) return null;
+    const pn = first(pt.name);
+    return {
+      title: '🏠 Evde yalnızlık', face: 'partner' + (pt.portrait ?? 0),
+      text: `Kamp, deplasman, reklam çekimi… ${pn} artık evde seni hiç göremediğini söylüyor.`,
+      options: [
+        { label: 'Bir hafta sonu tamamen ona ayır', fx: { partner: 12, energy: 8, coach: -2 }, result: 'Telefonu kapattın, sadece ikiniz.' },
+        { label: '"Kariyerimin zirvesindeyim"', fx: { partner: -12, morale: -2 }, result: `${pn} kapıyı çarptı.` },
+        { label: 'Seyahatlere onu da götür', fx: { money: -ask(state.player, 1, 3), partner: 8 }, result: 'Deplasman otellerinde birlikte kahvaltı.' },
+      ],
+    };
+  },
+  jealous(state) {
+    const pt = state.player.partner;
+    if (!pt) return null;
+    const pn = first(pt.name);
+    return {
+      title: '📱 Kıskançlık krizi', face: 'partner' + (pt.portrait ?? 0),
+      text: `Bir hayranın fotoğrafının altına attığın kalp emojisi ${ek(pn, 'gen')} gözünden kaçmadı.`,
+      options: [
+        { label: 'Hemen açıkla, telefonu göster', fx: { partner: 3 }, result: 'Yanlış anlaşılma çözüldü.' },
+        { label: '"Abartıyorsun"', odds: { p: 0.4, win: { fx: { partner: -2 }, result: 'Bir gün küs kaldı, sonra geçti.' }, lose: { fx: { partner: -14, morale: -4 }, result: 'Kavga büyüdü, magazin de duydu.' } } },
+        { label: 'Hesabı kapat', fx: { partner: 6, fans: -3 }, result: 'Sosyal medyaya ara verdin.' },
+      ],
+    };
+  },
+  child_birthday(state) {
+    const kids = (state.player.children || []).filter((c) => !c.exOf && Fam.childAge(state, c) >= 1 && Fam.childAge(state, c) <= 12);
+    if (!kids.length) return null;
+    const c = pick(kids), a = Fam.childAge(state, c), cost = ask(state.player, 1, 3);
+    return {
+      title: `🎈 ${c.name} ${a} yaşında!`, photo: 'cheer',
+      text: `${ek(c.name, 'gen')} doğum günü partisi bu hafta sonu. Maç da cumartesi…`,
+      options: [
+        { label: `Büyük parti (${money(cost)})`, fx: { money: -cost, child: { name: c.name, rel: 10 }, morale: 5 }, result: 'Palyaço, pasta, top havuzu. Mutluluk!' },
+        { label: 'Maçtan sonra yetiş', fx: { child: { name: c.name, rel: 4 }, energy: -5 }, result: 'Mumları üflerken yanındaydın.' },
+        { label: 'Hediyesini gönder', fx: { child: { name: c.name, rel: -6 } }, result: `${c.name} "babam neden gelmedi" diye sordu.` },
+      ],
+    };
+  },
+  child_sick(state) {
+    const kids = (state.player.children || []).filter((c) => !c.exOf && Fam.childAge(state, c) <= 10);
+    if (!kids.length) return null;
+    const c = pick(kids);
+    return {
+      title: `🤒 ${c.name} hasta`, photo: 'injury',
+      text: `${c.name} gece yükselen ateşle hastaneye kaldırıldı. Yarın sabah önemli bir antrenman var.`,
+      options: [
+        { label: 'Hastanede sabahla', fx: { child: { name: c.name, rel: 8 }, energy: -20, family: 4 }, result: 'Sabah ateşi düştü, ilk gördüğü sendin.' },
+        { label: 'Eşine bırak, antrenmana git', fx: { coach: 3, partner: -6, child: { name: c.name, rel: -3 } }, result: 'Antrenmanda aklın hep hastanedeydi.' },
+      ],
+    };
+  },
+  child_football(state) {
+    const kids = (state.player.children || []).filter((c) => c.gender === 'e' && Fam.childAge(state, c) >= 6 && Fam.childAge(state, c) <= 14);
+    if (!kids.length) return null;
+    const c = pick(kids);
+    return {
+      title: `⚽ ${c.name} topla yatıp kalkıyor`, photo: 'family',
+      text: `${c.name} bahçede sabahtan akşama top sektiriyor. "Baba, ben de senin gibi olacağım!"`,
+      options: [
+        { label: 'Futbol okuluna yazdır', fx: { money: -ask(state.player, 1, 2), child: { name: c.name, rel: 6, talent: 2 } }, result: 'Antrenörü "bu çocukta iş var" diyor.' },
+        { label: 'Her akşam birlikte çalışın', fx: { energy: -8, child: { name: c.name, rel: 10, talent: 1 } }, result: 'Sol ayağını da kullanmaya başladı.' },
+        { label: '"Önce dersler"', fx: { child: { name: c.name, rel: -2 }, family: 2 }, result: 'Annesi bu karara çok sevindi.' },
+      ],
+    };
+  },
+  child_school(state) {
+    const kids = (state.player.children || []).filter((c) => !c.exOf && Fam.childAge(state, c) >= 6 && Fam.childAge(state, c) <= 17);
+    if (!kids.length) return null;
+    const c = pick(kids);
+    return {
+      title: `🏫 ${ek(c.name, 'gen')} okul gösterisi`, photo: 'fans',
+      text: `${c.name} okul gösterisinde sahneye çıkacak. Saat, maç öncesi kampla çakışıyor.`,
+      options: [
+        { label: 'Hocadan izin iste, git', odds: { p: 0.6, win: { fx: { child: { name: c.name, rel: 10 }, coach: -1 }, result: 'En önde oturdun, el salladı.' }, lose: { fx: { coach: -6, child: { name: c.name, rel: 8 } }, result: 'Hoca izin vermedi ama yine de gittin…' } } },
+        { label: 'Videosunu iste', fx: { child: { name: c.name, rel: -4 } }, result: 'Videoyu otobüste izledin.' },
+      ],
+    };
+  },
+  visitation(state) {
+    const kids = (state.player.children || []).filter((c) => c.exOf && Fam.childAge(state, c) < 18);
+    if (!kids.length) return null;
+    const c = pick(kids);
+    return {
+      title: `👨‍👧 Velayet hafta sonu`, photo: 'family',
+      text: `Bu hafta sonu ${c.name} sende kalacak. Ama hafta sonu deplasman var.`,
+      options: [
+        { label: 'Maça birlikte götür', fx: { child: { name: c.name, rel: 10 }, energy: -6 }, result: 'Tribünden en yüksek sesi o çıkardı.' },
+        { label: 'Hafta sonunu ertele', fx: { child: { name: c.name, rel: -8 }, morale: -3 }, result: 'Telefondaki sessizliği unutamadın.' },
       ],
     };
   },
@@ -427,7 +551,7 @@ const CHAINS = {
     when: (s) => s.player.age >= 23 && s.player.rel.coach >= 60 && s.player.rel.team >= 55 && !s.player.captain,
     steps: {
       start: () => ({
-        title: '©️ Kaptanlık teklifi', face: 'coach',
+        title: '©️ Kaptanlık teklifi', photo: 'captain',
         text: 'Takım kaptanı uzun süre sahalardan uzak kalacak. Hoca pazubandı sana uzatıyor.',
         options: [
           { label: 'Gururla kabul et', fx: { captain: true, fame: 3, team: 4, morale: 6 }, result: 'Pazubant artık kolunda.', next: nx('captain', 'fight', 3, 5) },
@@ -445,7 +569,7 @@ const CHAINS = {
         next: nx('captain', 'return', 4, 7),
       }),
       return: () => ({
-        title: '©️ Eski kaptan döndü', photo: 'training',
+        title: '©️ Eski kaptan döndü', photo: 'captain',
         text: 'Eski kaptan sakatlığı atlattı. Pazubant kimde kalacak?',
         options: [
           { label: 'Bandı kendin geri ver', fx: { captain: false, team: 8, fans: 4 }, result: 'Bu jest soyunma odasında unutulmayacak.' },
@@ -618,7 +742,7 @@ const CHAINS = {
     when: (s) => s.player.fame >= 45,
     steps: {
       start: () => ({
-        title: '🎬 Belgesel teklifi', photo: 'press',
+        title: '🎬 Belgesel teklifi', photo: 'documentary',
         text: 'Bir dijital platform, sezon boyunca hayatını kaydetmek istiyor: antrenmanlar, ev, maç öncesi soyunma odası…',
         options: [
           { label: 'Kabul et', fx: { money: 400_000, fame: 3 }, result: 'Kameralar kapına dayandı.', next: nx('documentary', 'locker', 2, 4) },
@@ -627,7 +751,7 @@ const CHAINS = {
         ],
       }),
       locker: () => ({
-        title: '🎥 Kamera soyunma odasında', photo: 'tunnel',
+        title: '🎥 Kamera soyunma odasında', photo: 'documentary',
         text: 'Kamera, hocanın devre arası konuşmasını kaydetti. Takımda "bizi rezil edecek" huzursuzluğu var.',
         options: [
           { label: 'O kısmı kestir', fx: { team: 6, money: -50_000 }, result: 'Yapımcı istemeye istemeye kabul etti.' },
@@ -643,6 +767,82 @@ const CHAINS = {
           { label: 'Evden izle', fx: { fame: 4, fans: 4, morale: 3 }, result: 'Telefonun sabaha kadar sustu mu? Hayır.' },
         ],
       }),
+    },
+  },
+
+  // ---- AİLE: bebek ----
+  baby: {
+    when: (s) => !!s.player.partner?.married && (s.player.children || []).filter((c) => !c.exOf).length < 4 && ABS(s) - (s.player.partner.marriedAt ?? 0) >= 6 && !(s.player.newborn > 0),
+    steps: {
+      start: (state) => {
+        const pn = first(state.player.partner.name), n = (state.player.children || []).filter((c) => !c.exOf).length;
+        return {
+          title: n ? '👶 Bir kardeş mi?' : '👶 Bebek konuşması', face: 'partner' + (state.player.partner.portrait ?? 0),
+          text: n ? `${pn}: "${state.player.children[0].name} bir kardeş istiyor. Sen ne dersin?"` : `${pn} akşam yemeğinde elini tuttu: "Artık bir bebeğimiz olsun istiyorum."`,
+          options: [
+            { label: '"Ben de çok istiyorum"', fx: { partner: 10, morale: 5 }, result: 'Güzel haber gelecek gibi…', next: nx('baby', 'news', 4, 8) },
+            { label: '"Biraz daha bekleyelim"', fx: { partner: -6 }, result: `${pn} anlayışla karşıladı ama biraz buruk.` },
+          ],
+        };
+      },
+      news: (state) => ({
+        title: '🍼 Müjde!', face: 'partner' + (state.player.partner?.portrait ?? 0),
+        text: `${first(state.player.partner?.name || 'Eşin')} test sonucunu gösterdi: Bebek yolda!`,
+        options: [
+          { label: 'Herkese duyur!', fx: { fans: 4, fame: 2, family: 8, morale: 6 }, result: 'Gol sevincini bebek sallama hareketiyle yapacaksın.', next: nx('baby', 'birth', 28, 36) },
+          { label: 'Şimdilik aile arasında kalsın', fx: { family: 6, partner: 4 }, result: 'Sırrınızı sadece anneler biliyor.', next: nx('baby', 'birth', 28, 36) },
+        ],
+      }),
+      birth: (state) => {
+        const g = Math.random() < 0.5 ? 'e' : 'k';
+        const used = new Set((state.player.children || []).map((c) => c.name));
+        const pool = (g === 'e' ? Fam.BOY : Fam.GIRL).filter((n) => !used.has(n));
+        const names = pool.sort(() => Math.random() - 0.5).slice(0, 3);
+        if (g === 'e' && !used.has(state.player.name)) names[2] = state.player.name;
+        return {
+          title: g === 'e' ? '👦 Bir oğlun oldu!' : '👧 Bir kızın oldu!', photo: 'baby',
+          text: `Doğumhanenin kapısı açıldı… ${g === 'e' ? 'Oğlun' : 'Kızın'} sağlıklı, ${randInt(2900, 3900)} gram! Adını ne koyacaksınız?`,
+          options: names.map((n) => ({ label: n === state.player.name ? `${n} (senin adın)` : n, fx: { child: { add: true, name: n, gender: g } }, result: `Hoş geldin ${n}!` })),
+        };
+      },
+    },
+  },
+
+  // ---- AİLE: evlilikte kriz ----
+  marriage_crisis: {
+    when: (s) => !!s.player.partner?.married && s.player.fame >= 20,
+    steps: {
+      start: (state) => {
+        const pn = first(state.player.partner.name);
+        return {
+          title: '📰 İhanet söylentisi', photo: 'paparazzi', face: 'partner' + (state.player.partner.portrait ?? 0),
+          text: `Bir magazin sitesi, bir gece kulübünden çıkarken çekilmiş bulanık bir fotoğrafını "gizli aşk" diye yayınladı. ${pn} sabah gazeteyi masaya koydu.`,
+          options: [
+            { label: 'Kamera kayıtlarını bulup göster', fx: { money: -10_000, partner: 4 }, result: 'Fotoğraftaki kişinin kuzenin olduğu ortaya çıktı.' },
+            { label: '"Bana güvenmiyor musun?"', odds: { p: (s) => s.player.partner.value / 110, win: { fx: { partner: -3 }, result: 'Güveni sarsılmadı.' }, lose: { fx: { partner: -18, morale: -6 }, result: 'Evde soğuk rüzgârlar esiyor.', next: nx('marriage_crisis', 'therapy', 2, 4) } } },
+            { label: 'Siteye dava aç', fx: { money: -25_000, fame: 1, partner: 2 }, result: 'Site haberi kaldırdı.' },
+          ],
+        };
+      },
+      therapy: (state) => ({
+        title: '🛋️ Çift terapisi', face: 'partner' + (state.player.partner?.portrait ?? 0),
+        text: `${first(state.player.partner?.name || 'Eşin')} bir çift terapistinden randevu almış. "Gelirsen evliliğimizi kurtarabiliriz."`,
+        options: [
+          { label: `Git (${money(30_000)})`, fx: { money: -30_000, partner: 18, energy: -5 }, result: 'Uzun zamandır ilk kez gerçekten konuştunuz.' },
+          { label: '"Bunlara ihtiyacımız yok"', fx: { partner: -15 }, result: 'Kapı yine çarptı.' },
+        ],
+      }),
+      ask: (state) => {
+        const t = Fam.divorceTerms(state), pn = first(state.player.partner?.name || 'Eşin');
+        return {
+          title: '💔 Boşanmak istiyor', photo: 'divorce', face: 'partner' + (state.player.partner?.portrait ?? 0),
+          text: `${pn}: "Artık eskisi gibi değiliz. Boşanmak istiyorum." Avukatına göre mal paylaşımı ${money(t.share)}${t.house ? ', ev de onda kalır' : ''}, haftalık nafaka ${money(t.alimony + t.childSupport)}.`,
+          options: [
+            { label: `Son bir şans: terapi (${money(40_000)})`, odds: { p: 0.45, win: { fx: { money: -40_000, partner: 35 }, result: 'Zor ama başardınız. Yeni bir başlangıç.' }, lose: { fx: { money: -40_000, divorce: true }, result: 'Terapi de işe yaramadı. Yollar ayrıldı.' } } },
+            { label: 'Anlaşmalı boşan', fx: { divorce: true }, result: 'Mahkeme 20 dakika sürdü.' },
+          ],
+        };
+      },
     },
   },
 
@@ -696,6 +896,12 @@ export function weeklyStory(state, fallback) {
   const p = state.player;
   initStories(p);
   const now = ABS(state);
+  const cool = (id, w) => now - (p.seenEv[id] ?? -999) >= w;
+  // 0) evlilik dibe vurduysa boşanma talebi
+  if (p.partner?.married && p.partner.value < 18 && !p.stories.marriage_crisis && cool('divorce_ask', 20)) {
+    p.seenEv.divorce_ask = now;
+    return build('marriage_crisis', 'ask', state);
+  }
   // 1) vadesi gelen hikâye bölümü
   for (const [id, st] of Object.entries(p.stories)) {
     if (st.due <= now) {
@@ -704,7 +910,6 @@ export function weeklyStory(state, fallback) {
     }
   }
   if (Math.random() > 0.34) return null;
-  const cool = (id, w) => now - (p.seenEv[id] ?? -999) >= w;
   // 2) yeni zincir (aynı anda en fazla 2 hikâye açık)
   if (Object.keys(p.stories).length < 2 && Math.random() < 0.35) {
     const opts = Object.entries(CHAINS).filter(([id, c]) => !p.stories[id] && cool(id, 80) && c.when(state));
@@ -753,6 +958,17 @@ export function applyChoice(state, ev, i, relAdd) {
   if (fx.promise) { p.weekFlags.coachPromise = true; parts.push('İlk 11 şansı ↑'); }
   if (fx.bench) { p.weekFlags.benched = true; parts.push('Bu hafta yedek'); }
   if (fx.injury) { p.injury = Math.max(p.injury || 0, fx.injury); parts.push(`Sakat (${fx.injury} hafta)`); }
+  if (fx.child) {
+    if (fx.child.add) { Fam.addChild(state, fx.child.name, fx.child.gender); parts.push(`${fx.child.gender === 'k' ? '👧' : '👦'} ${fx.child.name}`); }
+    else {
+      const c = (p.children || []).find((x) => x.name === fx.child.name);
+      if (c) {
+        if (fx.child.rel) { c.rel = clamp((c.rel ?? 70) + fx.child.rel, 0, 100); parts.push(`${c.name} ${fx.child.rel > 0 ? '+' : '−'}${Math.abs(fx.child.rel)}`); }
+        if (fx.child.talent) c.talent = (c.talent || 0) + fx.child.talent;
+      }
+    }
+  }
+  if (fx.divorce) { const r = Fam.divorce(state); if (r.ok) parts.push(`Boşandınız · −${money(r.terms.share)}`); }
   if (fx.captain === true) { p.captain = true; parts.push('©️ Kaptan'); }
   if (fx.captain === false && p.captain) { p.captain = false; parts.push('Pazubant bırakıldı'); }
   if (next) {
