@@ -13,6 +13,7 @@ import * as Aw from './awards.js';
 import * as Eu from './europe.js';
 import * as Fam from './family.js';
 import * as Bet from './betting.js';
+import * as CUI from './casino-ui.js';
 
 const app = document.getElementById('app');
 // Kaydı yükle ve eski sürümleri güncelle
@@ -49,6 +50,7 @@ function toast(msg) {
   setTimeout(() => { if (ui.toast === msg) { ui.toast = null; render(); } }, 2200);
 }
 function persist() { Cloud.save(state); }
+CUI.init({ st: () => state, ui, persist, render: () => render(), toast: (m) => toast(m), money: E.money, esc });
 function addNews(list, showNow = true) {
   list = list.filter(Boolean);
   if (!list.length) return;
@@ -470,36 +472,10 @@ const screens = {
     const stakeBar = `<div class="stakes">${stakes.map((x) => `<button class="${x === ui.stake ? 'on' : ''}" data-act="stake" data-v="${x}">${E.money(x).replace('₺', '')}</button>`).join('')}</div>`;
     let body = '';
     if (t === 'bahis') { body = betScreen(stakeBar);
-    } else if (t === 'rulet') {
-      const r = ui.roulette;
-      body = `${stakeBar}<div class="card center">
-        <div class="wheel ${r ? 'c-' + Life.rouletteColor(r.n) : ''}">${r ? r.n : '?'}</div>
-        ${r ? `<p class="${r.win > 0 ? 'win' : 'lose'}">${r.win > 0 ? `Kazandın! +${E.money(r.win)}` : 'Kaybettin'}</p>` : '<p class="muted small">Bahsini seç ve çevir</p>'}
-        <div class="evbtns"><button class="btn red" data-act="spin" data-t="red">Kırmızı ×2</button><button class="btn blackbtn" data-act="spin" data-t="black">Siyah ×2</button>
-        <button class="btn ghost" data-act="spin" data-t="odd">Tek ×2</button><button class="btn ghost" data-act="spin" data-t="even">Çift ×2</button></div>
-        <div class="row mt"><input id="rnum" type="number" min="0" max="36" value="${ui.rnum ?? 7}" class="numin"><button class="btn" data-act="spin" data-t="num">Sayıya oyna ×36</button></div>
-      </div>`;
-    } else if (t === 'blackjack') {
-      const g = ui.bj;
-      const cards = (h, hide) => h.map((c, i) => hide && i === 1 ? '<span class="pcard back">?</span>' : `<span class="pcard ${'♥♦'.includes(c.s) ? 'redc' : ''}">${c.r}${c.s}</span>`).join('');
-      body = `${stakeBar}<div class="card center bj">
-        ${g ? `<div class="muted small">Krupiye ${g.done ? Life.handValue(g.dealer) : ''}</div><div class="hand">${cards(g.dealer, !g.done)}</div>
-          <div class="muted small mt">Sen ${Life.handValue(g.player)}</div><div class="hand">${cards(g.player)}</div>
-          ${g.msg ? `<p class="${g.win > 0 ? 'win' : g.win === 0 ? '' : 'lose'}">${esc(g.msg)}</p>` : ''}` : '<p class="muted">21\'e en yakın olan kazanır. Blackjack 3:2 öder.</p>'}
-        <div class="evbtns mt">${!g || g.done ? `<button class="btn" data-act="bjDeal">Dağıt (${E.money(ui.stake)})</button>` : `<button class="btn" data-act="bjHit">Kart çek</button><button class="btn ghost" data-act="bjStand">Dur</button>`}</div>
-      </div>`;
-    } else {
-      const s = ui.slot;
-      body = `${stakeBar}<div class="card center">
-        <div class="reels">${(s?.reels || ['❔', '❔', '❔']).map((x) => `<span>${x}</span>`).join('')}</div>
-        ${s ? `<p class="${s.mult > 0 ? 'win' : 'lose'}">${s.mult > 0 ? `×${s.mult} · +${E.money(ui.stake * s.mult)}` : 'Olmadı'}</p>` : ''}
-        <button class="btn big" data-act="slot">Çevir (${E.money(ui.stake)})</button>
-        <p class="muted small">3 aynı: ⚽×5 🍒×8 🍋×10 ⭐×20 🔔×30 7️⃣×100 · 2 aynı: ×1,5</p>
-      </div>`;
-    }
+    } else body = CUI.body(t, stakeBar);
     return `
-      <header class="top"><button class="back" data-go="hub">‹</button><h2>Gazino</h2><span class="grow"></span><b class="money">${E.money(p.money)}</b></header>
-      <div class="tabs">${[['bahis', '🎟️ Bahis'], ['rulet', '🎡 Rulet'], ['blackjack', '🃏 21'], ['slot', '🎰 Slot']].map(([k, l]) => `<button class="${t === k ? 'on' : ''}" data-act="casinoTab" data-t="${k}">${l}</button>`).join('')}</div>
+      <header class="top"><button class="back" data-go="hub">‹</button><h2>Gazino</h2><span class="grow"></span><b class="money">${E.money(p.money - CUI.hidden())}</b></header>
+      <div class="tabs scroll">${CUI.TABS.map(([k, l]) => `<button class="${t === k ? 'on' : ''}" data-act="casinoTab" data-t="${k}">${l}</button>`).join('')}</div>
       ${body}
       <p class="muted small pad">Tüm oyunlar oyun içi parayla. Çok kaybedersen gazeteler duyar…</p>`;
   },
@@ -546,14 +522,13 @@ const screens = {
         ${m.choice ? `<div class="card choice"><b>${esc(m.choice.title)}</b><div class="evbtns">${m.choice.options.map((c, i) => `<button class="btn ${i ? 'ghost' : ''}" data-act="choice" data-v="${c.v}">${esc(c.label)}</button>`).join('')}</div><div class="cbar"></div></div>` : ''}
         <div class="feed">${m.feed.slice().reverse().map((f) => `<p class="${f.cls || ''}"><b>${f.min}'</b> ${['spk', 'hl', 'goal', 'card-y', 'card-r'].includes(f.cls) && f.id ? '🎙️ ' : ''}${f.cls === 'card-y' ? '🟨 ' : f.cls === 'card-r' ? '🟥 ' : ''}${esc(f.text)}</p>`).join('')}</div>
         ${m.done ? `
-          <div class="card ft">
+          <div class="card ft" id="matchEnd">
             <h3>Maç sonu</h3>
             ${m.res.played ? `<div class="statsrow in"><div><span>Puan</span><b>${m.res.rating}</b></div><div><span>Gol</span><b>${m.res.goals}</b></div><div><span>Asist</span><b>${m.res.assists}</b></div></div>` : '<p class="muted">Bu maçta oynamadın.</p>'}
           </div>
           ${m.round ? roundCard(m) : ''}
           ${ui.iv ? interviewCard(ui.iv) : ''}
-          <button class="btn big" data-act="afterMatch" ${ui.iv && !ui.iv.chosen ? 'disabled' : ''}>Devam</button>
-          <div id="matchEnd"></div>` : ''}`}
+          <button class="btn big" data-act="afterMatch" ${ui.iv && !ui.iv.chosen ? 'disabled' : ''}>Devam</button>` : ''}`}
     `;
   },
 
@@ -827,22 +802,6 @@ function interviewCard(iv) {
       : iv.answers.map((a, i) => `<button class="iv-opt" data-act="ivAns" data-i="${i}">${esc(a.text)}</button>`).join('') +
         `<button class="iv-skip" data-act="ivAns" data-i="-1">🚫 Konuşmayacağım</button>`}
   </div>`;
-}
-
-function bjFinish(g, natural = false) {
-  if (!g || g.done) return;
-  const pv = Life.handValue(g.player);
-  if (pv <= 21 && !natural) while (Life.handValue(g.dealer) < 17) g.dealer.push(g.deck.pop());
-  const dv = Life.handValue(g.dealer);
-  let pay = 0;
-  if (natural && dv !== 21) { pay = Math.round(g.stake * 2.5); g.msg = 'BLACKJACK! 🎉'; }
-  else if (pv > 21) { g.msg = 'Battın (21\'i geçti)'; }
-  else if (dv > 21 || pv > dv) { pay = g.stake * 2; g.msg = 'Kazandın!'; }
-  else if (pv === dv) { pay = g.stake; g.msg = 'Berabere, paran iade'; }
-  else g.msg = 'Krupiye kazandı';
-  g.win = pay - g.stake;
-  state.player.money += pay; state.player.casinoWeek += pay;
-  g.done = true;
 }
 
 // ---------- maç akışı ----------
@@ -1197,6 +1156,9 @@ app.addEventListener('click', async (e) => {
     case 'kidsTime': { const r = Life.kidsTime(state); persist(); return toast(r.msg || ''); }
     case 'breakup': Life.breakUp(state); persist(); return render();
     case 'casinoTab': ui.casinoTab = el.dataset.t; return render();
+    case 'slot': case 'barbut': case 'rBet': case 'rUndo': case 'rClear': case 'rRepeat': case 'rSpin': case 'bjDeal': case 'bjHit': case 'bjStand': case 'bjDouble':
+    case 'kPrice': case 'kBuy': case 'kAll': case 'pkSit': case 'pkRebuy': case 'pkMove': case 'pkNext': case 'pkLeave':
+      Sfx.unlock(); CUI.handle(act, el); return;
     case 'stake': ui.stake = +el.dataset.v; return render();
     case 'betView': ui.betView = el.dataset.v; return render();
     case 'betLg': ui.betLg = el.dataset.v; return render();
@@ -1211,30 +1173,6 @@ app.addEventListener('click', async (e) => {
       if (!r.ok) return toast(r.msg);
       ui.slip = []; persist(); toast(`Kupon yatırıldı (${E.money(r.total)})`); return render();
     }
-    case 'spin': {
-      if (ui.stake > state.player.money) return toast('Paran yetmiyor.');
-      const num = +(document.getElementById('rnum')?.value ?? 0); ui.rnum = num;
-      if (el.dataset.t === 'num' && !(num >= 0 && num <= 36)) return toast('0-36 arası bir sayı seç.');
-      const r = Life.spinRoulette({ type: el.dataset.t, num });
-      const win = ui.stake * r.mult;
-      Life.casinoResult(state, win - ui.stake);
-      ui.roulette = { n: r.n, win }; Sfx.unlock(); persist(); return render();
-    }
-    case 'slot': {
-      if (ui.stake > state.player.money) return toast('Paran yetmiyor.');
-      const r = Life.spinSlot(); ui.slot = r;
-      Life.casinoResult(state, Math.round(ui.stake * r.mult) - ui.stake); persist(); return render();
-    }
-    case 'bjDeal': {
-      if (ui.stake > state.player.money) return toast('Paran yetmiyor.');
-      const deck = Life.newDeck();
-      const g = ui.bj = { deck, player: [deck.pop(), deck.pop()], dealer: [deck.pop(), deck.pop()], stake: ui.stake, done: false };
-      state.player.money -= g.stake; state.player.casinoWeek -= g.stake;
-      if (Life.handValue(g.player) === 21) bjFinish(g, true);
-      persist(); return render();
-    }
-    case 'bjHit': { const g = ui.bj; g.player.push(g.deck.pop()); if (Life.handValue(g.player) > 21) bjFinish(g); else if (Life.handValue(g.player) === 21) bjFinish(g); persist(); return render(); }
-    case 'bjStand': bjFinish(ui.bj); persist(); return render();
     case 'kickoff': Sfx.unlock(); ui.iv = null; return runMatch();
     case 'ivAns': {
       const iv = ui.iv; if (!iv || iv.chosen) return;
@@ -1390,11 +1328,13 @@ function render() {
     <div class="np-overlay"><div class="np-wrap">${News.clippingHtml(ui.popup[0])}</div>
       <button class="btn big" data-act="npNext">${ui.popup.length > 1 ? `Sonraki haber (${ui.popup.length - 1})` : 'Kapat'}</button></div>` : '';
   app.innerHTML = html + pop + (ui.toast ? `<div class="toast">${esc(ui.toast)}</div>` : '');
+  if (screen === 'casino') CUI.afterRender(ui.casinoTab);
   // maç bitince röportaj ve sonuçlar en altta: otomatik aşağı kaydır
   if (screen === 'match' && ui.match?.done) {
     const first = !ui.match.scrolledEnd;
     ui.match.scrolledEnd = true;
-    requestAnimationFrame(() => document.getElementById('matchEnd')?.scrollIntoView({ behavior: first ? 'smooth' : 'auto', block: 'end' }));
+    // sadece ilk seferde: Maç sonu + haftanın sonuçları ekranın tepesine gelsin
+    if (first) requestAnimationFrame(() => { const el = document.getElementById('matchEnd'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + scrollY - (document.querySelector('.scoreboard')?.offsetHeight || 0) - 10, behavior: 'smooth' }); });
   }
 }
 
