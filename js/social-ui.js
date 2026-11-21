@@ -173,3 +173,5 @@ export function handle(act, el) {
   return false;
 }
 export const badgeCount = (state) => (state.social?.dms || []).filter((d) => !d.done && d.options && !d.read).length;
+
+export const followers = (state) => S.fmtF(state.social?.followers || 0);

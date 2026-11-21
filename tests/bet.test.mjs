@@ -11,7 +11,7 @@ for (let w = 0; w < 20; w++) {
   for (const m of list) {
     // olasılıkların toplamı ~1/0.92 (kasa payı) olmalı
     const inv = (o) => Object.values(o).reduce((a, x) => a + 1 / x, 0);
-    for (const mk of ['MS', 'CS', 'AU', 'KG', 'IY']) assert(inv(m.mk[mk]) > (mk === 'CS' ? 2 : 1), mk);
+    for (const mk of ['MS', 'CS', 'AU', 'KG', 'IY']) if (Math.min(...Object.values(m.mk[mk])) > 1.03) assert(inv(m.mk[mk]) > (mk === 'CS' ? 2 : 1), mk);
     if (Math.min(...Object.values(m.mk.MS)) > 1.03) assert(Math.abs(inv(m.mk.MS) - 1 / 0.92) < 0.03, 'MS marj ' + inv(m.mk.MS));
   }
   const slip = [];

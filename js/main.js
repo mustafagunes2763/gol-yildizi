@@ -8,6 +8,7 @@ import * as Music from './music.js';
 import * as Voice from './voice.js';
 import * as Trivia from './trivia.js';
 import * as Career from './career.js';
+import * as Drills from './drills.js';
 import * as Look from './look.js';
 import * as Iv from './interview.js';
 import * as Life from './life.js';
@@ -81,6 +82,19 @@ function eventCard(ev) {
     <div class="evbtns">${ev.options.map((o, i) => `<button class="btn ${i ? 'ghost' : ''}" data-act="event" data-i="${i}">${esc(o.label)}</button>`).join('')}</div></div>`;
 }
 
+function ovrRing(v, size = 62) {
+  const r = 26, c = 2 * Math.PI * r, f = Math.max(0, Math.min(1, (v - 40) / 59));
+  const col = v >= 85 ? '#facc15' : v >= 75 ? '#22c55e' : v >= 65 ? '#60a5fa' : '#94a3b8';
+  return `<div class="ring" style="width:${size}px;height:${size}px"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="${r}" fill="none" stroke="#ffffff1a" stroke-width="6"/><circle cx="32" cy="32" r="${r}" fill="none" stroke="${col}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${c * f} ${c}" transform="rotate(-90 32 32)"/></svg><b style="color:${col}">${v}</b><span>GÜÇ</span></div>`;
+}
+function radar(stats) {
+  const keys = E.STAT_KEYS, n = keys.length, R = 70, cx = 100, cy = 92;
+  const pt = (i, v) => { const a = -Math.PI / 2 + i * 2 * Math.PI / n; return [cx + Math.cos(a) * R * v, cy + Math.sin(a) * R * v]; };
+  const grid = [0.25, 0.5, 0.75, 1].map((g) => `<polygon points="${keys.map((_, i) => pt(i, g).join(',')).join(' ')}" fill="none" stroke="#ffffff22"/>`).join('');
+  const poly = keys.map((k, i) => pt(i, stats[k] / 99).join(',')).join(' ');
+  const labels = keys.map((k, i) => { const [x, y] = pt(i, 1.24); return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle">${STAT_LABELS[k]} ${Math.floor(stats[k])}</text>`; }).join('');
+  return `<svg class="radar" viewBox="0 0 200 190">${grid}${keys.map((_, i) => `<line x1="${cx}" y1="${cy}" x2="${pt(i, 1)[0]}" y2="${pt(i, 1)[1]}" stroke="#ffffff14"/>`).join('')}<polygon points="${poly}" fill="#22c55e55" stroke="#22c55e" stroke-width="2"/>${labels}</svg>`;
+}
 function rehabCard(p) {
   const done = p.weekFlags?.rehab;
   return `<div class="card injury"><b>🩹 Sakatsın</b> · ${p.injury} hafta daha yoksun.
@@ -178,13 +192,15 @@ const screens = {
     const roleText = { starter: 'İlk 11', sub: 'Yedek', out: 'Kadro dışı', injured: `Sakat (${p.injury} hafta)`, suspended: `Cezalı (${p.suspended} maç)` }[role] || '';
     const capTxt = p.captain ? ' · ©️ Kaptan' : '';
     return `
-      <header class="hero" style="--c1:${t.c1};--c2:${t.c2}">
-        ${badge(t, 54)}
+      <header class="hero hero2" style="--c1:${t.c1};--c2:${t.c2}">
+        ${p.shirt ? `<i class="shirtbg">${p.shirt}</i>` : ''}
+        <div class="hface">${Look.portraitSvg(Look.lookOf(p), [t.c1, t.c2], 58)}${badge(t, 24)}</div>
         <div class="grow">
           <div class="pname">${esc(p.name)} ${esc(p.surname)}${p.captain ? ' <span title="Kaptan">©️</span>' : ''}</div>
-          <div class="small">${esc(t.name)} · ${p.age} yaş · FV${p.shirt ? ` · #${p.shirt}` : ''}${p.nat?.caps ? ` · 🇹🇷 ${p.nat.caps} maç` : ''}</div>
+          <div class="small">${esc(t.name)} · ${p.age} yaş · FV${p.shirt ? ` · #${p.shirt}` : ''}${p.nat?.caps ? ` · 🇹🇷 ${p.nat.caps}` : ''}</div>
+          <div class="formdots">${(p.form || []).map((r) => `<i class="f${r}">${{ W: 'G', D: 'B', L: 'M' }[r]}</i>`).join('')}<small>${p.season.goals}⚽ ${p.season.assists}🅰️</small></div>
         </div>
-        <div class="ovr"><b>${E.overall(p)}</b><span>GÜÇ</span></div>
+        ${ovrRing(E.overall(p))}
       </header>
       <div class="statsrow">
         <div><span>Para</span><b>${E.money(p.money)}</b></div>
@@ -217,18 +233,18 @@ const screens = {
         <div class="card next"><b>Bu hafta maçın yok</b><p class="muted small">Ligin bitti, diğer lig devam ediyor.</p>
         <button class="btn big" data-act="skipWeek">Haftayı geç</button></div>`}
       <div class="grid">
-        <button class="tile" data-go="train">🏋️<span>Antrenman</span></button>
-        <button class="tile" data-act="rest" ${p.rested ? 'disabled' : ''}>😴<span>Dinlen</span></button>
-        <button class="tile" data-go="shop">🛍️<span>Mağaza</span></button>
-        <button class="tile" data-go="life">❤️<span>İlişkiler</span></button>
-        <button class="tile" data-go="casino">🎰<span>Gazino</span></button>
-        <button class="tile rel" data-go="social"><img class="ticon" src="img/social/logo96.png" alt="" width="28" height="28"><span>Paslaş</span>${SUI.badgeCount(state) ? `<em class="tbadge">${SUI.badgeCount(state)}</em>` : ''}</button>
-        <button class="tile" data-go="table">📊<span>Ligler</span></button>
-        <button class="tile" data-go="europe">🏆<span>Avrupa</span></button>
-        <button class="tile" data-go="profile">👤<span>Profil</span></button>
-        <button class="tile" data-go="news">📰<span>Gazete</span></button>
+        <button class="tile t-green" data-go="train">🏋️<span>Antrenman</span></button>
+        <button class="tile t-purple" data-act="rest" ${p.rested ? 'disabled' : ''}>😴<span>Dinlen</span></button>
+        <button class="tile t-pink" data-go="shop">🛍️<span>Mağaza</span></button>
+        <button class="tile t-red" data-go="life">❤️<span>İlişkiler</span></button>
+        <button class="tile t-gold" data-go="casino">🎰<span>Gazino</span></button>
+        <button class="tile rel t-purple" data-go="social"><img class="ticon" src="img/social/logo96.png" alt="" width="28" height="28"><span>Paslaş</span>${SUI.badgeCount(state) ? `<em class="tbadge">${SUI.badgeCount(state)}</em>` : ''}</button>
+        <button class="tile t-blue" data-go="table">📊<span>Ligler</span></button>
+        <button class="tile t-gold" data-go="europe">🏆<span>Avrupa</span></button>
+        <button class="tile t-blue" data-go="profile">👤<span>Profil</span></button>
+        <button class="tile t-gray" data-go="news">📰<span>Gazete</span></button>
         ${Cloud.SHOW_LEADERBOARD ? '<button class="tile" data-go="leaderboard">🏆<span>Arkadaşlar</span></button>' : ''}
-        <button class="tile" data-go="settings">⚙️<span>Ayarlar</span></button>
+        <button class="tile t-gray" data-go="settings">⚙️<span>Ayarlar</span></button>
         <button class="tile" data-go="start">🏠<span>Ana menü</span></button>
       </div>
       <div class="card inbox"><h3>Mesajlar</h3>
@@ -242,11 +258,12 @@ const screens = {
       <header class="top"><button class="back" data-go="hub">‹</button><h2>Antrenman</h2></header>
       <div class="banner" style="background-image:url('img/training-banner.jpg')"><span>Sabahın köründe, sisli sahada…</span></div>
       <div class="card"><div class="row"><span>Enerji</span><b>${Math.round(p.energy)}</b></div>${bar(p.energy, 100, p.energy < 30 ? 'low' : '')}
-      <p class="muted small">Her antrenman ${E.TRAIN_COST} enerji harcar. Enerji her hafta +${E.WEEKLY_ENERGY} dolar. Genç yaşta daha hızlı gelişirsin.</p></div>
+      <p class="muted small">🎮 Mini oyunda başarına göre gelişim ×0,6 ile ×1,8 arası olur. "Hızlı" normal gelişim verir. Her antrenman ${E.TRAIN_COST} enerji harcar. Enerji her hafta +${E.WEEKLY_ENERGY} dolar. Genç yaşta daha hızlı gelişirsin.</p></div>
       ${E.STAT_KEYS.map((k) => `
         <div class="card statline">
           <div class="grow"><div class="row"><b>${STAT_LABELS[k]}</b><b>${Math.floor(p.stats[k])}</b></div>${bar(p.stats[k])}</div>
-          <button class="btn" data-act="train" data-stat="${k}" ${p.energy < E.TRAIN_COST ? 'disabled' : ''}>Çalış</button>
+          <div class="tbtns"><button class="btn" data-act="drill" data-stat="${k}" ${p.energy < E.TRAIN_COST || p.injury > 0 ? 'disabled' : ''}>${Drills.DRILLS[k].icon} Mini oyun</button>
+          <button class="btn ghost sm" data-act="train" data-stat="${k}" ${p.energy < E.TRAIN_COST ? 'disabled' : ''}>Hızlı</button></div>
         </div>`).join('')}
       <p class="muted small pad">Şut: güç ve isabet · Teknik: falso ve isabet · Hız: defans baskısına karşı süre · Pas: asist şansı · Güç: genel güç</p>`;
   },
@@ -318,19 +335,23 @@ const screens = {
     const avg = s.apps ? (s.ratingSum / s.apps).toFixed(1) : '-';
     return `
       <header class="top"><button class="back" data-go="hub">‹</button><h2>Profil</h2><button class="btn ghost sm" data-go="cabinet">🏆 Kupa dolabı${(p.trophies || []).length ? ` (${p.trophies.length})` : ''}</button></header>
-      <div class="card profilehead">
-        ${Look.portraitSvg(Look.lookOf(p), [team(p.clubId).c1, team(p.clubId).c2], 96)}
+      <div class="card profilehead ph2" style="--c1:${team(p.clubId).c1};--c2:${team(p.clubId).c2}">
+        ${p.shirt ? `<i class="shirtbg">${p.shirt}</i>` : ''}
+        <div class="phface">${Look.portraitSvg(Look.lookOf(p), [team(p.clubId).c1, team(p.clubId).c2], 96)}</div>
         <div class="grow">
           <b class="pname">${esc(p.name)} ${esc(p.surname)}</b>
-          <div class="muted small">${p.age} yaş · ${esc(p.nation)} · ${esc(p.foot)} ayak · FV</div>
-          <div class="row small mt"><span>Taraftar sevgisi</span><b>${Math.round(p.fans ?? 50)}</b></div>${bar(p.fans ?? 50, 100, 'orange')}
+          <div class="muted small">${p.age} yaş · ${esc(p.nation)} · ${esc(p.foot)} ayak · FV${p.shirt ? ` · #${p.shirt}` : ''}</div>
+          <div class="chips mt">${badge(team(p.clubId), 20)}<span>${esc(team(p.clubId).name)}</span>${p.captain ? '<span>©️ Kaptan</span>' : ''}${p.nat?.caps ? `<span>🇹🇷 ${p.nat.caps} maç · ${p.nat.goals} gol</span>` : ''}${state.social ? `<span>📱 ${SUI.followers(state)}</span>` : ''}</div>
         </div>
+        ${ovrRing(E.overall(p), 70)}
       </div>
-      <div class="card">
-        <div class="row"><span>Sözleşme</span><span>${E.money(p.contract.wage)}/hafta · ${p.contract.endsYear} yazına kadar</span></div>
-        <div class="row"><span>Ün</span><span>${Math.round(p.fame)}/100</span></div>
+      <div class="kpis">
+        <div><span>Piyasa değeri</span><b>${E.money(K.marketValue(p))}</b></div>
+        <div><span>Maaş</span><b>${E.money(p.contract.wage)}<small>/hf</small></b></div>
+        <div><span>Ün</span><b>${Math.round(p.fame)}</b></div>
+        <div><span>Taraftar</span><b>${Math.round(p.fans ?? 50)}</b></div>
       </div>
-      <div class="card">${E.STAT_KEYS.map((k) => `<div class="row"><span>${STAT_LABELS[k]}</span><b>${Math.floor(p.stats[k])}</b></div>${bar(p.stats[k])}`).join('')}</div>
+      <div class="card"><div class="row small muted"><span>Sözleşme</span><span>${p.contract.endsYear} yazına kadar</span></div>${radar(p.stats)}</div>
       ${(() => { const c = clubInfo(p.clubId); return c.stadyum ? `<div class="card clubcard" style="--c1:${team(p.clubId).c1}">
         <div class="row">${badge(team(p.clubId), 40)}<div class="grow"><b>${esc(c.tam_adi || team(p.clubId).name)}</b><div class="muted small">${esc(c.sehir)} · Kuruluş ${c.kurulus_yili}</div></div></div>
         <div class="row small mt"><span>Stadyum</span><span>${esc(c.stadyum)} (${Number(c.kapasite).toLocaleString('tr-TR')})</span></div>
@@ -706,7 +727,12 @@ const screens = {
     const legacy = state.legacy || [];
     return `
       <header class="top"><button class="back" data-go="profile">‹</button><h2>Kupa dolabı</h2></header>
-      ${Object.keys(tc).length ? `<div class="cabinet">${Object.keys(Aw.TROPHY).filter((k) => tc[k]).map((k) => `<div class="cup"><span>${Aw.TROPHY[k].icon}</span><b>${tc[k].length > 1 ? '×' + tc[k].length : ''}</b><div class="small">${Aw.TROPHY[k].name}</div><div class="muted tiny">${tc[k].join(', ')}</div></div>`).join('')}</div>` : '<div class="card center"><div style="font-size:40px">🗄️</div><p class="muted">Dolap henüz boş. İlk kupa için çalışmaya devam!</p></div>'}
+      <div class="shelfwrap">
+        <div class="shelfhead"><b>${(p.trophies || []).length}</b> kupa · ${Object.keys(tc).length}/${Object.keys(Aw.TROPHY).length} çeşit</div>
+        ${(() => { const keys = Object.keys(Aw.TROPHY); const rows = []; for (let i = 0; i < keys.length; i += 3) rows.push(keys.slice(i, i + 3)); return rows.map((r) => `<div class="shelf">${r.map((k) => `<div class="cup2 ${tc[k] ? 'won' : 'locked'}"><span>${Aw.TROPHY[k].icon}</span>${tc[k] && tc[k].length > 1 ? `<b>×${tc[k].length}</b>` : ''}<div class="cname">${esc(Aw.TROPHY[k].name)}</div>${tc[k] ? `<div class="cyears">${tc[k].join(', ')}</div>` : '<div class="cyears">—</div>'}</div>`).join('')}</div>`).join(''); })()}
+      </div>
+      ${p.nat?.caps || p.nat?.u21caps ? `<div class="card"><h3>🇹🇷 Milli takım</h3><div class="statsrow in"><div><span>A Milli</span><b>${p.nat.caps}</b></div><div><span>Gol</span><b>${p.nat.goals}</b></div><div><span>U21</span><b>${p.nat.u21caps}</b></div><div><span>U21 gol</span><b>${p.nat.u21goals}</b></div></div>${(p.nat.tourn || []).map((t) => `<p class="small">${esc(t.name)}: <b>${esc(t.reached)}</b> · ${t.goals} gol</p>`).join('')}</div>` : ''}
+      ${p.gotw ? `<div class="card small">🏅 Haftanın golü ödülü: <b>${p.gotw}</b></div>` : ''}
       <div class="card"><h3>Kariyer</h3>
         <table class="tbl"><tr><th>Sezon</th><th class="l">Kulüp</th><th>M</th><th>G</th><th>A</th><th>Ort</th></tr>
         ${p.career.seasons.map((x) => `<tr><td>${x.year}</td><td class="l">${esc(team(x.club)?.short || x.club)}</td><td>${x.apps}</td><td>${x.goals}</td><td>${x.assists}</td><td>${x.avg || '-'}</td></tr>`).join('') || '<tr><td colspan="6" class="muted">İlk sezonun devam ediyor</td></tr>'}</table>
@@ -802,6 +828,8 @@ function leagueZones(lid, n) {
   const out = Array(n).fill(null);
   if (lid === 'SL') { out[0] = Z.ucl; out[1] = Z.uclq; out[2] = Z.uelq; out[3] = Z.uelq; out[4] = Z.ueclq; }
   if (lid === 'PL' || lid === 'LL') { for (let i = 0; i < 5; i++) out[i] = Z.ucl; out[5] = out[6] = Z.uel; out[7] = Z.uecl; }
+  if (lid === 'SA' || lid === 'BL') { for (let i = 0; i < 4; i++) out[i] = Z.ucl; out[4] = out[5] = Z.uel; out[6] = Z.uecl; }
+  if (lid === 'FR') { for (let i = 0; i < 4; i++) out[i] = Z.ucl; out[4] = Z.uel; out[5] = Z.uecl; }
   const L = LEAGUES[lid];
   for (let i = 0; i < (L.promote || 0); i++) out[i] = Z.up;
   for (let i = 0; i < (L.relegate || 0); i++) out[n - 1 - i] = Z.down;
@@ -990,7 +1018,7 @@ async function runMatch() {
       lateDone = true;
       spk('latePressure', {}, 'hl');
       const n = diff <= -2 ? 1 : E.randInt(1, 2);
-      for (let k = 0; k < n; k++) insert(plan.extraMoment(E.randInt(77, Math.min(89, plan.onTo)), E.pick(['acik', 'kafa', 'korner', 'kontra', 'uzuntop', 'duvar'])));
+      for (let k = 0; k < n; k++) insert(plan.extraMoment(E.randInt(77, Math.min(89, plan.onTo)), E.pick(['acik', 'kafa', 'korner', 'kontra', 'uzuntop', 'duvar', 'vole', 'arkadirek', 'kosevurusu'])));
     }
     if (min === 60 && !leadTrim && diff >= 2) {
       leadTrim = true;
@@ -1182,6 +1210,17 @@ app.addEventListener('click', async (e) => {
       state.news ||= [];
       addNews([News.signingNews(state, o.clubId, null)]);
       persist(); return go('hub');
+    }
+    case 'drill': {
+      const stat = el.dataset.stat;
+      if (state.player.injury > 0) return toast('Sakatken antrenman yapamazsın.');
+      if (state.player.energy < E.TRAIN_COST) return toast('Yeterli enerjin yok.');
+      Drills.run(stat, (score) => {
+        const r = E.train(state, stat, Drills.multOf(score));
+        persist(); render();
+        toast(r.ok ? `${STAT_LABELS[stat]} +${r.gain.toFixed(2)} (×${String(Drills.multOf(score)).replace('.', ',')})` : r.msg);
+      });
+      return;
     }
     case 'train': {
       const r = E.train(state, el.dataset.stat);

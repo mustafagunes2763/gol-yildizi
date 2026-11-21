@@ -104,6 +104,14 @@ export const LINES = {
     'Penaltı gol! {ad} soğukkanlı, {kaleci} öbür köşede!',
     'GOL! Penaltıyı tereyağından kıl çeker gibi attı!',
   ],
+  intro_kosevurusu: ['Korner! Topun başında {ad} var, ceza sahası kalabalık!', '{ad} köşe bayrağına koştu, korneri kendisi kullanacak!'],
+  intro_vole: ['Top ceza sahası dışına sekti… {ad} bekliyor!', 'Uzaklaştırılan top havada… {ad} gözünü topa dikti!'],
+  intro_arkadirek: ['{arkadas} kanattan çevirecek… {ad} arka direkte unutuldu!', 'Orta ön direği geçebilir… arka direkte {ad} tek başına!'],
+  intro_balik: ['{arkadas} çizgiye indi, sert ve alçak çevirecek…', 'Alçak orta geliyor! {ad} kendini atacak mı?'],
+  goal_kosevurusu: ['{ad} korneri adrese teslim gönderdi, gol!', 'Kornerden müthiş orta, ağlar havalandı!'],
+  goal_vole: ['VOLEEE! {ad} havadan vurdu, top füze gibi ağlarda!', 'Ne vuruş! {ad} yere düşürmeden vurdu, {kaleci} sadece baktı!', 'Bu vole yılın golü adayı! {ad} inanılmaz!'],
+  goal_arkadirek: ['Arka direkte {ad}! Kafayı içeri çevirdi, gol!', '{ad} arka direkte unutulmayacak bir kafa vurdu!'],
+  goal_balik: ['BALIKLAMA! {ad} kendini attı, top ağlarda!', '{ad} çimlere uzanarak kafayı vurdu, muhteşem!'],
   goal_uzuntop: [
     'GOL! Kaleciden önce davrandı {ad}, top boş ağlarda!',
     'Hız yarışını kazandı {ad}! {kaleci} geç kaldı, GOL!',
@@ -261,6 +269,22 @@ export const BUILD = {
   duvar: [
     ['{takim} ceza sahası önünde paslaşıyor…', 'Top {ad:dat} geldi, önü kalabalık…', 'Yanında {arkadas}! Ver-kaç fırsatı!'],
     ['{ad} sürüyor, iki defans önünde…', '{arkadas} yanına geldi, duvar oluyor…', 'Şimdi ya da hiç!'],
+  ],
+  kosevurusu: [
+    ['Şut! Defanstan sekti…', 'Korner kararı!', '{ad} topu köşe bayrağına koydu…'],
+    ['{kaleci} topu kornere çeldi!', 'Uzun boylular ceza sahasında…', '{ad} kolunu kaldırdı, işaret verdi…'],
+  ],
+  vole: [
+    ['Korner sonrası top uzaklaştırıldı…', 'Top havada dönüyor…', '{ad} ceza sahası çizgisinde, yere düşmeden vuracak mı?'],
+    ['{arkadas} göğsüyle indirdi…', 'Top havalandı…', '{ad} vole için pozisyon aldı!'],
+  ],
+  arkadirek: [
+    ['{arkadas} kanatta çalımladı…', 'Kafasını kaldırdı, ceza sahasına bakıyor…', 'Arka direkte {ad} boş!'],
+    ['{takim} sağdan geliyor…', 'Orta ön direği aşacak…', '{ad} arka direğe sızdı!'],
+  ],
+  balik: [
+    ['{arkadas} çizgiye kadar indi…', 'Alçak ve sert çevirecek…', '{ad} ceza sahasına daldı!'],
+    ['Hızlı hücum, {arkadas} kanatta…', 'Top sert geliyor, yerden yarım metre!', 'Balıklama zamanı!'],
   ],
   pres: [
     ['{rakip} geriden oyun kuruyor…', '{ad} pres için öne çıktı…', 'Kaleci kısa verdi! Top rakipte, {ad} üstüne basıyor!'],

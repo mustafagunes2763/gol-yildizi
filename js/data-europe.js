@@ -172,7 +172,7 @@ export const UEL_2026 = ['cry', 'bou', 'sun', 'mil', 'juv', 'rso', 'cel', 'hof',
   'lyo', 'nec', 'oly', 'spa', 'stg', 'usg', 'and', 'ara', 'ben', 'bjk', 'fer', 'jag', 'lch', 'lil2', 'ofi', 'omo', 'rbs', 'plz'];
 // Kontenjan: Türkiye UCL 2 / UEL 1, İngiltere UCL 5 / UEL 3
 // Kontenjan (lig sırası): doğrudan katılanlar. Türkiye'nin elemeli yolları QUAL_PATHS'te.
-export const EURO_SLOTS = { TUR: { UCL: 1, UEL: 0, UECL: 0, league: 'SL' }, ENG: { UCL: 5, UEL: 2, UECL: 1, league: 'PL' }, ESP: { UCL: 5, UEL: 2, UECL: 1, league: 'LL' } };
+export const EURO_SLOTS = { TUR: { UCL: 1, UEL: 0, UECL: 0, league: 'SL' }, ENG: { UCL: 5, UEL: 2, UECL: 1, league: 'PL' }, ESP: { UCL: 5, UEL: 2, UECL: 1, league: 'LL' }, ITA: { UCL: 4, UEL: 2, UECL: 1, league: 'SA' }, GER: { UCL: 4, UEL: 2, UECL: 1, league: 'BL' }, FRA: { UCL: 4, UEL: 1, UECL: 1, league: 'FR' } };
 // TFF 2026-27 erişim listesi (Türkiye Kupası oyunda yok: kupa şampiyonunun yerini lig 3.'sü alır).
 // 2. ön eleme Temmuz'da oynandığı için oyunda 3. ön elemeden başlanır.
 export const QUAL_PATHS = [
@@ -194,4 +194,49 @@ export const NAME_POOLS = {
   NED: [['Daan', 'Sem', 'Bram', 'Lars', 'Thijs', 'Jesse', 'Milan', 'Ruben'], ['de Vries', 'Jansen', 'Bakker', 'Visser', 'Smit', 'Meijer', 'de Boer', 'Mulder']],
   GEN: [['Adam', 'Luka', 'David', 'Ivan', 'Marko', 'Nikola', 'Tomas', 'Filip', 'Erik', 'Mateo', 'Petar', 'Andrej', 'Kristian', 'Dominik'],
     ['Novak', 'Horvat', 'Kovač', 'Popov', 'Nielsen', 'Hansen', 'Dimitrov', 'Petrov', 'Nowak', 'Kowalski', 'Varga', 'Papadopoulos', 'Berg', 'Lund']],
+};
+
+// Serie A 2026-27 (Inter, Milan, Juventus, Napoli, Roma, Como, Atalanta zaten EURO_TEAMS'te). Yükselen: Venezia, Frosinone, Monza.
+export const SA_NEW = {
+  laz: { name: 'Lazio',      short: 'LAZ', c1: '#87D8F7', c2: '#FFFFFF', str: 80, country: 'ITA' },
+  bgn: { name: 'Bologna',    short: 'BOL', c1: '#A21C26', c2: '#1A2F48', str: 80, country: 'ITA' },
+  fio: { name: 'Fiorentina', short: 'FIO', c1: '#4B2884', c2: '#FFFFFF', str: 78, country: 'ITA' },
+  trn: { name: 'Torino',     short: 'TOR', c1: '#8A1E03', c2: '#FFFFFF', str: 76, country: 'ITA' },
+  udi: { name: 'Udinese',    short: 'UDI', c1: '#111111', c2: '#FFFFFF', str: 75, country: 'ITA' },
+  gea: { name: 'Genoa',      short: 'GEN', c1: '#A3001E', c2: '#002B5C', str: 75, country: 'ITA' },
+  sas: { name: 'Sassuolo',   short: 'SAS', c1: '#00A752', c2: '#111111', str: 75, country: 'ITA' },
+  cag: { name: 'Cagliari',   short: 'CAG', c1: '#A50034', c2: '#002350', str: 74, country: 'ITA' },
+  prm: { name: 'Parma',      short: 'PAR', c1: '#FFDD00', c2: '#1B3D8F', str: 74, country: 'ITA' },
+  lec: { name: 'Lecce',      short: 'LEC', c1: '#FFD100', c2: '#D2001F', str: 72, country: 'ITA' },
+  ven: { name: 'Venezia',    short: 'VEN', c1: '#111111', c2: '#F37021', str: 72, country: 'ITA' },
+  mnz: { name: 'Monza',      short: 'MON', c1: '#E30613', c2: '#FFFFFF', str: 72, country: 'ITA' },
+  fro: { name: 'Frosinone',  short: 'FRO', c1: '#FFDD00', c2: '#0055A4', str: 71, country: 'ITA' },
+};
+// Bundesliga 2026-27 (Bayern, Dortmund, Leipzig, Stuttgart, Leverkusen, Hoffenheim, Freiburg zaten var). Yükselen: Schalke, Elversberg, Paderborn.
+export const BL_NEW = {
+  sge: { name: 'Eintracht Frankfurt', short: 'SGE', c1: '#E1000F', c2: '#111111', str: 81, country: 'GER' },
+  bmg: { name: "Mönchengladbach",     short: 'BMG', c1: '#FFFFFF', c2: '#111111', str: 77, country: 'GER' },
+  fcu: { name: 'Union Berlin',        short: 'FCU', c1: '#D4011D', c2: '#FFFFFF', str: 76, country: 'GER' },
+  m05: { name: 'Mainz 05',            short: 'M05', c1: '#C3141E', c2: '#FFFFFF', str: 76, country: 'GER' },
+  svw: { name: 'Werder Bremen',       short: 'SVW', c1: '#1D9053', c2: '#FFFFFF', str: 76, country: 'GER' },
+  fca: { name: 'Augsburg',            short: 'FCA', c1: '#BA3733', c2: '#46714D', str: 75, country: 'GER' },
+  koe: { name: 'Köln',                short: 'KOE', c1: '#FFFFFF', c2: '#ED1C24', str: 75, country: 'GER' },
+  hsv: { name: 'Hamburg',             short: 'HSV', c1: '#FFFFFF', c2: '#0A3F86', str: 75, country: 'GER' },
+  s04: { name: 'Schalke 04',          short: 'S04', c1: '#004D9D', c2: '#FFFFFF', str: 74, country: 'GER' },
+  sve: { name: 'Elversberg',          short: 'SVE', c1: '#111111', c2: '#FFFFFF', str: 71, country: 'GER' },
+  pad: { name: 'Paderborn',           short: 'SCP', c1: '#005CA9', c2: '#111111', str: 71, country: 'GER' },
+};
+// Ligue 1 2026-27 (PSG, Marsilya, Monaco, Lille, Lyon, Lens, Rennes zaten var). Yükselen: Troyes, Le Mans.
+export const FR_NEW = {
+  nic: { name: 'Nice',       short: 'NIC', c1: '#D2001F', c2: '#111111', str: 78, country: 'FRA' },
+  str: { name: 'Strasbourg', short: 'STR', c1: '#0098D8', c2: '#FFFFFF', str: 78, country: 'FRA' },
+  bst: { name: 'Brest',      short: 'BRE', c1: '#ED1C24', c2: '#FFFFFF', str: 76, country: 'FRA' },
+  tfc: { name: 'Toulouse',   short: 'TFC', c1: '#5B2B82', c2: '#FFFFFF', str: 76, country: 'FRA' },
+  pfc: { name: 'Paris FC',   short: 'PFC', c1: '#1B2D59', c2: '#FFFFFF', str: 74, country: 'FRA' },
+  aux: { name: 'Auxerre',    short: 'AUX', c1: '#FFFFFF', c2: '#0055A4', str: 73, country: 'FRA' },
+  ang: { name: 'Angers',     short: 'ANG', c1: '#111111', c2: '#FFFFFF', str: 72, country: 'FRA' },
+  hac: { name: 'Le Havre',   short: 'HAC', c1: '#7AB8E6', c2: '#0A2240', str: 72, country: 'FRA' },
+  lor: { name: 'Lorient',    short: 'LOR', c1: '#F58220', c2: '#111111', str: 72, country: 'FRA' },
+  tro: { name: 'Troyes',     short: 'TRO', c1: '#0055A4', c2: '#FFFFFF', str: 71, country: 'FRA' },
+  lms: { name: 'Le Mans',    short: 'LMS', c1: '#E30613', c2: '#FFD100', str: 70, country: 'FRA' },
 };

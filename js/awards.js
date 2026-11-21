@@ -9,6 +9,9 @@ export const TROPHY = {
   champ_L1: { name: '1. Lig Şampiyonluğu', icon: '🥇' },
   champ_PL: { name: 'Premier Lig Şampiyonluğu', icon: '🦁' },
   champ_LL: { name: 'La Liga Şampiyonluğu', icon: '🇪🇸' },
+  champ_SA: { name: 'Serie A Şampiyonluğu', icon: '🇮🇹' },
+  champ_BL: { name: 'Bundesliga Şampiyonluğu', icon: '🇩🇪' },
+  champ_FR: { name: 'Ligue 1 Şampiyonluğu', icon: '🇫🇷' },
   ucl: { name: 'Şampiyonlar Ligi', icon: '⭐' },
   uel: { name: 'Avrupa Ligi', icon: '🟠' },
   uecl: { name: 'Konferans Ligi', icon: '🟢' },
@@ -46,7 +49,7 @@ export function seasonAwards(state, sum) {
 
   // takım kupaları
   const team = [];
-  if (sum.myPos === 1) team.push({ SL: 'champ_SL', L1: 'champ_L1', PL: 'champ_PL', LL: 'champ_LL' }[lid]);
+  if (sum.myPos === 1) team.push({ SL: 'champ_SL', L1: 'champ_L1', PL: 'champ_PL', LL: 'champ_LL', SA: 'champ_SA', BL: 'champ_BL', FR: 'champ_FR' }[lid]);
   else if (lid === 'L1' && sum.myPos <= LEAGUES.L1.promote) team.push('promo_L1');
 
   p.trophies ||= [];
@@ -55,7 +58,7 @@ export function seasonAwards(state, sum) {
   for (const a of out) if (a.winner.me) won.push(a.key);
   for (const k of won) {
     p.trophies.push({ key: k, year: sum.year, club: p.clubId, league: lid });
-    const bonus = { golkrali: 12, yilin: 15, asistkrali: 8, genc: 8, champ_SL: 20, champ_L1: 10, promo_L1: 6, champ_PL: 25, champ_LL: 25 }[k] || 0;
+    const bonus = { golkrali: 12, yilin: 15, asistkrali: 8, genc: 8, champ_SL: 20, champ_L1: 10, promo_L1: 6, champ_PL: 25, champ_LL: 25, champ_SA: 25, champ_BL: 25, champ_FR: 22 }[k] || 0;
     p.fame = clamp((p.fame || 0) + bonus / 2, 0, 100);
     p.money += Math.round(p.contract.wage * bonus);
   }

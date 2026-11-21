@@ -328,7 +328,7 @@ export function leagueNews(state) {
   for (const [lid, L] of Object.entries(s.leagues)) {
     const round = L.fixtures[wk];
     if (!round) continue;
-    const lname = ({ SL: 'Süper Lig', L1: '1. Lig', PL: 'Premier Lig', LL: 'La Liga' })[lid] || lid;
+    const lname = ({ SL: 'Süper Lig', L1: '1. Lig', PL: 'Premier Lig', LL: 'La Liga', SA: 'Serie A', BL: 'Bundesliga', FR: 'Ligue 1' })[lid] || lid;
     for (const m of round) {
       if (m.hg == null) continue;
       const H = state.teams[m.h], A = state.teams[m.a];
@@ -491,7 +491,7 @@ export function seasonNews(state, sum) {
   if (sum.myPos === 1) {
     out.push(clip(state, 'golsporu', {
       headline: `ŞAMPİYON ${UP(T.name)}!`,
-      sub: `${({ SL: 'Süper Lig', L1: '1. Lig', PL: 'Premier Lig', LL: 'La Liga' })[lid]} kupası ${ek(T.name, 'gen')} müzesinde`,
+      sub: `${({ SL: 'Süper Lig', L1: '1. Lig', PL: 'Premier Lig', LL: 'La Liga', SA: 'Serie A', BL: 'Bundesliga', FR: 'Ligue 1' })[lid]} kupası ${ek(T.name, 'gen')} müzesinde`,
       body: `Sezon boyunca istikrarlı bir grafik çizen ${T.name}, ligi zirvede tamamladı. ${p.surname} sezonu ${s.goals} gol ve ${s.assists} asistle kapattı.`,
       caption: `${p.surname} şampiyonluk kupasını havaya kaldırdı`, pose: 'trophy',
     }));
@@ -613,6 +613,9 @@ export function awardNews(state, key, value) {
     champ_SL: [`${UP(state.teams[p.clubId].name)} ŞAMPİYON!`, `${p.surname} şampiyonluğun mimarlarından`, 'champions'],
     champ_PL: [`${UP(state.teams[p.clubId].name)} İNGİLTERE ŞAMPİYONU!`, `${p.surname} Premier Lig'in zirvesinde`, 'champions'],
     champ_LL: [`${UP(state.teams[p.clubId].name)} İSPANYA ŞAMPİYONU!`, `${p.surname} La Liga'nın zirvesinde`, 'champions'],
+    champ_SA: [`${UP(state.teams[p.clubId].name)} İTALYA ŞAMPİYONU!`, `${p.surname} Serie A'nın zirvesinde`, 'champions'],
+    champ_BL: [`${UP(state.teams[p.clubId].name)} ALMANYA ŞAMPİYONU!`, `${p.surname} Bundesliga'nın zirvesinde`, 'champions'],
+    champ_FR: [`${UP(state.teams[p.clubId].name)} FRANSA ŞAMPİYONU!`, `${p.surname} Ligue 1'in zirvesinde`, 'champions'],
     champ_L1: [`${UP(state.teams[p.clubId].name)} LİG ŞAMPİYONU`, "Süper Lig'e şampiyon olarak çıktılar", 'champions'],
     promo_L1: [`${UP(state.teams[p.clubId].name)} SÜPER LİG'DE!`, 'Yükselme sevinci', 'trophy'],
   }[key];

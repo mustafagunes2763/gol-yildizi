@@ -91,3 +91,7 @@ Real-estate photo of a fictional home in Istanbul, 4:3, golden hour light, invit
 
 ## Yeni gazete fotoğrafları (2026-11-21) — 4:3, aynı şablon
 - [x] proposal, baby, divorce, family, radio, captain, documentary, podcast ✅
+
+
+## Serie A / Bundesliga / Ligue 1
+- 35 takımın kadrosu eklendi (Kasım 2026). 27 transfer çakışması yeni kadro lehine çözüldü.

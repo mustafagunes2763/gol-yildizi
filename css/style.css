@@ -666,3 +666,70 @@ td.fm i.fw { background: #22c55e; } td.fm i.fd { background: #94a3b8; } td.fm i.
 .rehab button { display: grid; grid-template-columns: 32px 1fr; text-align: left; gap: 0 8px; background: var(--bg); border: 1px solid var(--line); color: var(--text); border-radius: 10px; padding: 8px; }
 .rehab button span { grid-row: span 2; font-size: 22px; align-self: center; } .rehab button small { color: var(--muted); }
 .rehab button.risky { border-color: #f59e0b66; }
+/* ---------- antrenman mini oyunları ---------- */
+.tbtns { display: flex; flex-direction: column; gap: 4px; align-items: stretch; }
+.drill-ov { position: fixed; inset: 0; z-index: 80; background: #000c; display: grid; place-items: center; padding: 14px; }
+.drill { width: min(400px, 100%); background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 14px; }
+.dhead { display: flex; justify-content: space-between; align-items: center; font-size: 18px; }
+.dx { background: none; border: 0; color: var(--muted); font-size: 20px; }
+.dstage { margin: 10px 0; display: grid; gap: 12px; }
+.tbar { position: relative; height: 34px; background: var(--bg); border-radius: 17px; overflow: hidden; border: 1px solid var(--line); }
+.tzone { position: absolute; top: 0; bottom: 0; background: #16a34a99; border-left: 2px solid #4ade80; border-right: 2px solid #4ade80; }
+.tneedle { position: absolute; top: -2px; bottom: -2px; width: 4px; margin-left: -2px; background: #facc15; box-shadow: 0 0 8px #facc15; }
+.tbar.vert { height: 200px; width: 60px; margin: 0 auto; border-radius: 14px; }
+.tbar.vert .tzone { left: 0; right: 0; top: auto; border: 0; border-top: 2px solid #4ade80; border-bottom: 2px solid #4ade80; }
+.tfill { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: linear-gradient(#ef4444, #f59e0b); opacity: .85; }
+.tball { text-align: center; font-size: 46px; height: 56px; }
+.tball.pop { animation: pulse .35s ease; }
+.tinfo { text-align: center; font-weight: 700; min-height: 20px; }
+.track { position: relative; height: 56px; background: repeating-linear-gradient(90deg, #166534 0 30px, #15803d 30px 60px); border-radius: 10px; }
+.runner { position: absolute; left: 0; top: 8px; font-size: 34px; transform: scaleX(-1); transition: left .08s linear; }
+.finish { position: absolute; right: 6px; top: 10px; font-size: 30px; }
+.feet { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; } .feet .btn { padding: 26px 0; font-size: 20px; touch-action: manipulation; }
+.pgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: linear-gradient(#15803d, #166534); padding: 12px; border-radius: 12px; }
+.pm { aspect-ratio: 1; border-radius: 50%; border: 2px solid #ffffff55; background: #ffffff1a; font-size: 26px; touch-action: manipulation; }
+.pm.lit { background: #facc15; border-color: #fff; box-shadow: 0 0 16px #facc15; }
+.pm.ok { background: #22c55e; } .pm.bad { background: #ef4444; }
+.dres { text-align: center; margin: 8px 0; } .dres b { display: block; font-size: 28px; } .dres span { color: var(--acc); font-weight: 700; }
+.dhold, .dtap { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+/* ---------- görsel cila: ana ekran, profil, kupa dolabı ---------- */
+.hero2 { position: relative; overflow: hidden; background: radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--c1) 75%, #000) 0%, #111b26 70%); box-shadow: 0 8px 24px #0006; }
+.hero2::after { content: ''; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 55%, color-mix(in srgb, var(--c2) 18%, transparent) 56%, transparent 75%); pointer-events: none; }
+.shirtbg { position: absolute; right: 70px; top: -18px; font: 900 110px/1 system-ui; font-style: normal; color: #ffffff0d; pointer-events: none; }
+.hface { position: relative; flex: none; width: 58px; height: 58px; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 3px color-mix(in srgb, var(--c1) 70%, #fff), 0 4px 12px #0008; }
+.hface svg { width: 100%; height: 100%; display: block; }
+.hface .badge { position: absolute; right: -4px; bottom: -4px; }
+.hero2 .hface { overflow: visible; } .hero2 .hface svg { border-radius: 50%; }
+.formdots { display: flex; gap: 3px; align-items: center; margin-top: 5px; }
+.formdots i { width: 17px; height: 17px; border-radius: 5px; display: grid; place-items: center; font: 800 10px system-ui; font-style: normal; color: #fff; }
+.formdots .fW { background: #16a34a; } .formdots .fD { background: #64748b; } .formdots .fL { background: #dc2626; }
+.formdots small { margin-left: 6px; color: var(--muted); }
+.ring { position: relative; flex: none; display: grid; place-items: center; }
+.ring svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ring b { font-size: 22px; line-height: 1; margin-top: -6px; } .ring span { position: absolute; bottom: 11px; font-size: 8px; letter-spacing: 1px; color: var(--muted); }
+.tile { position: relative; overflow: hidden; transition: transform .12s ease, border-color .2s; box-shadow: 0 2px 8px #0004; }
+.tile:active { transform: scale(.94); }
+.tile::before { content: ''; position: absolute; inset: 0; opacity: .16; background: radial-gradient(circle at 50% 0%, var(--tc, #fff), transparent 70%); pointer-events: none; }
+.t-green { --tc: #22c55e; } .t-purple { --tc: #a855f7; } .t-pink { --tc: #ec4899; } .t-red { --tc: #ef4444; } .t-gold { --tc: #facc15; } .t-blue { --tc: #3b82f6; } .t-gray { --tc: #94a3b8; }
+.ph2 { position: relative; overflow: hidden; background: radial-gradient(130% 150% at 0% 0%, color-mix(in srgb, var(--c1) 70%, #000), #111b26 72%); }
+.ph2 .shirtbg { right: 90px; top: -10px; font-size: 130px; }
+.phface { width: 96px; height: 96px; border-radius: 50%; overflow: hidden; flex: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--c1) 70%, #fff), 0 6px 18px #0009; }
+.phface svg { width: 100%; height: 100%; display: block; }
+.ph2 .chips { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.ph2 .chips span { font-size: 11px; background: #0006; border-radius: 10px; padding: 3px 7px; }
+.kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 8px 0; }
+.kpis > div { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; }
+.kpis span { display: block; font-size: 11px; color: var(--muted); } .kpis b { font-size: 16px; } .kpis small { color: var(--muted); font-weight: 400; }
+.radar { width: 100%; max-width: 340px; display: block; margin: 0 auto; }
+.radar text { fill: #cbd5e1; font: 700 8.5px system-ui; }
+.shelfwrap { background: linear-gradient(#2a1a0e, #1a0f07); border: 3px solid #5b3a1a; border-radius: 16px; padding: 10px 8px 4px; margin: 0 0 10px; box-shadow: inset 0 0 30px #000a; }
+.shelfhead { text-align: center; color: #fde68a; font-size: 13px; margin-bottom: 6px; } .shelfhead b { font-size: 20px; }
+.shelf { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 8px 4px 0; border-bottom: 8px solid #6b4423; box-shadow: 0 6px 6px -4px #000c; margin-bottom: 10px; }
+.cup2 { position: relative; text-align: center; padding: 4px 2px 6px; }
+.cup2 > span { display: block; font-size: 38px; line-height: 1.1; }
+.cup2.won > span { filter: drop-shadow(0 0 10px #facc15aa); animation: shine 3s ease-in-out infinite; }
+.cup2.locked > span { filter: grayscale(1) brightness(.35); opacity: .7; }
+.cup2 > b { position: absolute; top: 0; right: 4px; color: #facc15; font-size: 12px; }
+.cname { font-size: 10px; color: #fde68a; line-height: 1.15; min-height: 23px; } .cup2.locked .cname { color: #a8a29e; }
+.cyears { font-size: 9px; color: #d6d3d1aa; }
+@keyframes shine { 50% { filter: drop-shadow(0 0 16px #fde047); } }
