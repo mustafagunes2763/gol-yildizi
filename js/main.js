@@ -8,6 +8,9 @@ import * as Look from './look.js';
 import * as Iv from './interview.js';
 import * as Life from './life.js';
 import * as Spiker from './commentary.js';
+import * as K from './contract.js';
+import * as Aw from './awards.js';
+import * as Eu from './europe.js';
 
 const app = document.getElementById('app');
 // Kaydı yükle ve eski sürümleri güncelle
@@ -55,6 +58,17 @@ function addNews(list, showNow = true) {
 function go(s) { screen = s; render(); window.scrollTo(0, 0); }
 
 // ---------- ekranlar ----------
+// Gemini portreleri (img/people)
+const face = (name, size = 44, cls = '') => `<img class="face ${cls}" src="img/people/${name}.jpg" width="${size}" height="${size}" alt="" loading="lazy">`;
+const EVENT_FACE = { family_money: 'mother', extra_training: 'coach' };
+function eventCard(ev) {
+  const fk = ev.face || EVENT_FACE[ev.id] || (ev.id === 'partner_trip' ? 'partner' + (state.player.partner?.portrait ?? 0) : null);
+  const story = ev.story ? '<span class="evtag">Hikâye</span>' : '';
+  return `<div class="card event">${ev.photo ? `<img class="evphoto" src="img/news/${ev.photo}.jpg" alt="" loading="lazy">` : ''}
+    ${fk ? `<div class="evface">${face(fk, 64, 'round')}</div>` : ''}${story}<b>${esc(ev.title)}</b><p>${esc(ev.text)}</p>
+    <div class="evbtns">${ev.options.map((o, i) => `<button class="btn ${i ? 'ghost' : ''}" data-act="event" data-i="${i}">${esc(o.label)}</button>`).join('')}</div></div>`;
+}
+
 const screens = {
   start() {
     const u = Cloud.currentUser();
@@ -105,14 +119,15 @@ const screens = {
     const isStart = !p.clubId;
     return `
       <header class="top"><h2>${isStart ? 'Kulüp teklifleri' : 'Transfer teklifleri'}</h2></header>
-      <p class="muted pad">${isStart ? 'Menajerin üç kulüpten deneme sözleşmesi buldu. Birini seç:' : ''}</p>
+      <div class="card agent">${face('agent', 56, 'round')}<div class="grow"><b>Menajerin Cengiz Demirel</b><div class="muted small">${isStart ? '"Üç kulüpten deneme sözleşmesi buldum evlat. Seç birini, gerisini ben hallederim."' : '"Masada teklifler var. Acele etme, en iyisini seç."'}</div></div></div>
       ${state.offers.map((o, i) => {
         const t = team(o.clubId);
         return `<div class="card offer">
           ${badge(t, 48)}
           <div class="grow"><b>${esc(t.name)}</b><div class="muted small">${LEAGUES[E.leagueOf(state, t.id)].name} · Güç ${t.str}</div>
           <div class="muted small">${esc(clubInfo(t.id).sehir || '')}${clubInfo(t.id).teknik_direktor ? ' · Hoca: ' + esc(clubInfo(t.id).teknik_direktor) : ''}</div>
-          <div class="small">${E.money(o.wage)}/hafta · ${o.years} yıl</div></div>
+          <div class="small">${E.money(o.wage)}/hafta · ${o.years} yıl</div>
+          <button class="btn ghost sm mt" data-act="negotiate" data-src="start" data-i="${i}">🤝 Pazarlık et</button></div>
           <button class="btn" data-act="accept" data-i="${i}">İmzala</button>
         </div>`;
       }).join('')}`;
@@ -125,11 +140,12 @@ const screens = {
     const pos = E.sortedTable(state.season.leagues[lid].table).findIndex((r) => r.id === p.clubId) + 1;
     const role = fx ? E.selection(state) : null;
     const roleText = { starter: 'İlk 11', sub: 'Yedek', out: 'Kadro dışı', injured: `Sakat (${p.injury} hafta)`, suspended: `Cezalı (${p.suspended} maç)` }[role] || '';
+    const capTxt = p.captain ? ' · ©️ Kaptan' : '';
     return `
       <header class="hero" style="--c1:${t.c1};--c2:${t.c2}">
         ${badge(t, 54)}
         <div class="grow">
-          <div class="pname">${esc(p.name)} ${esc(p.surname)}</div>
+          <div class="pname">${esc(p.name)} ${esc(p.surname)}${p.captain ? ' <span title="Kaptan">©️</span>' : ''}</div>
           <div class="small">${esc(t.name)} · ${p.age} yaş · FV</div>
         </div>
         <div class="ovr"><b>${E.overall(p)}</b><span>GÜÇ</span></div>
@@ -145,16 +161,17 @@ const screens = {
         <div class="row mt"><span>Taraftar sevgisi</span><b>${Math.round(p.fans ?? 50)}</b></div>${bar(p.fans ?? 50, 100, 'orange')}
       </div>
       ${p.injury > 0 ? `<div class="card injury"><b>🩹 Sakatsın</b> · ${p.injury} hafta daha yoksun. Antrenman yapamazsın, ama dinlenebilirsin.</div>` : ''}
-      ${state.event ? `<div class="card event"><b>${esc(state.event.title)}</b><p>${esc(state.event.text)}</p>
-        <div class="evbtns">${state.event.options.map((o, i) => `<button class="btn ${i ? 'ghost' : ''}" data-act="event" data-i="${i}">${esc(o.label)}</button>`).join('')}</div></div>` : ''}
+      ${state.event ? eventCard(state.event) : ui.evResult ? `<div class="card event evresult"><b>${esc(ui.evResult.title)}</b>${ui.evResult.result ? `<p>${esc(ui.evResult.result)}</p>` : ''}${ui.evResult.summary ? `<p class="small evsum">${esc(ui.evResult.summary)}</p>` : ''}<button class="btn ghost" data-act="evOk">Tamam</button></div>` : ''}
       ${state.phase === 'seasonEnd' ? `
         <div class="card next"><b>Sezon bitti!</b><p class="muted small">Sezon özetini ve teklifleri gör.</p>
         <button class="btn big" data-go="seasonEnd">Sezon sonu</button></div>` :
       fx ? `
         <div class="card next">
-          <div class="muted small">Hafta ${state.season.week + 1} · ${LEAGUES[lid].name}</div>
+          <div class="muted small">${fx.comp ? `<span class="comp ${fx.comp}">${Eu.COMP[fx.comp].icon} ${Eu.COMP[fx.comp].name}</span> · ${fx.round}` : `Hafta ${state.season.week + 1} · ${LEAGUES[lid].name}`}</div>
           <div class="vs">${badge(team(fx.h), 36)}<b>${esc(team(fx.h).short)}</b><span>vs</span><b>${esc(team(fx.a).short)}</b>${badge(team(fx.a), 36)}</div>
           ${isDerby(fx.h, fx.a) ? '<div class="derby">🔥 DERBİ</div>' : ''}
+          ${fx.agg ? `<div class="muted small">İlk maç: ${fx.agg.my}-${fx.agg.opp} · toplam skora bakılır</div>` : ''}
+          ${fx.knockout ? `<div class="derby">🏆 ${fx.final ? 'FİNAL · tek maç' : 'RÖVANŞ'} · toplam skor eşitse uzatma ve penaltılar</div>` : fx.leg === 1 ? '<div class="derby">🏆 ELEME 1. MAÇ · rövanş haftaya</div>' : ''}
           <div class="muted small">🏟️ ${esc(clubInfo(fx.h).stadyum || (fx.home ? 'İç saha' : 'Deplasman'))}</div>
           <div class="muted small">${fx.home ? 'İç saha' : 'Deplasman'} · Rakip gücü ${team(fx.opp).str} · Hoca kararı: <b>${roleText}</b></div>
           <button class="btn big" data-go="prematch">Maça çık</button>
@@ -197,6 +214,7 @@ const screens = {
   table() {
     const myL = E.leagueOf(state, state.player.clubId);
     const lid = ui.tableTab || myL;
+    if (Eu.COMP[lid]) return euroTable(lid, myL);
     const view = ui.tableView || 'puan';
     const L = LEAGUES[lid];
     let body;
@@ -224,7 +242,7 @@ const screens = {
     }
     return `
       <header class="top"><button class="back" data-go="hub">‹</button><h2>Ligler</h2></header>
-      <div class="tabs">${Object.keys(LEAGUES).map((id) => `<button class="${id === lid ? 'on' : ''}" data-act="tab" data-tab="${id}">${LEAGUES[id].name.replace('Trendyol ', '')}${id === myL ? ' ⭐' : ''}</button>`).join('')}</div>
+      ${leagueTabs(lid, myL)}
       <div class="tabs sub">${[['puan', '📊 Puan durumu'], ['gol', '⚽ Gol krallığı'], ['asist', '🎯 Asist']].map(([v, l]) => `<button class="${v === view ? 'on' : ''}" data-act="tview" data-v="${v}">${l}</button>`).join('')}</div>
       ${body}`;
   },
@@ -234,7 +252,7 @@ const screens = {
     const s = p.season;
     const avg = s.apps ? (s.ratingSum / s.apps).toFixed(1) : '-';
     return `
-      <header class="top"><button class="back" data-go="hub">‹</button><h2>Profil</h2></header>
+      <header class="top"><button class="back" data-go="hub">‹</button><h2>Profil</h2><button class="btn ghost sm" data-go="cabinet">🏆 Kupa dolabı${(p.trophies || []).length ? ` (${p.trophies.length})` : ''}</button></header>
       <div class="card profilehead">
         ${Look.portraitSvg(Look.lookOf(p), [team(p.clubId).c1, team(p.clubId).c2], 96)}
         <div class="grow">
@@ -344,20 +362,22 @@ const screens = {
       }).join('')}`;
   },
 
+  // (portre yardımcısı aşağıda: face())
   life() {
     const p = state.player;
-    const relRow = (k, btn) => `<div class="card relrow"><div class="row"><b>${Life.REL_LABEL[k]}</b><b>${Math.round(p.rel[k])}</b></div>${bar(p.rel[k], 100, k === 'family' ? 'orange' : k === 'team' ? 'blue' : '')}
+    const relFace = { family: `<span class="faces">${face('mother', 40)}${face('father', 40)}</span>` };
+    const relRow = (k, btn) => `<div class="card relrow"><div class="row">${relFace[k] || ''}<b class="grow">${Life.REL_LABEL[k]}</b><b>${Math.round(p.rel[k])}</b></div>${bar(p.rel[k], 100, k === 'family' ? 'orange' : k === 'team' ? 'blue' : '')}
       <div class="muted small">${{ coach: 'Yüksekse ilk 11 şansın artar.', team: 'Yüksekse pozisyonlarda daha çok arkadaşın olur, pasların gole döner.', family: 'Yüksekse moralin her hafta artar.' }[k]}</div>${btn}</div>`;
     const partner = p.partner;
     let love;
     if (p.age < 18) love = `<p class="muted">Özel hayat 18 yaşında açılır. Şimdilik futbola odaklan!</p>`;
     else if (!partner) {
       love = ui.candidates
-        ? ui.candidates.map((c, i) => `<div class="cand"><span class="avatar">${esc(c.name[0])}</span><div class="grow"><b>${esc(c.name)}</b><div class="muted small">${esc(c.job)}</div></div><button class="btn sm" data-act="meet" data-i="${i}">Tanış</button></div>`).join('') +
+        ? ui.candidates.map((c, i) => `<div class="cand">${face('partner' + (c.portrait ?? i % 3), 52, 'round')}<div class="grow"><b>${esc(c.name)}</b><div class="muted small">${esc(c.job)}</div></div><button class="btn sm" data-act="meet" data-i="${i}">Tanış</button></div>`).join('') +
           `<button class="btn ghost" data-act="meetCancel">Vazgeç</button>`
         : `<p class="muted small">Şu an yalnızsın.</p><button class="btn" data-act="social">Sosyal hayata çık 🍸</button>`;
     } else {
-      love = `<div class="cand"><span class="avatar love">${esc(partner.name[0])}</span><div class="grow"><b>${esc(partner.name)}</b><div class="muted small">${esc(partner.job)} · ${partner.married ? 'Eşin 💍' : 'Sevgilin'} · ${partner.weeks} hafta</div></div><b>${Math.round(partner.value)}</b></div>
+      love = `<div class="cand">${face('partner' + (partner.portrait ?? 0), 56, 'round love')}<div class="grow"><b>${esc(partner.name)}</b><div class="muted small">${esc(partner.job)} · ${partner.married ? 'Eşin 💍' : 'Sevgilin'} · ${partner.weeks} hafta</div></div><b>${Math.round(partner.value)}</b></div>
         ${bar(partner.value, 100, 'pink')}
         <div class="evbtns mt">
           <button class="btn" data-act="date">Buluş (${E.money(Life.dateCost(p))})</button>
@@ -389,7 +409,7 @@ const screens = {
       const mine = p.bets.filter((b) => b.week === state.season.week && b.year === state.season.year);
       body = `<p class="muted small pad">Bu haftanın diğer maçları. Kendi maçına bahis yok! Kupon hafta sonunda sonuçlanır.</p>${stakeBar}
         ${list.map((m, i) => { const b = mine.find((x) => x.h === m.h && x.a === m.a); return `<div class="card betrow">
-          <div class="small"><b>${esc(team(m.h).short)}</b> - <b>${esc(team(m.a).short)}</b> <span class="muted">${m.lid === 'SL' ? 'SL' : '1.L'}</span></div>
+          <div class="small"><b>${esc(team(m.h).short)}</b> - <b>${esc(team(m.a).short)}</b> <span class="muted">${({ SL: 'SL', L1: '1.L', PL: 'PL' })[m.lid] || m.lid}</span></div>
           <div class="odds">${['1', 'X', '2'].map((k) => `<button class="${b?.pick === k ? 'on' : ''}" data-act="bet" data-i="${i}" data-pick="${k}" ${b ? 'disabled' : ''}>${k}<small>${m.odds[k].toFixed(2)}</small></button>`).join('')}</div>
           ${b ? `<div class="muted small">${E.money(b.stake)} oynadın · olası kazanç ${E.money(b.stake * b.odd)}</div>` : ''}
         </div>`; }).join('') || '<p class="muted pad">Bu hafta oynanacak maç yok.</p>'}`;
@@ -460,7 +480,7 @@ const screens = {
     return `
       <div class="scoreboard" style="--c1:${m.plan.fx.home ? m.plan.myColors[0] : m.plan.oppColors[0]};--c2:${m.plan.fx.home ? m.plan.oppColors[0] : m.plan.myColors[0]}">
         <div class="sb-team">${esc(team(m.plan.fx.h).short)}</div>
-        <div class="sb-score">${m.homeG} - ${m.awayG}<small>${m.minute}'</small></div>
+        <div class="sb-score">${m.homeG} - ${m.awayG}<small>${m.pens ? `pen. ${m.plan.fx.home ? m.pens[0] : m.pens[1]}-${m.plan.fx.home ? m.pens[1] : m.pens[0]}` : m.minute + "'"}</small>${m.plan.fx.comp ? `<em class="sbcomp">${Eu.COMP[m.plan.fx.comp].icon} ${Eu.COMP[m.plan.fx.comp].short} · ${m.plan.fx.round}${m.plan.fx.agg ? ` · toplam ${m.res.myGoals + m.plan.fx.agg.my}-${m.res.oppGoals + m.plan.fx.agg.opp}` : ''}</em>` : ''}</div>
         <div class="sb-team">${esc(team(m.plan.fx.a).short)}</div>
       </div>
       <div id="momentHost" class="moment-host ${m.inMoment ? 'on' : ''}"></div>
@@ -477,10 +497,45 @@ const screens = {
     `;
   },
 
+  negotiate() {
+    const n = ui.neg, p = state.player, t = team(n.clubId);
+    const o = n.offer, d = n.demand, open = n.status === 'open';
+    const row = (key, label, fmt, stepUp, stepDown) => `<div class="negrow"><span>${label}</span>
+      <span class="negclub">${fmt(o[key])}</span>
+      ${open ? `<span class="negctl"><button data-act="negStep" data-k="${key}" data-d="-1">−</button><b>${fmt(d[key])}</b><button data-act="negStep" data-k="${key}" data-d="1">+</button></span>` : `<b>${fmt(o[key])}</b>`}</div>`;
+    const kindTxt = { start: 'İlk profesyonel sözleşme', transfer: 'Transfer görüşmesi', renew: 'Sözleşme uzatma' }[n.kind];
+    return `
+      <header class="top"><button class="back" data-act="negBack">‹</button><h2>Pazarlık</h2></header>
+      <div class="card offer">${badge(t, 48)}<div class="grow"><b>${esc(t.name)}</b><div class="muted small">${kindTxt} · Piyasa değerin ${E.money(n.value)}</div>
+        <div class="patience">${open ? `Kulübün sabrı: ${'●'.repeat(Math.max(0, n.patience))}${'○'.repeat(Math.max(0, 3 - n.patience))}` : n.status === 'agreed' ? '✅ Anlaşma sağlandı' : '❌ Kulüp masadan kalktı'}</div></div></div>
+      <div class="card neg">
+        <div class="negrow head"><span></span><span class="negclub">Kulüp</span><span class="negctl">${open ? 'Senin talebin' : 'Sözleşme'}</span></div>
+        ${row('wage', 'Haftalık maaş', E.money)}
+        ${row('years', 'Süre', (v) => v + ' yıl')}
+        ${row('sign', 'İmza parası', E.money)}
+        ${row('goal', 'Gol primi', E.money)}
+        ${row('release', 'Serbest kalma', E.money)}
+      </div>
+      <div class="card agent">${face('agent', 48, 'round')}<div class="grow"><b>Cengiz</b><div class="small">${esc(K.agentHint(n) || (n.status === 'agreed' ? 'İmzala, gerisini ben hallederim.' : 'Boş ver, başka kulüpler de var.'))}</div>
+        <div class="muted tiny">Komisyon: imza parasının %10'u + 2 haftalık maaş</div></div></div>
+      <div class="neglog">${n.log.slice().reverse().map((l) => `<p class="${l.who}"><b>${l.who === 'agent' ? 'Cengiz' : esc(t.short || t.name)}:</b> ${esc(l.text)}</p>`).join('')}</div>
+      <div class="evbtns pad">
+        ${open ? `<button class="btn" data-act="negSubmit">Talebi ilet</button><button class="btn ghost" data-act="negAccept">Kulübün teklifini kabul et</button>` : ''}
+        ${n.status === 'agreed' ? `<button class="btn big" data-act="negSign">✍️ İmzala</button>` : ''}
+        <button class="btn ghost" data-act="negBack">${n.status === 'walked' ? 'Geri dön' : 'Vazgeç'}</button>
+      </div>`;
+  },
+
   seasonEnd() {
     if (!ui.summary) {
       ui.summary = E.seasonSummary(state);
-      ui.seasonOffers = E.seasonOffers(state);
+      ui.seasonOffers = state.player.age >= Aw.RETIRE_MAX ? [] : E.seasonOffers(state);
+      const before = state.awardsYear;
+      ui.awards = Aw.seasonAwards(state, ui.summary);
+      if (before !== state.awardsYear) {
+        addNews(ui.awards.won.map((k) => News.awardNews(state, k, ui.awards.list.find((a) => a.key === k)?.value)), false);
+        persist();
+      }
       if (!state.seasonNewsDone || state.seasonNewsDone !== state.season.year) {
         state.seasonNewsDone = state.season.year;
         addNews(News.seasonNews(state, ui.summary));
@@ -494,19 +549,108 @@ const screens = {
       <header class="top"><h2>${seasonLabel()} sezonu bitti</h2></header>
       <div class="card">
         <p>${esc(team(p.clubId).name)} ligi <b>${s.myPos}.</b> sırada bitirdi.</p>
-        <p class="small muted">Şampiyonlar: ${esc(team(s.champion.SL).name)} (Süper Lig), ${esc(team(s.champion.L1).name)} (1. Lig)</p>
-        ${['SL', 'L1'].map((lid) => { const k = E.leagueStats(state, lid).sort((x, y) => y.g - x.g)[0]; return k ? `<p class="small muted">⚽ ${LEAGUES[lid].name.replace('Trendyol ', '')} gol kralı: <b>${esc(k.name)}</b> (${esc(team(k.teamId).short || team(k.teamId).name)}, ${k.g} gol)</p>` : ''; }).join('')}
+        <p class="small muted">Şampiyonlar: ${Object.entries(s.champion).map(([l, id]) => `${esc(team(id).name)} (${LEAGUES[l].name.replace('Trendyol ', '')})`).join(', ')}</p>
+        ${Object.entries(s.euro || {}).filter(([, id]) => id).map(([c, id]) => `<p class="small muted">${Eu.COMP[c].icon} ${Eu.COMP[c].name} şampiyonu: <b>${esc(team(id).name)}</b></p>`).join('')}
+        ${Object.keys(LEAGUES).map((lid) => { const k = E.leagueStats(state, lid).sort((x, y) => y.g - x.g)[0]; return k ? `<p class="small muted">⚽ ${LEAGUES[lid].name.replace('Trendyol ', '')} gol kralı: <b>${esc(k.name)}</b> (${esc(team(k.teamId).short || team(k.teamId).name)}, ${k.g} gol)</p>` : ''; }).join('')}
         <div class="statsrow in"><div><span>Maç</span><b>${s.stats.apps}</b></div><div><span>Gol</span><b>${s.stats.goals}</b></div><div><span>Asist</span><b>${s.stats.assists}</b></div><div><span>Ort.</span><b>${s.stats.avg || '-'}</b></div></div>
       </div>
+      <div class="card awards"><h3>🏅 Sezon ödülleri · ${LEAGUES[ui.awards.lid].name.replace('Trendyol ', '')}</h3>
+        ${ui.awards.won.filter((k) => k.startsWith('champ') || k.startsWith('promo')).map((k) => `<div class="aw me"><span>${Aw.TROPHY[k].icon}</span><div><b>${Aw.TROPHY[k].name}</b><div class="muted small">${esc(team(p.clubId).name)}</div></div></div>`).join('')}
+        ${ui.awards.list.map((a) => `<div class="aw ${a.winner.me ? 'me' : ''}"><span>${Aw.TROPHY[a.key].icon}</span><div><b>${Aw.TROPHY[a.key].name}</b><div class="muted small">${esc(a.winner.name)} · ${esc(team(a.winner.teamId).short || team(a.winner.teamId).name)} · ${a.value}</div></div>${a.winner.me ? '<em>SEN!</em>' : ''}</div>`).join('')}
+      </div>
+      ${p.age >= Aw.RETIRE_MIN ? `<div class="card retire"><p class="small">${p.age >= Aw.RETIRE_MAX ? `${p.age} yaşındasın. Vücudun artık izin vermiyor, kramponları asma vakti.` : `${p.age} yaşındasın. İstersen futbolu bırakabilirsin. Oğlun yeni kariyere başlar.`}</p>
+        <button class="btn big ${p.age >= Aw.RETIRE_MAX ? '' : 'ghost'}" data-act="retire">🎬 Futbolu bırak</button></div>` : ''}
+      ${p.age >= Aw.RETIRE_MAX ? '' : `
       <h3 class="pad">Transfer teklifleri</h3>
       ${ui.seasonOffers.length ? ui.seasonOffers.map((o, i) => {
         const t = team(o.clubId);
-        return `<div class="card offer">${badge(t, 44)}<div class="grow"><b>${esc(t.name)}</b><div class="muted small">${LEAGUES[E.leagueOf(state, t.id)].name} · Güç ${t.str}</div><div class="small">${E.money(o.wage)}/hafta · ${o.years} yıl</div></div><button class="btn" data-act="seasonAccept" data-i="${i}">İmzala</button></div>`;
+        return `<div class="card offer">${badge(t, 44)}<div class="grow"><b>${esc(t.name)}</b><div class="muted small">${LEAGUES[E.leagueOf(state, t.id)].name} · Güç ${t.str}</div><div class="small">${E.money(o.wage)}/hafta · ${o.years} yıl</div>
+          <button class="btn ghost sm mt" data-act="negotiate" data-src="season" data-i="${i}">🤝 Pazarlık et</button></div><button class="btn" data-act="seasonAccept" data-i="${i}">İmzala</button></div>`;
       }).join('') : '<p class="muted pad">Bu yaz teklif gelmedi.</p>'}
-      <div class="card"><p class="small">${expiring ? `Sözleşmen bitiyor. ${esc(team(p.clubId).name)} sana ${E.money(Math.round(p.contract.wage * 1.15 / 500) * 500)}/hafta ile 2 yıl uzatma teklif ediyor.` : `Sözleşmen ${p.contract.endsYear} yazına kadar sürüyor.`}</p>
-      <button class="btn big ghost" data-act="stay">${esc(team(p.clubId).name)}'da kal</button></div>`;
+      <div class="card"><p class="small">${expiring ? `Sözleşmen bitiyor. ${esc(team(p.clubId).name)} sana ${E.money(Math.round(p.contract.wage * 1.15 / 500) * 500)}/hafta ile 2 yıl uzatma teklif ediyor.` : `Sözleşmen ${p.contract.endsYear} yazına kadar sürüyor.${p.contract.release ? ` Serbest kalma bedelin ${E.money(p.contract.release)}.` : ''}`}</p>
+      ${expiring ? `<button class="btn big" data-act="negotiate" data-src="renew">🤝 Uzatma pazarlığı</button>` : ''}
+      <button class="btn big ghost" data-act="stay">${esc(News.ek(team(p.clubId).name, 'loc'))} kal${expiring ? ' (teklifi kabul et)' : ''}</button></div>`}`;
+  },
+
+  retired() {
+    const sum = (state.legacy || []).slice(-1)[0];
+    const hof = Aw.hallOfFame();
+    if (!sum) return '';
+    const tc = {}; for (const t of sum.trophyList) tc[t.key] = (tc[t.key] || 0) + 1;
+    return `
+      <header class="top"><h2>Bir efsane veda ediyor</h2></header>
+      <div class="card center retirecard">
+        <div class="big">🎬</div><h3>${esc(sum.name)}${sum.gen > 1 ? ` <small class="muted">(${sum.gen}. kuşak)</small>` : ''}</h3>
+        <p class="muted small">${sum.retiredAt} yaşında futbolu bıraktı</p>
+        <div class="statsrow in"><div><span>Sezon</span><b>${sum.years}</b></div><div><span>Maç</span><b>${sum.apps}</b></div><div><span>Gol</span><b>${sum.goals}</b></div><div><span>Asist</span><b>${sum.assists}</b></div></div>
+        <p class="small">${Object.entries(tc).map(([k, n]) => `${Aw.TROPHY[k].icon} ${Aw.TROPHY[k].name}${n > 1 ? ' ×' + n : ''}`).join(' · ') || 'Kupa kazanamadı'}</p>
+        <p class="muted small">Kulüpler: ${esc(sum.clubs.join(', '))}${sum.best ? ` · En iyi sezon: ${sum.best.year} (${sum.best.goals} gol)` : ''}</p>
+      </div>
+      <div class="card"><h3>👑 Ölümsüzler</h3>${hof.slice(0, 10).map((h, i) => `<div class="row small"><span>${i + 1}. ${esc(h.name)}</span><span class="muted">${h.goals} gol · ${h.trophies} kupa</span></div>`).join('')}</div>
+      <div class="card"><h3>👶 Oğlunla devam et</h3>
+        <p class="small muted">Oğlun 17 yaşında, aynı dünyada kariyere başlar. Soyadını, ününün bir kısmını, paranın %25'ini ve biraz da yeteneğini miras alır.</p>
+        <input id="sonName" class="textin" placeholder="Oğlunun adı" maxlength="16" value="${esc(ui.sonName || '')}">
+        <button class="btn big" data-act="newSon">Yeni kariyere başla</button>
+      </div>
+      <button class="btn ghost big" data-go="start">Ana menüye dön</button>`;
+  },
+
+  cabinet() {
+    const p = state.player;
+    const tc = Aw.trophyCounts(p);
+    const legacy = state.legacy || [];
+    return `
+      <header class="top"><button class="back" data-go="profile">‹</button><h2>Kupa dolabı</h2></header>
+      ${Object.keys(tc).length ? `<div class="cabinet">${Object.keys(Aw.TROPHY).filter((k) => tc[k]).map((k) => `<div class="cup"><span>${Aw.TROPHY[k].icon}</span><b>${tc[k].length > 1 ? '×' + tc[k].length : ''}</b><div class="small">${Aw.TROPHY[k].name}</div><div class="muted tiny">${tc[k].join(', ')}</div></div>`).join('')}</div>` : '<div class="card center"><div style="font-size:40px">🗄️</div><p class="muted">Dolap henüz boş. İlk kupa için çalışmaya devam!</p></div>'}
+      <div class="card"><h3>Kariyer</h3>
+        <table class="tbl"><tr><th>Sezon</th><th class="l">Kulüp</th><th>M</th><th>G</th><th>A</th><th>Ort</th></tr>
+        ${p.career.seasons.map((x) => `<tr><td>${x.year}</td><td class="l">${esc(team(x.club)?.short || x.club)}</td><td>${x.apps}</td><td>${x.goals}</td><td>${x.assists}</td><td>${x.avg || '-'}</td></tr>`).join('') || '<tr><td colspan="6" class="muted">İlk sezonun devam ediyor</td></tr>'}</table>
+      </div>
+      ${legacy.length ? `<div class="card"><h3>Aile mirası</h3>${legacy.map((l) => `<div class="row small"><span>${esc(l.name)}</span><span class="muted">${l.goals} gol · ${l.trophies} kupa</span></div>`).join('')}</div>` : ''}`;
   },
 };
+
+function leagueTabs(lid, myL) {
+  const myE = Eu.myEuroStatus(state)?.comp;
+  return `<div class="tabs scroll">${Object.keys(LEAGUES).map((id) => `<button class="${id === lid ? 'on' : ''}" data-act="tab" data-tab="${id}">${LEAGUES[id].name.replace('Trendyol ', '')}${id === myL ? ' ⭐' : ''}</button>`).join('')}${Object.keys(Eu.COMP).filter((id) => !Eu.COMP[id].cup).map((id) => `<button class="${id === lid ? 'on' : ''}" data-act="tab" data-tab="${id}">${Eu.COMP[id].icon} ${Eu.COMP[id].short}${id === myE ? ' ⭐' : ''}</button>`).join('')}</div>`;
+}
+
+function euroTable(cid, myL) {
+  const comp = state.euro?.comps[cid];
+  const me = state.player.clubId;
+  const view = ['puan', 'ko', 'gol'].includes(ui.tableView) ? ui.tableView : 'puan';
+  let body = '';
+  if (!comp) body = '<p class="muted pad">Bu sezon kupa yok.</p>';
+  else if (view === 'puan') {
+    const rows = Eu.sortedEuro(comp);
+    const q = (state.euro.quals || []).filter((x) => x.comp === cid && x.ties.length);
+    body = `${q.map((x) => `<div class="card"><h3>🇹🇷 ${esc(team(x.team).name)} · ön eleme</h3>${x.ties.map((t, i) => `<div class="komatch ${x.team === me ? 'me' : ''}"><span>${esc(x.rounds[i])}</span><b>${t.legs.map((l) => l.hg === null ? '-' : `${l.h === x.team ? l.hg : l.ag}-${l.h === x.team ? l.ag : l.hg}`).join(' · ')}</b><span class="${t.w === x.team ? 'win' : ''}">${t.w ? (t.w === x.team ? '✅' : '❌') : ''} ${esc(team(t.hi).short)} ${badge(team(t.hi), 16)}</span></div>`).join('')}${x.done ? `<p class="small muted">${x.result === 'in' ? 'Lig aşamasına kaldı!' : x.result === 'down' ? 'Elendi, bir alt kupada devam ediyor.' : 'Elendi, Avrupa defteri kapandı.'}</p>` : ''}</div>`).join('')}
+      <p class="muted small pad">Lig aşaması · ${Math.min(comp.md, comp.mds || 8)}/${comp.mds || 8} maç oynandı. İlk 8 son 16'ya, 9-24 play-off'a.</p><table class="tbl league">
+      <tr><th>#</th><th class="l">Takım</th><th>O</th><th>G</th><th>B</th><th>M</th><th>Av</th><th>P</th></tr>
+      ${rows.map((r, i) => `<tr class="${r.id === me ? 'me' : ''} ${i < 8 ? 'up' : i < 24 ? 'mid' : 'down'}"><td>${i + 1}</td><td class="l nm"><span>${badge(team(r.id), 20)}<span>${esc(team(r.id).name)}</span></span></td><td>${r.p}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td>${r.gd > 0 ? '+' : ''}${r.gd}</td><td><b>${r.pts}</b></td></tr>`).join('')}</table>`;
+  } else if (view === 'ko') {
+    const sc = (l) => l.hg === null ? '-' : `${l.hg}-${l.ag}`;
+    body = comp.ko.length ? comp.ko.map((ties, i) => `<div class="card"><h3>${Eu.STAGE_NAME[i]}</h3>${ties.map((t) => {
+      const last = t.legs[t.legs.length - 1], two = t.legs.length === 2;
+      const done = t.w, aggHi = Eu.aggFor(t, t.hi), aggLo = Eu.aggFor(t, t.lo);
+      return `<div class="komatch ${t.hi === me || t.lo === me ? 'me' : ''}"><span class="${t.w === t.hi ? 'win' : ''}">${badge(team(t.hi), 16)} ${esc(team(t.hi).short)}</span>
+        <b>${two ? `${t.legs[0].hg === null ? '-' : aggHi + '-' + aggLo}` : sc(last)}${last.pens ? `<small> (p. ${last.h === t.hi ? last.pens[0] : last.pens[1]}-${last.h === t.hi ? last.pens[1] : last.pens[0]})</small>` : last.et ? '<small> uz.</small>' : ''}
+        ${two ? `<small class="legs">${sc(t.legs[0]).split('-').reverse().join('-')} · ${sc(t.legs[1])}</small>` : ''}</b>
+        <span class="${t.w === t.lo ? 'win' : ''}">${esc(team(t.lo).short)} ${badge(team(t.lo), 16)}</span></div>`;
+    }).join('')}</div>`).join('')
+      + (comp.winner ? `<div class="card center"><div style="font-size:36px">🏆</div><b>${esc(team(comp.winner).name)}</b><div class="muted small">${Eu.COMP[cid].name} şampiyonu</div></div>` : '')
+      : '<p class="muted pad">Eleme turları lig aşaması bitince başlar.</p>';
+  } else {
+    const all = Object.entries(state.euro.ps || {}).map(([k, v]) => { const i = k.indexOf('|'); return { teamId: k.slice(0, i), name: k.slice(i + 1), g: v[0], a: v[1], me: !!v[2] }; })
+      .filter((x) => comp.teams.includes(x.teamId) && x.g > 0).sort((x, y) => y.g - x.g || y.a - x.a).slice(0, 20);
+    body = all.length ? `<table class="tbl stats"><tr><th>#</th><th class="l">Oyuncu</th><th>Gol</th><th>Asist</th></tr>${all.map((x, i) => `<tr class="${x.me ? 'me' : ''}"><td>${i + 1}</td><td class="l"><b>${esc(x.name)}</b><div class="muted tiny">${badge(team(x.teamId), 14)} ${esc(team(x.teamId).name)}</div></td><td><b>${x.g}</b></td><td class="muted">${x.a}</td></tr>`).join('')}</table>` : '<p class="muted pad">Henüz gol yok.</p>';
+  }
+  return `
+    <header class="top"><button class="back" data-go="hub">‹</button><h2>${Eu.COMP[cid].icon} ${Eu.COMP[cid].name}</h2></header>
+    ${leagueTabs(cid, myL)}
+    <div class="tabs sub">${[['puan', '📊 Lig aşaması'], ['ko', '🏆 Eleme'], ['gol', '⚽ Gol krallığı']].map(([v, l]) => `<button class="${v === view ? 'on' : ''}" data-act="tview" data-v="${v}">${l}</button>`).join('')}</div>
+    ${body}`;
+}
 
 function interviewCard(iv) {
   if (!iv.answers?.[0]?.tone) return '';   // eski kayıttan kalma röportaj
@@ -539,6 +683,7 @@ function bjFinish(g, natural = false) {
 // ---------- maç akışı ----------
 async function runMatch() {
   const plan = ui.plan;
+  if (window.__debug) window.__debug.ui = ui;   // testler için
   const m = ui.match = {
     plan, minute: 0, homeG: 0, awayG: 0, feed: [], fast: localStorage.getItem('golyildizi.fast') === '1', done: false, inMoment: false, choice: null,
     res: { played: plan.role !== 'out', goals: 0, assists: 0, outcomes: [], myGoals: 0, oppGoals: 0, yellows: 0, red: false, cards: [] },
@@ -640,7 +785,7 @@ async function runMatch() {
       lateDone = true;
       spk('latePressure', {}, 'hl');
       const n = diff <= -2 ? 1 : E.randInt(1, 2);
-      for (let k = 0; k < n; k++) insert(plan.extraMoment(E.randInt(77, Math.min(89, plan.onTo)), E.pick(['acik', 'kafa', 'korner', 'kontra'])));
+      for (let k = 0; k < n; k++) insert(plan.extraMoment(E.randInt(77, Math.min(89, plan.onTo)), E.pick(['acik', 'kafa', 'korner', 'kontra', 'uzuntop', 'duvar'])));
     }
     if (min === 60 && !leadTrim && diff >= 2) {
       leadTrim = true;
@@ -711,6 +856,52 @@ async function runMatch() {
     await new Promise((r) => setTimeout(r, m.fast ? 60 + lines * 320 : 210 + lines * 800 + (min === 45 ? 700 : 0)));
   }
   m.minute = 90;
+  // eleme maçı: uzatma + penaltılar
+  const aggM = () => m.res.myGoals + (plan.fx.agg?.my || 0), aggO = () => m.res.oppGoals + (plan.fx.agg?.opp || 0);
+  if (plan.fx.knockout && aggM() === aggO() && !m.res.red) {
+    m.feed.push({ min: 90, text: plan.fx.agg ? `Toplam skor ${aggM()}-${aggO()}! Uzatmalara gidiyoruz…` : 'Berabere! Uzatmalara gidiyoruz…', cls: 'hl' }); Sfx.whistle(); render(); await wait(1600);
+    for (let min = 91; min <= 120; min++) {
+      m.minute = min;
+      if (Math.random() < 0.011) { addMine(); m.feed.push({ min, text: `GOL! ${E.pick(plan.teammates)} (${plan.myName})`, cls: 'goal' }); spk('teamGoal'); }
+      else if (Math.random() < 0.010) { addOpp(); m.feed.push({ min, text: `Gol: ${E.pick(state.teams[plan.fx.opp].squad).name} (${plan.oppName})`, cls: 'bad' }); spk('oppGoal'); }
+      render(); await new Promise((r) => setTimeout(r, m.fast ? 25 : 120));
+    }
+    if (aggM() === aggO()) {
+      m.feed.push({ min: 120, text: 'Penaltılar! Kalpler duracak…', cls: 'hl' }); Sfx.whistle(true); render(); await wait(1800);
+      const iKick = plan.role !== 'out' && plan.onTo >= 90 && plan.onFrom <= 120;
+      const short = (n) => { const w = (n || '').split(' '); return w.length > 1 ? `${w[0][0]}. ${w.slice(1).join(' ')}` : n; };
+      const mates = (state.teams[p.clubId].squad.filter((x) => x.pos !== 'KL').map((x) => x.name)).slice(0, 10), opps = state.teams[plan.fx.opp].squad.filter((x) => x.pos !== 'KL').map((x) => x.name).slice(0, 10);
+      let a = 0, b = 0;
+      m.pens = [0, 0];
+      const setP = () => { m.pens = plan.fx.home ? [a, b] : [b, a]; };
+      for (let k = 0; k < 20; k++) {
+        // bizim atış
+        let ok;
+        if (k === 0 && iKick) {
+          m.feed.push({ min: 120, text: 'İlk penaltı senden!', cls: 'hl' }); render(); await wait(900);
+          const r = await moment(plan.extraMoment(120, 'penalti'), 120, false);
+          ok = r.outcome === 'goal';
+          m.feed.push({ min: 120, text: ok ? `⚽ ${p.surname} attı!` : `❌ ${p.surname} kaçırdı!`, cls: ok ? 'goal' : 'bad' });
+        } else {
+          ok = Math.random() < 0.76;
+          const who = mates[(iKick ? k - 1 : k + 0) % mates.length] || 'Arkadaşın';
+          m.feed.push({ min: 120, text: ok ? `⚽ ${short(who)} attı` : `❌ ${short(who)} kaçırdı`, cls: ok ? '' : 'bad' });
+        }
+        if (ok) a++;
+        setP(); render(); await wait(1100);
+        if (k < 5 && (a > b + (5 - k) || b > a + (4 - k))) break;
+        // rakip atış
+        const okb = Math.random() < 0.74;
+        if (okb) b++;
+        m.feed.push({ min: 120, text: okb ? `⚽ ${short(opps[k % opps.length] || 'Rakip')} attı` : `🧤 ${short(opps[k % opps.length] || 'Rakip')} kaçırdı!`, cls: okb ? 'bad' : 'goal' });
+        setP(); render(); await wait(1100);
+        if (k < 5 && (a > b + (4 - k) || b > a + (4 - k))) break;
+        if (k >= 4 && a !== b) break;
+      }
+      m.res.pens = [a, b];
+      m.feed.push({ min: 120, text: a > b ? `Penaltılarda kazandık! (${a}-${b})` : `Penaltılarda kaybettik… (${a}-${b})`, cls: a > b ? 'goal' : 'bad' });
+    }
+  }
   spk('fulltime');
   Sfx.whistle(true); Sfx.stopCrowd();
   if (m.res.red) plan.onTo = Math.max(plan.onFrom, m.res.redMin);
@@ -721,7 +912,7 @@ async function runMatch() {
   addNews([
     ...(m.res.played && p.career.apps === 1 ? [News.debutNews(state, plan)] : []),
     ...News.matchNews(state, plan, m.res), ...Iv.promiseResult(state, plan, m.res), News.maybeRumor(state, recentAvg), News.cardNews(state, plan, m.res),
-    ...News.weeklyExtras(state, plan, m.res, E.leagueStats(state, lidMe)), News.leagueNews(state),
+    ...(plan.fx.comp ? [News.euroNews(state, plan, m.res)] : [...News.weeklyExtras(state, plan, m.res, E.leagueStats(state, lidMe)), News.leagueNews(state)]),
   ], false);
   if (m.res.injury) {
     m.feed.push({ min: 90, text: `Maçın sonunda sakatlandın! ${m.res.injury} hafta yoksun.`, cls: 'bad' });
@@ -745,7 +936,7 @@ app.addEventListener('click', async (e) => {
   const act = el.dataset.act;
   switch (act) {
     case 'continue': return go(state.phase === 'seasonEnd' ? 'seasonEnd' : 'hub');
-    case 'playSlot': openSlot(+el.dataset.i); if (!state) return toast('Bu kayıt açılamadı.'); return go(state.phase === 'offers' ? 'offers' : state.phase === 'seasonEnd' ? 'seasonEnd' : 'hub');
+    case 'playSlot': openSlot(+el.dataset.i); if (!state) return toast('Bu kayıt açılamadı.'); return go(state.phase === 'offers' ? 'offers' : state.phase === 'seasonEnd' ? 'seasonEnd' : state.phase === 'retired' ? 'retired' : 'hub');
     case 'newSlot': Cloud.setActiveSlot(+el.dataset.i); state = null; return go('create');
     case 'delAsk': ui.delConfirm = +el.dataset.i; return render();
     case 'delCancel': ui.delConfirm = null; return render();
@@ -788,7 +979,13 @@ app.addEventListener('click', async (e) => {
     case 'shopTab': ui.shopTab = el.dataset.t; return render();
     case 'buy': { const r = Life.buy(state, el.dataset.id); persist(); return toast(r.ok ? `${r.item.name} alındı!` : r.msg); }
     case 'sell': { const r = Life.sell(state, el.dataset.id); persist(); return toast(r.ok ? `${r.item.name} satıldı` : r.msg); }
-    case 'event': { Life.resolveEvent(state, +el.dataset.i); persist(); return render(); }
+    case 'event': {
+      const title = state.event?.title;
+      const r = Life.resolveEvent(state, +el.dataset.i);
+      ui.evResult = r && (r.result || r.summary) ? { title, result: r.result, summary: r.summary } : null;
+      persist(); return render();
+    }
+    case 'evOk': ui.evResult = null; return render();
     case 'talkCoach': { const r = Life.talkCoach(state); persist(); return toast(r.msg); }
     case 'treatTeam': { const r = Life.treatTeam(state); persist(); return toast(r.msg); }
     case 'callFamily': { const r = Life.callFamily(state); persist(); return toast(r.msg); }
@@ -862,6 +1059,63 @@ app.addEventListener('click', async (e) => {
       ui.match = null; ui.plan = null; ui.iv = null;
       ui.popup.push(...ui.pending); ui.pending = [];
       return go(state.phase === 'seasonEnd' ? 'seasonEnd' : 'hub');
+    case 'retire': {
+      if (!confirm('Futbolu bırakmak istediğine emin misin?')) return;
+      const sum = Aw.retire(state);
+      addNews([News.retireNews(state, sum)], false);
+      ui.summary = null; persist(); return go('retired');
+    }
+    case 'newSon': {
+      const name = (document.getElementById('sonName')?.value || '').trim();
+      if (!name) return toast('Oğlunun adını yaz');
+      Aw.newSon(state, name);
+      persist(); return go('offers');
+    }
+    case 'negotiate': {
+      const src = el.dataset.src;
+      const p = state.player;
+      let offer, kind;
+      if (src === 'start') { offer = state.offers[+el.dataset.i]; kind = 'start'; }
+      else if (src === 'season') { offer = ui.seasonOffers[+el.dataset.i]; kind = 'transfer'; }
+      else { offer = { clubId: p.clubId, wage: Math.round(p.contract.wage * 1.15 / 500) * 500, years: 2 }; kind = 'renew'; }
+      ui.neg = K.openNegotiation(state, offer, kind); ui.neg.src = src; ui.neg.idx = +el.dataset.i;
+      return go('negotiate');
+    }
+    case 'negStep': {
+      const n = ui.neg, k = el.dataset.k, dir = +el.dataset.d;
+      const step = { wage: Math.max(5000, Math.round(n.offer.wage * 0.05 / 5000) * 5000), sign: Math.max(10000, Math.round(n.offer.sign * 0.1 / 10000) * 10000), goal: Math.max(1000, Math.round(n.offer.goal * 0.1 / 1000) * 1000), release: Math.max(100000, Math.round(n.offer.release * 0.1 / 100000) * 100000), years: 1 }[k];
+      n.demand[k] = k === 'years' ? Math.min(5, Math.max(1, n.demand.years + dir)) : Math.max(step, n.demand[k] + dir * step);
+      return render();
+    }
+    case 'negSubmit': K.submitDemand(ui.neg); return render();
+    case 'negAccept': K.acceptCurrent(ui.neg); ui.neg.log.push({ who: 'agent', text: 'Teklifi kabul ettik. Hayırlı olsun!' }); return render();
+    case 'negBack': {
+      const src = ui.neg?.src; ui.neg = null;
+      return go(src === 'start' ? 'offers' : 'seasonEnd');
+    }
+    case 'negSign': {
+      const n = ui.neg, p = state.player, old = p.clubId;
+      if (n.src === 'start') {
+        E.acceptOffer(state, { clubId: n.clubId, wage: n.offer.wage, years: n.offer.years });
+        const r = K.signContract(state, n);
+        addNews([News.signingNews(state, n.clubId, null)]);
+        E.addInbox(state, `Cengiz Demirel komisyonunu aldı: ${E.money(r.commission)}.`);
+      } else if (n.src === 'season') {
+        E.endSeason(state);
+        E.acceptOffer(state, { clubId: n.clubId, wage: n.offer.wage, years: n.offer.years });
+        const r = K.signContract(state, n);
+        addNews([News.signingNews(state, n.clubId, old)]);
+        E.addInbox(state, `Cengiz Demirel komisyonunu aldı: ${E.money(r.commission)}.`);
+        ui.summary = null;
+      } else {
+        const r = K.signContract(state, n);
+        p.contract.endsYear += 1;
+        E.addInbox(state, `${team(p.clubId).name} ile sözleşmeni ${n.offer.years} yıl uzattın. Cengiz'in komisyonu: ${E.money(r.commission)}.`);
+        E.endSeason(state);
+        ui.summary = null;
+      }
+      ui.neg = null; persist(); return go('hub');
+    }
     case 'seasonAccept': {
       const o = ui.seasonOffers[+el.dataset.i];
       const old = state.player.clubId;

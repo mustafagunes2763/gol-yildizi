@@ -3,6 +3,7 @@
 // Değiştirmek istersen buradaki değerleri düzenlemen yeterli.
 
 import { KULUPLER } from './kulupler.js';
+import { PL_TEAMS, EURO_TEAMS, UECL_TEAMS } from './data-europe.js';
 
 export const SEASON_START_YEAR = 2026;
 
@@ -48,6 +49,7 @@ export const TEAMS = {
   ist:  { name: 'İstanbulspor',    short: 'İST', c1: '#FFD200', c2: '#111111', str: 57 },
   bol:  { name: 'Boluspor',        short: 'BOL', c1: '#D71920', c2: '#FFFFFF', str: 56 },
 };
+Object.assign(TEAMS, PL_TEAMS, EURO_TEAMS, UECL_TEAMS);
 
 // Kulüp bilgisi: gerçek ana renk, stadyum, şehir, hoca, ezeli rakipler
 for (const [id, k] of Object.entries(KULUPLER)) {
@@ -57,8 +59,10 @@ for (const [id, k] of Object.entries(KULUPLER)) {
   if (t.c1 === t.c2) t.c2 = t.c1 === '#FFFFFF' ? '#111111' : '#FFFFFF';
 }
 export const clubInfo = (id) => KULUPLER[id] || {};
+const EN_DERBIES = [['ars', 'tot'], ['liv', 'eve'], ['mci', 'mun'], ['liv', 'mun'], ['new', 'sun'], ['che', 'tot'], ['ars', 'che'], ['lee', 'mun'], ['avl', 'bha']];
 export const isDerby = (a, b) => {
   const big = ['gs', 'fb', 'bjk', 'ts'];
+  if (EN_DERBIES.some(([x, y]) => (x === a && y === b) || (x === b && y === a))) return true;
   return (big.includes(a) && big.includes(b)) || (KULUPLER[a]?.ezeli_rakipler || []).includes(b) || (KULUPLER[b]?.ezeli_rakipler || []).includes(a);
 };
 
@@ -69,6 +73,8 @@ export const LEAGUES = {
   L1: { id: 'L1', name: 'Trendyol 1. Lig', tier: 2,
         teams: ['ant','kay','bur','kgm','sivas','igd','ero','bod','sar','bat','mar','kec','mug','ban','pen','umr','man','van','ist','bol'],
         promote: 3, relegate: 0 },
+  PL: { id: 'PL', name: 'Premier Lig', tier: 1, country: 'ENG',
+        teams: Object.keys(PL_TEAMS), promote: 0, relegate: 0 },
 };
 
 // Takım arkadaşı / rakip isimleri (gerçek kadrolar sonraki aşamada js/kadrolar.js ile gelecek)

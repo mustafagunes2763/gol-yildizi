@@ -2,6 +2,8 @@
 import { TEAMS, LEAGUES, SEASON_START_YEAR, FIRST_NAMES, LAST_NAMES, clubInfo } from './data.js';
 import { KADROLAR } from './kadrolar.js';
 import { weeklyLife, initLife, injuryRoll } from './life.js';
+import { NAME_POOLS, UCL_2026, UEL_2026, UECL_2026 } from './data-europe.js';
+import * as Euro from './europe.js';
 
 export const SAVE_VERSION = 1;
 export const STAT_KEYS = ['sut', 'pas', 'hiz', 'teknik', 'guc'];
@@ -61,10 +63,18 @@ export function newPlayer({ name, surname, foot = 'Sağ', nation = 'Türkiye', l
 export const emptySeasonStats = () => ({ apps: 0, starts: 0, goals: 0, assists: 0, ratingSum: 0 });
 
 // ---------- takımlar ----------
-function genSquad() {
-  // Basit kadro: 11 + 7 yedek, isimleri uydurma
+function genSquad(t = {}) {
+  // Kadrosu gelmeyen takım: ülkeye uygun uydurma isimler, güce uygun reytingler (Gemini kadrosu gelince değişir)
   const positions = ['KL','DF','DF','DF','DF','OS','OS','OS','FV','FV','FV','KL','DF','DF','OS','OS','FV','FV'];
-  return positions.map((pos) => ({ name: randomName(), pos }));
+  const pool = t.country ? (NAME_POOLS[t.country] || NAME_POOLS.GEN) : null;
+  const avg = 66 + ((t.str || 66) - 56) / 1.8;
+  const used = new Set();
+  return positions.map((pos, i) => {
+    let name;
+    do { name = pool ? `${pick(pool[0])} ${pick(pool[1])}` : randomName(); } while (used.has(name));
+    used.add(name);
+    return { name, pos, age: randInt(19, 33), ovr: Math.round(avg + (i < 11 ? randInt(-2, 4) : randInt(-8, -2))), nat: t.country || 'Türkiye' };
+  });
 }
 
 // Gerçek kadro: [isim, mevki, yaş, uyruk, güç, tahmini]
@@ -86,7 +96,7 @@ export function initTeams() {
   const teams = {};
   for (const [id, t] of Object.entries(TEAMS)) {
     const real = realSquad(id);
-    teams[id] = { id, ...t, squad: real || genSquad(), real: !!real };
+    teams[id] = { id, ...t, squad: real || genSquad(t), real: !!real };
     if (real) teams[id].str = squadStrength(real);
   }
   return teams;
@@ -107,6 +117,33 @@ export function upgradeTeams(state) {
     }
     state.namesV = 2; changed = true;
   }
+  // yeni eklenen takımlar (Premier Lig, Avrupa) ve ligler
+  for (const [id, t] of Object.entries(TEAMS)) {
+    if (state.teams[id]) continue;
+    const real = realSquad(id);
+    state.teams[id] = { id, ...t, squad: real || genSquad(t), real: !!real };
+    if (real) state.teams[id].str = squadStrength(real);
+    changed = true;
+  }
+  for (const [lid, l] of Object.entries(LEAGUES)) {
+    if (state.leagues[lid]) continue;
+    state.leagues[lid] = l.teams.slice();
+    if (state.season && !state.season.leagues[lid]) {
+      state.season.leagues[lid] = { fixtures: makeFixtures(l.teams), table: emptyTable(l.teams) };
+      // geçmiş haftaları simüle et
+      for (let w = 0; w < state.season.week; w++) for (const m of state.season.leagues[lid].fixtures[w] || []) {
+        [m.hg, m.ag] = simScore(state.teams, m.h, m.a); applyResult(state.season.leagues[lid].table, m);
+      }
+      state.season.totalWeeks = Math.max(...Object.values(state.season.leagues).map((x) => x.fixtures.length));
+    }
+    changed = true;
+  }
+  if (state.season && !state.euro) {
+    state.euro = Euro.createEuro(state, { UCL: UCL_2026, UEL: UEL_2026, UECL: UECL_2026 });
+    for (let w = 0; w < state.season.week; w++) Euro.simWeek(state, w);
+    changed = true;
+  }
+  if (Euro.ensureUECL(state)) changed = true;
   for (const [id, t] of Object.entries(state.teams)) {
     if (t.real) continue;
     const real = realSquad(id);
@@ -166,6 +203,7 @@ export function applyResult(table, m) {
   else { H.d++; A.d++; H.pts++; A.pts++; }
 }
 
+export const sortedTableOf = (t) => sortedTable(t);
 export function sortedTable(table) {
   return Object.entries(table)
     .map(([id, r]) => ({ id, ...r, gd: r.gf - r.ga }))
@@ -186,8 +224,16 @@ function pickBy(squad, W, not) {
 }
 export function pickScorer(team) { return pickBy(team.squad, SCORE_W)?.name || 'Oyuncu'; }
 export function pickAssister(team, scorer) { return Math.random() < 0.72 ? pickBy(team.squad, ASSIST_W, scorer)?.name || null : null; }
+export function addStatTo(S, teamId, name, g, a, me = false) {
+  if (!name) return;
+  const k = `${teamId}|${name}`;
+  const r = (S[k] ||= [0, 0]);
+  r[0] += g; r[1] += a;
+  if (me) r[2] = 1;
+}
 export function addStat(state, teamId, name, g, a, me = false) {
   if (!name) return;
+  if (state._euroStats) return addStatTo(state.euro.ps, teamId, name, g, a, me);
   const S = (state.season.ps ||= {});
   const k = `${teamId}|${name}`;
   const r = (S[k] ||= [0, 0]);
@@ -228,6 +274,9 @@ export function newSeason(state) {
   }
   season.totalWeeks = Math.max(...Object.values(season.leagues).map((l) => l.fixtures.length));
   state.season = season;
+  const nx = state.euroNext || { UCL: UCL_2026, UEL: UEL_2026, UECL: UECL_2026 };
+  if (!nx.UECL) nx.UECL = UECL_2026;
+  state.euro = Euro.createEuro(state, nx);
   state.player.season = emptySeasonStats();
   state.player.yellows = 0;   // sarı kartlar sezon sonunda silinir (kırmızı cezası devam eder)
 }
@@ -287,6 +336,8 @@ export function addInbox(state, text) {
 
 // Bu haftaki maç (oyuncunun takımı)
 export function currentFixture(state) {
+  const ef = Euro.euroFixture(state);
+  if (ef) return ef;
   const lid = leagueOf(state, state.player.clubId);
   const L = state.season.leagues[lid];
   const round = L.fixtures[state.season.week];
@@ -302,7 +353,7 @@ export function selection(state) {
   if (p.injury > 0) return 'injured';
   if (p.suspended > 0) return 'suspended';
   const rel = p.rel ? (p.rel.coach - 50) / 8 : 0;
-  const promise = p.weekFlags?.coachPromise ? 5 : 0;
+  const promise = (p.weekFlags?.coachPromise ? 5 : 0) - (p.weekFlags?.benched ? 12 : 0);
   const ovr = overall(p) + (p.morale - 50) / 10 + (p.energy < 30 ? -5 : 0) + rel + promise;
   const fvs = t.squad.filter((x) => x.pos === 'FV' && x.ovr).map((x) => x.ovr).sort((a, b) => b - a);
   if (fvs.length >= 3) {
@@ -332,7 +383,7 @@ export function matchKits(home, away) {
 }
 
 // An türü dağılımı
-const MOMENT_KINDS = [['acik', 31], ['kontra', 16], ['birebir', 11], ['serbest', 11], ['kafa', 13], ['korner', 9], ['rovasata', 3], ['penalti', 6]];
+const MOMENT_KINDS = [['acik', 25], ['kontra', 14], ['birebir', 9], ['serbest', 10], ['kafa', 12], ['korner', 8], ['rovasata', 3], ['penalti', 6], ['uzuntop', 8], ['duvar', 8], ['pres', 7]];
 export function momentKind(tactic) {
   const w = MOMENT_KINDS.map(([k, v]) => [k, v * ((TACTICS[tactic]?.mix || {})[k] || 1)]);
   let r = Math.random() * w.reduce((a, [, v]) => a + v, 0);
@@ -343,10 +394,10 @@ export function momentKind(tactic) {
 // Rakip taktikleri: an dağılımı, defans sayısı, pres, süre, goller
 export const TACTICS = {
   dengeli: { name: 'Dengeli', desc: 'Klasik 4-4-2, sürpriz yok.', mix: {}, def: 0, press: 1, time: 1, oppG: 1, myG: 1 },
-  pres: { name: 'Önde pres', desc: 'Topu çabuk kapmaya çalışırlar; arkaları boş, kontraya açıklar.', mix: { kontra: 1.8, birebir: 1.4, acik: 0.8 }, def: 0, press: 1.18, time: 0.85, oppG: 1.1, myG: 1.1 },
-  katenacio: { name: 'Otobüs', desc: 'Kaleye otobüs çektiler. Duran toplar altın değerinde.', mix: { serbest: 1.6, korner: 1.6, kontra: 0.4, birebir: 0.5 }, def: 1, press: 0.9, time: 1.15, oppG: 0.7, myG: 0.75 },
+  pres: { name: 'Önde pres', desc: 'Topu çabuk kapmaya çalışırlar; arkaları boş, kontraya açıklar.', mix: { kontra: 1.8, birebir: 1.4, acik: 0.8, uzuntop: 1.7, pres: 0.6 }, def: 0, press: 1.18, time: 0.85, oppG: 1.1, myG: 1.1 },
+  katenacio: { name: 'Otobüs', desc: 'Kaleye otobüs çektiler. Duran toplar altın değerinde.', mix: { serbest: 1.6, korner: 1.6, kontra: 0.4, birebir: 0.5, duvar: 1.5, uzuntop: 0.4, pres: 1.3 }, def: 1, press: 0.9, time: 1.15, oppG: 0.7, myG: 0.75 },
   kanat: { name: 'Kanat oyunu', desc: 'Kanatlardan ortalarla gelirler, ceza sahası kalabalık.', mix: { kafa: 1.7, korner: 1.4, rovasata: 1.5 }, def: 0, press: 1, time: 1, oppG: 1.05, myG: 1 },
-  hucum: { name: 'Hücum', desc: 'Gol için her şeyi göze alırlar. Bol gollü maç kokusu!', mix: { kontra: 1.6, birebir: 1.5, serbest: 0.8 }, def: -1, press: 0.95, time: 1, oppG: 1.3, myG: 1.2 },
+  hucum: { name: 'Hücum', desc: 'Gol için her şeyi göze alırlar. Bol gollü maç kokusu!', mix: { kontra: 1.6, birebir: 1.5, serbest: 0.8, uzuntop: 1.5, pres: 1.4 }, def: -1, press: 0.95, time: 1, oppG: 1.3, myG: 1.2 },
 };
 function pickTactic(opp, me) {
   const d = opp.str - me.str;
@@ -466,12 +517,30 @@ export function matchRating(res) {
 export function finishMatch(state, plan, res) {
   const p = state.player;
   const fx = plan.fx;
-  const L = state.season.leagues[fx.lid];
-  const m = L.fixtures[state.season.week].find((x) => x.h === fx.h && x.a === fx.a);
   const myG = res.myGoals, opG = res.oppGoals;
-  m.hg = fx.home ? myG : opG;
-  m.ag = fx.home ? opG : myG;
-  applyResult(L.table, m);
+  if (fx.comp) {
+    const { comp, m } = Euro.findMatch(state, fx);
+    m.hg = fx.home ? myG : opG; m.ag = fx.home ? opG : myG;
+    const pens = res.pens ? (fx.home ? res.pens : [res.pens[1], res.pens[0]]) : null;
+    Euro.recordResult(state, comp, fx.md, m, pens);
+    const tie = Euro.tieOf(comp, fx.md, m);
+    res.koWon = fx.knockout && tie ? tie.w === p.clubId : undefined;
+    res.agg = tie && tie.legs.length === 2 && fx.knockout ? [Euro.aggFor(tie, p.clubId), Euro.aggFor(tie, fx.opp)] : null;
+    res.pensUsed = m.pens || null; res.et = !!m.et;
+    if (comp.winner === p.clubId) {
+      (p.trophies ||= []).push({ key: fx.comp.toLowerCase(), year: state.season.year, club: p.clubId });
+      p.fame = clamp((p.fame || 0) + 12, 0, 100);
+      res.euroTrophy = fx.comp;
+    }
+    if (myG > opG || res.koWon) p.fame = clamp((p.fame || 0) + Euro.COMP[fx.comp].fame * 0.5, 0, 100);
+  } else {
+    const L = state.season.leagues[fx.lid];
+    const m = L.fixtures[state.season.week].find((x) => x.h === fx.h && x.a === fx.a);
+    m.hg = fx.home ? myG : opG;
+    m.ag = fx.home ? opG : myG;
+    applyResult(L.table, m);
+  }
+  state._euroStats = !!fx.comp;
 
   res.result = myG > opG ? 'W' : myG < opG ? 'L' : 'D';
   // gol/asist kayıtları
@@ -487,6 +556,7 @@ export function finishMatch(state, plan, res) {
     for (let i = 0; i < res.assists; i++) addStat(state, p.clubId, pickScorer(state.teams[p.clubId]), 1, 0);
   }
   if (res.goals) for (let i = 0; i < res.goals; i++) if (Math.random() < 0.6) addStat(state, p.clubId, pickAssister(state.teams[p.clubId], meName), 0, 1);
+  state._euroStats = false;
   const rating = matchRating(res);
   res.rating = rating;
 
@@ -506,7 +576,7 @@ export function finishMatch(state, plan, res) {
     const xp = Math.max(0, (rating - 5.5)) * 0.05;
     for (const k of STAT_KEYS) p.stats[k] = clamp(p.stats[k] + xp * rand(0.3, 1), 1, 99);
     // gol bonusu
-    p.money += res.goals * Math.round(p.contract.wage * 0.5);
+    p.money += res.goals * Math.round(p.contract.goalBonus ?? p.contract.wage * 0.5);
     // ilişkiler
     if (p.rel) {
       p.rel.coach = clamp(p.rel.coach + (rating >= 7.5 ? 3 : rating >= 6.5 ? 1 : rating < 5.5 ? -3 : 0), 0, 100);
@@ -521,7 +591,7 @@ export function finishMatch(state, plan, res) {
   if (plan.injured) p.backFrom = 'injury';
   else if (plan.suspended && p.suspended === 0) p.backFrom = 'ban';
   p.form = [...(p.form || []), res.result].slice(-5);
-  advanceWeek(state);
+  if (!fx.comp) advanceWeek(state);
   return res;
 }
 
@@ -529,6 +599,7 @@ export function finishMatch(state, plan, res) {
 export function advanceWeek(state) {
   const s = state.season;
   const p = state.player;
+  Euro.simWeek(state, s.week);
   for (const [lid, L] of Object.entries(s.leagues)) {
     const round = L.fixtures[s.week];
     if (!round) continue;
@@ -581,7 +652,8 @@ export function seasonSummary(state) {
   out.myLeague = lid;
   out.myPos = out.leagues[lid].findIndex((r) => r.id === p.clubId) + 1;
   out.stats = { ...p.season, avg: p.season.apps ? Math.round(p.season.ratingSum / p.season.apps * 10) / 10 : 0 };
-  out.champion = { SL: out.leagues.SL[0].id, L1: out.leagues.L1[0].id };
+  out.champion = Object.fromEntries(Object.entries(out.leagues).map(([l, t]) => [l, t[0].id]));
+  out.euro = state.euro ? { ...Object.fromEntries(Object.entries(state.euro.comps).map(([c, x]) => [c, x.winner])), USC: state.euro.super?.w || null } : {};
   return out;
 }
 
@@ -590,9 +662,12 @@ export function seasonOffers(state) {
   const ovr = overall(p);
   const avg = p.season.apps ? p.season.ratingSum / p.season.apps : 6;
   const score = ovr + (avg - 6.5) * 6 + p.fame / 5;
-  const all = Object.values(state.teams).filter((t) => t.id !== p.clubId);
+  const all = Object.values(state.teams).filter((t) => t.id !== p.clubId && leagueOf(state, t.id));
   // Gücü oyuncuya yakın veya biraz üstündeki takımlar ilgilenir
-  const interested = shuffle(all.filter((t) => t.str <= score + 22 && t.str >= Math.min(score - 5, 78)));
+  // sözleşmesi devam ediyorsa: sadece serbest kalma bedelini ödeyebilen kulüpler
+  const free = contractExpiring(state) || !p.contract.release;
+  const afford = (t) => free || Math.max(0, t.str - 55) ** 2.4 * 90_000 >= p.contract.release;
+  const interested = shuffle(all.filter((t) => t.str <= score + 22 && t.str >= Math.min(score - 5, 78) && afford(t)));
   return interested.slice(0, 3).map((t) => ({
     clubId: t.id,
     wage: Math.round(Math.max(p.contract.wage * 1.2, (t.str - 50) * 9000 * (1 + p.fame / 50)) / 5000) * 5000,
@@ -615,6 +690,10 @@ export function endSeason(state) {
   const up = l1.slice(0, LEAGUES.L1.promote);
   state.leagues.SL = sl.filter((id) => !down.includes(id)).concat(up);
   state.leagues.L1 = l1.filter((id) => !up.includes(id)).concat(down);
+
+  // Gelecek sezonun Avrupa katılımcıları (bu sezonun puan durumuna göre)
+  state.euroNext = Euro.nextParticipants(state, sum);
+  state.lastEuro = state.euro ? Object.fromEntries(Object.entries(state.euro.comps).map(([c, x]) => [c, x.winner])) : null;
 
   // Kadrolar yaşlanır / gelişir, takım güçleri yeniden hesaplanır
   ageSquads(state);

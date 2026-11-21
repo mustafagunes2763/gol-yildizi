@@ -1,7 +1,7 @@
 // Kritik an mini oyunu (v2)
 // - Oyuncundan sürükle: çizdiğin yoldan topla koşar
 // - Hızlı kaydır (oyuncudan ya da boş yerden): şut, arkadaşına doğru: pas
-// Türler: acik | kontra | birebir | serbest | kafa | penalti
+// Türler: acik | kontra | birebir | serbest | kafa | korner | rovasata | penalti | uzuntop | duvar | pres
 // Mantıksal saha 360x540, kale üstte.
 import * as Sfx from './audio.js';
 import { lookOf, hairColor, skinColor } from './look.js';
@@ -33,8 +33,12 @@ const HINTS = {
   korner: 'Korner! Top gelince kafayı vur',
   rovasata: 'Top havada arkadan geliyor… tam anında kaydır!',
   penalti: 'PENALTI — kaleye doğru kaydır',
+  uzuntop: 'Uzun top! Topa doğru sürükle, kaleciden önce yetiş',
+  duvar: 'Arkadaşa dokun: ver-kaç! Top dönünce vur',
+  pres: 'Top rakipte! Üstüne koş, kap ve vur',
 };
-const TIME_LIMIT = { acik: 10, kontra: 13, birebir: 8 };
+const TIME_LIMIT = { acik: 10, kontra: 13, birebir: 8, uzuntop: 9, duvar: 11, pres: 11 };
+const RUNNERS = new Set(['acik', 'kontra', 'birebir', 'uzuntop', 'duvar', 'pres']);
 const HEADERS = new Set(['kafa', 'korner', 'rovasata']);
 
 /**
@@ -67,7 +71,7 @@ export function playMoment(host, o) {
     const st = o.stats;
     const kind = HINTS[o.kind] ? o.kind : 'acik';
     const tired = o.energy < 30 ? 1.4 : 1;
-    const canRun = kind === 'acik' || kind === 'kontra' || kind === 'birebir';
+    const canRun = RUNNERS.has(kind);
     const canPass = canRun;
     const weather = o.weather || {};
     const snow = weather.fx === 'kar', rain = weather.fx === 'yagmur';
@@ -87,6 +91,8 @@ export function playMoment(host, o) {
     const defenders = [];
     const mates = [];
     let crossBall = null; // kafa vuruşu için orta
+    let loose = null;     // sahipsiz top (uzun top / ver-kaç dönüşü): { vx, vy, fr }
+    let press = null;     // pres: { carrier, pass, t, next, passes, won, tryAt }
     const mateName = () => (o.teammates[Math.floor(Math.random() * o.teammates.length)] || 'Arkadaşın').split(' ').slice(-1)[0];
 
     if (kind === 'acik') {
@@ -160,12 +166,43 @@ export function playMoment(host, o) {
       crossBall = { x: sx, y: sy, vx: (target.x - sx) / tt, vy: (target.y - sy) / tt, high: true };
     } else if (kind === 'penalti') {
       me.x = GOAL_CX; me.y = 150;
+    } else if (kind === 'uzuntop') {
+      // defansın arkasına atılan top: kaleciyle yarış
+      me.hasBall = false;
+      me.x = rand(110, 250); me.y = rand(330, 360);
+      defenders.push({ role: 'press', x: clamp(me.x + (Math.random() < 0.5 ? -1 : 1) * rand(22, 40), 20, 340), y: me.y + rand(8, 26), slow: 0.8 });
+      if (o.defenders > 1) defenders.push({ role: 'press', x: clamp(me.x + rand(-110, 110), 20, 340), y: me.y + rand(40, 70), slow: 0.7 });
+      mates.push({ x: clamp(me.x + rand(-60, 60), 40, 320), y: H - 25, name: mateName(), crosser: true });
+      const tx = clamp(me.x + rand(-40, 40), POST_L - 10, POST_R + 10), ty = rand(175, 215);
+      const fr = 1.6, k = fr * 1.03;                  // sürtünmeyle hedefin biraz ötesinde durur
+      const bx0 = me.x + (Math.random() < 0.5 ? -1 : 1) * 26;
+      loose = { vx: (tx - bx0) * k, vy: (ty - me.y - 40) * k, fr, grace: 0.6, x0: bx0 };
+    } else if (kind === 'duvar') {
+      // ceza sahası önü: yanında duvar arkadaş, önünde iki defans
+      me.x = rand(120, 240); me.y = rand(255, 285);
+      const side = me.x < GOAL_CX ? 1 : -1;
+      mates.push({ x: clamp(me.x + side * rand(48, 62), 40, 320), y: me.y - rand(18, 30), name: mateName(), wall: true, fixed: true });
+      defenders.push({ role: 'press', x: me.x + rand(-10, 10), y: me.y - rand(48, 60), slow: 0.95 });
+      defenders.push({ role: 'zone', x: clamp(me.x - side * rand(25, 50), 30, 330), y: me.y - rand(95, 120) });
+      if (o.defenders > 2) defenders.push({ role: 'zone', x: clamp(me.x + side * rand(60, 90), 30, 330), y: me.y - rand(110, 140) });
+    } else if (kind === 'pres') {
+      // top rakipte, kendi ceza sahalarından çıkmaya çalışıyorlar
+      me.hasBall = false;
+      me.x = rand(120, 240); me.y = rand(300, 330);
+      const c = { role: 'opp', x: clamp(me.x + rand(-70, 70), 60, 300), y: rand(165, 205) };
+      const r1 = { role: 'opp', x: c.x < GOAL_CX ? rand(240, 310) : rand(50, 120), y: rand(120, 160) };
+      const r2 = { role: 'opp', x: clamp(GOAL_CX + rand(-40, 40), 60, 300), y: rand(240, 280) };
+      defenders.push(c, r1, r2);
+      press = { carrier: c, pass: null, t: 0, next: rand(1.6, 2.2), passes: 0, won: false, tryAt: 0 };
+      mates.push({ x: me.x < GOAL_CX ? me.x + rand(70, 110) : me.x - rand(70, 110), y: me.y + rand(-10, 20), tx: null, name: mateName() });
     }
     defenders.forEach((d, i) => { d.name = oppNames[i % oppNames.length]; });
 
     const ball = { x: me.x, y: me.y - 10 };
     if (crossBall) { ball.x = crossBall.x; ball.y = crossBall.y; }
-    if (window.__debug) window.__debug.moment = { kind, ball, me, keeper, defenders, mates };
+    if (kind === 'uzuntop') { ball.x = loose.x0; ball.y = me.y + 40; }
+    if (press) { ball.x = press.carrier.x; ball.y = press.carrier.y + 9; }
+    if (window.__debug) window.__debug.moment = { kind, ball, me, keeper, defenders, mates, get loose() { return loose; }, get press() { return press; }, get path() { return path; }, get gesture() { return gesture; } };
 
     // ---------- durum ----------
     let phase = 'aim';   // aim | flying | done
@@ -191,7 +228,7 @@ export function playMoment(host, o) {
       if (phase !== 'aim') return;
       canvas.setPointerCapture(e.pointerId);
       const p = toLocal(e);
-      gesture = { pts: [p], nearMe: canRun && me.hasBall && dist(p, me) < 45, mode: null };
+      gesture = { pts: [p], nearMe: canRun && (me.hasBall || loose || (press && !press.won)) && dist(p, me) < 45, mode: null };
     });
     const samplePath = (pts) => pts.filter((_, i) => i % 2 === 0).map((p) => ({ x: clamp(p.x, 10, W - 10), y: clamp(p.y, GOAL_Y + 6, H - 10) }));
     canvas.addEventListener('pointermove', (e) => {
@@ -233,13 +270,31 @@ export function playMoment(host, o) {
         if (rs > 1.4 && rs > avg * 2.2) { const tail = g.pts.filter((q) => b.t - q.t < 140); if (tail.length > 1) { path = []; return release(tail, rs); } } // çizip sonunda fırlattı: şut
         path = samplePath(g.pts); return;
       }
-            // çalım: oyuncundan başlayan hızlı yatay kaydırma
-      if (g.nearMe && kind !== 'serbest' && Math.abs(b.x - a.x) > 1.8 * Math.abs(b.y - a.y) && len > 25 && len < 110) return doDodge(Math.sign(b.x - a.x));
+      // topsuzken: yanındaysa topu alıp vurur, değilse önce topa yetiş
+      if (!me.hasBall && (loose || press)) {
+        if (loose && loose.grace <= 0 && dist(me, ball) < 26) grabLoose(true);
+        else { if (len >= 25) flash(press ? 'Önce topu kap!' : 'Önce topa yetiş!'); return; }
+      }
+      // çalım: oyuncundan başlayan hızlı yatay kaydırma
+      if (g.nearMe && me.hasBall && kind !== 'serbest' && Math.abs(b.x - a.x) > 1.8 * Math.abs(b.y - a.y) && len > 25 && len < 110) return doDodge(Math.sign(b.x - a.x));
       if (len >= 25) release(g.pts, rs);
       else flash('Daha uzun kaydır');
     });
     canvas.addEventListener('pointercancel', () => { gesture = null; });
 
+    function grabLoose(quiet) {
+      loose = null; me.hasBall = true;
+      facing = Math.atan2(GOAL_Y - me.y, GOAL_CX - me.x);
+      if (!quiet) flash('Topu aldın!');
+    }
+    // pres: topu kazandın, artık açık oyun gibi
+    function winBall(txt) {
+      press.won = true; press.pass = null;
+      me.hasBall = true; facing = -Math.PI / 2;
+      const c = press.carrier; c.stun = 1.1;
+      defenders.forEach((d) => { d.role = d === c ? 'press' : 'zone'; d.slow = 0.85; });
+      flash(txt); Sfx.thud();
+    }
     function doDodge(dir) {
       dodge = { vx: dir * 150, t: 0.22 };
       for (const d of defenders) {
@@ -391,9 +446,9 @@ export function playMoment(host, o) {
         if (dodge) {
           me.x = clamp(me.x + dodge.vx * dt, 12, W - 12); dodge.t -= dt;
           if (dodge.t <= 0) dodge = null;
-        } else if (me.hasBall && path.length) {
+        } else if ((me.hasBall || loose || (press && !press.won)) && path.length) {
           const tgt = path[0];
-          const d = moveTo(me, tgt.x, tgt.y, runSpeed, dt);
+          const d = moveTo(me, tgt.x, tgt.y, me.hasBall ? runSpeed : runSpeed * 1.08, dt);
           if (d > 0.5) facing = Math.atan2(tgt.y - me.y, tgt.x - me.x);
           if (d < 4) path.shift();
         }
@@ -407,6 +462,52 @@ export function playMoment(host, o) {
           }
         }
 
+        // sahipsiz top (uzun top / ver-kaç dönüşü)
+        if (loose) {
+          ball.x += loose.vx * dt; ball.y += loose.vy * dt;
+          const f = loose.fr * (rain ? 0.75 : snow ? 1.4 : 1);
+          loose.vx *= 1 - f * dt; loose.vy *= 1 - f * dt;
+          if (loose.grace > 0) loose.grace -= dt;
+          else if (dist(me, ball) < BODY_R + BALL_R + 4) grabLoose();
+          else if (ball.x < 4 || ball.x > W - 4 || ball.y > H - 4) return finish('lost', 'Top auta çıktı');
+          else if (ball.y < GOAL_Y + 6) return finish('saved', 'Kaleci topu aldı');
+        }
+        // pres: rakip topla oynuyor
+        if (press && !press.won) {
+          const c = press.carrier;
+          if (press.pass) {
+            const pz = press.pass;
+            ball.x += pz.vx * dt; ball.y += pz.vy * dt;
+            if (dist(me, ball) < BODY_R + BALL_R + 6) return winBall('Araya girdin!');
+            if (dist(ball, pz.to) < BODY_R + 2) {
+              press.carrier = pz.to; press.pass = null; press.t = 0; press.passes++;
+              press.next = rand(1.3, 2.0) - press.passes * 0.15;
+              if (press.passes >= 3) return finish('lost', 'Rakip presi kırdı');
+            }
+          } else {
+            press.t += dt;
+            // top sürer: senden uzaklaşır
+            const ax = c.x - me.x, ay = c.y - me.y, al = Math.hypot(ax, ay) || 1;
+            if (c.stun <= 0) { c.x = clamp(c.x + ax / al * 22 * dt, 30, 330); c.y = clamp(c.y + ay / al * 12 * dt, 70, 300); }
+            ball.x = c.x; ball.y = c.y + 9;
+            const dm = dist(me, c);
+            if (dm < BODY_R * 2 + 4 && elapsed >= press.tryAt) {
+              press.tryAt = elapsed + 0.6;
+              const pW = clamp(0.5 + (st.guc + st.hiz - 120) / 250 - (o.keeper - 65) / 220, 0.25, 0.8);
+              if (Math.random() < pW) return winBall('Topu kaptın!');
+              if (Math.random() < 0.14) { foulInfo = null; return finish('lost', 'Faul yaptın! Rakip serbest vuruş kazandı'); }
+              flash('Sıyırdı!'); press.t = press.next;   // hemen pası çıkarır
+            }
+            if (press.t >= press.next) {
+              const opts = defenders.filter((d) => d !== c);
+              const to = opts.reduce((b, d) => (!b || dist(d, me) > dist(b, me) ? d : b), null);
+              const a = Math.atan2(to.y - ball.y, to.x - ball.x) + gauss() * 0.04;
+              press.pass = { to, vx: Math.cos(a) * 240, vy: Math.sin(a) * 240 };
+              Sfx.kick(0.3);
+            }
+          }
+          for (const d of defenders) if (d !== press.carrier && d !== (press.pass && press.pass.to)) moveTo(d, d.x + Math.sin(elapsed + d.y) * 6, d.y, 8, dt);
+        }
         // orta (kafa)
         if (crossBall) {
           ball.x += crossBall.vx * dt; ball.y += crossBall.vy * dt;
@@ -436,6 +537,7 @@ export function playMoment(host, o) {
           } else if (d.role === 'mark' && !d.fixed) {
             moveTo(d, me.x + 8, me.y + 14, 20, dt);
           }
+          if (loose && loose.grace <= 0 && dist(d, ball) < BODY_R + BALL_R + 2) return finish('lost', 'Defans önce yetişti');
           // top kapma
           if (me.hasBall && dist(d, ball) < BODY_R + BALL_R + 3) {
             if (Math.random() < tackleP) return tackled(d);
@@ -445,7 +547,10 @@ export function playMoment(host, o) {
         }
 
         // kaleci: top kaleye yaklaşınca çıkar
-        if (keeper.stun <= 0) {
+        if (loose && keeper.stun <= 0 && ball.y < GOAL_Y + 195 && elapsed > 0.4) {
+          moveTo(keeper, ball.x, ball.y, keeperRun * 1.35, dt);
+          if (dist(keeper, ball) < BODY_R + BALL_R + 2) return finish('saved', 'Kaleci önce davrandı');
+        } else if (keeper.stun <= 0) {
           const dGoal = Math.hypot(GOAL_CX - ball.x, GOAL_Y - ball.y);
           const ang0 = Math.atan2(ball.y - GOAL_Y, ball.x - GOAL_CX), out0 = clamp(dGoal * 0.1, 4, 18);
           let tx = clamp(GOAL_CX + Math.cos(ang0) * out0, POST_L + 8, POST_R - 8), ty = GOAL_Y + 8 + Math.max(0, Math.sin(ang0) * out0 * 0.6);
@@ -502,6 +607,18 @@ export function playMoment(host, o) {
           }
         }
 
+        // ver-kaç: duvar arkadaş topu boşluğa geri verir
+        if (s.kind === 'pass' && s.target.wall && dist(ball, s.target) < BODY_R + 5) {
+          const P = { x: clamp(me.x + (GOAL_CX - me.x) * 0.35, 70, 290), y: clamp(me.y - rand(90, 115), GOAL_Y + 95, 230) };
+          const fr = 1.1, T = 0.85, k = fr / (1 - Math.exp(-fr * T));
+          loose = { vx: (P.x - ball.x) * k, vy: (P.y - ball.y) * k, fr, grace: 0.15 };
+          path = [P]; shot = null; phase = 'aim'; trail = [];
+          s.target.wall = false;
+          const near = defenders.filter((d) => d.role !== 'wall').sort((a, b) => dist(a, me) - dist(b, me))[0];
+          if (near) near.stun = 1.3;
+          flash('Ver-kaç!'); Sfx.kick(0.4);
+          return;
+        }
         // pas ulaştı -> arkadaş vurur
         if (s.kind === 'pass' && dist(ball, s.target) < BODY_R + 5) {
           const dGoal = Math.hypot(GOAL_CX - ball.x, GOAL_Y - ball.y);
@@ -758,6 +875,14 @@ export function playMoment(host, o) {
       if (shake) ctx.translate(rand(-shake, shake), rand(-shake, shake));
       drawScene({ ...snap(), trail }, true);
 
+      if (loose && phase === 'aim') {
+        circle(ball.x, ball.y, 11 + Math.sin(elapsed * 8) * 2, null, 'rgba(74,222,128,.9)', 2);
+      }
+      if (press && !press.won && phase === 'aim' && !press.pass) {
+        const c = press.carrier;
+        circle(c.x, c.y, BODY_R + 6 + Math.sin(elapsed * 7) * 1.5, null, 'rgba(239,68,68,.9)', 2);
+        ctx.fillStyle = '#fca5a5'; ctx.font = '800 9px system-ui'; ctx.textAlign = 'center'; ctx.fillText('KAP', c.x, c.y + 22);
+      }
       if (crossBall && phase === 'aim') {
         const d = dist(ball, me);
         const r = clamp(d * 0.5, 14, 80);

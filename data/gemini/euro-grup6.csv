@@ -1,0 +1,273 @@
+takim_id,oyuncu,mevki,yas,uyruk,guc,tahmini
+and,Colin Coosemans,KL,34,Belçika,75,1
+and,Mads Kikkenborg,KL,27,Danimarka,72,1
+and,Joachim Imbrechts,KL,25,İsveç,67,1
+and,Jan-Carlo Simić,DF,21,Sırbistan,77,1
+and,Lucas Hey,DF,23,Danimarka,75,1
+and,Zanka,DF,36,Danimarka,74,1
+and,Killian Sardella,DF,24,Belçika,76,1
+and,Ludwig Augustinsson,DF,32,İsveç,75,1
+and,Moussa N'Diaye,DF,24,Senegal,75,1
+and,Thomas Foket,DF,32,Belçika,75,1
+and,Ali Maamar,DF,21,Fas,71,1
+and,Nunzio Engwanda,DF,18,Belçika,67,1
+and,Mats Rits,OS,33,Belçika,76,1
+and,Leander Dendoncker,OS,31,Belçika,78,1
+and,Mario Stroeykens,OS,22,Belçika,78,1
+and,Yari Verschaeren,OS,25,Belçika,77,1
+and,Theo Leoni,OS,26,Belçika,76,1
+and,Majeed Ashimeru,OS,29,Gana,75,1
+and,Nathan De Cat,OS,18,Belçika,70,1
+and,Tristan Degreef,OS,21,Belçika,72,1
+and,Kasper Dolberg,FV,29,Danimarka,79,1
+and,Anders Dreyer,FV,28,Danimarka,79,1
+and,Samuel Edozie,FV,23,İngiltere,76,1
+and,César Huerta,FV,25,Meksika,77,1
+and,Luis Vázquez,FV,25,Arjantin,75,1
+and,Nilson Angulo,FV,23,Ekvador,74,1
+and,Keisuke Goto,FV,21,Japonya,71,1
+ara,Arsen Beglaryan,KL,33,Ermenistan,67,1
+ara,Danylo Kucher,KL,29,Ukrayna,66,1
+ara,Rafael Manasyan,KL,23,Ermenistan,61,1
+ara,Cássio Scheid,DF,32,Brezilya,68,1
+ara,José Bueno,DF,30,Kolombiya,68,1
+ara,Kamo Hovhannisyan,DF,34,Ermenistan,68,1
+ara,Edgar Grigoryan,DF,28,Ermenistan,66,1
+ara,Alemão,DF,33,Brezilya,67,1
+ara,Hakob Hakobyan,DF,29,Ermenistan,66,1
+ara,Romércio,DF,29,Brezilya,67,1
+ara,Erik Smbatyan,DF,23,Ermenistan,62,1
+ara,Alwyn Tera,OS,29,Kenya,68,1
+ara,Karen Muradyan,OS,34,Ermenistan,67,1
+ara,Hovhannes Harutyunyan,OS,27,Ermenistan,68,1
+ara,Amos Nondi,OS,27,Kenya,67,1
+ara,Davit Barseghyan,OS,21,Ermenistan,62,1
+ara,Petros Avetisyan,OS,30,Ermenistan,67,1
+ara,Zhirayr Shaghoyan,FV,25,Ermenistan,69,1
+ara,Artur Serobyan,FV,23,Ermenistan,69,1
+ara,Tenton Yenne,FV,26,Nijerya,70,1
+ara,Marius Noubissi,FV,29,Kamerun,68,1
+ara,Jonathan Duarte,FV,29,Kolombiya,68,1
+ara,Mathew Gbomadu,FV,22,Nijerya,65,1
+ben,Anatoliy Trubin,KL,25,Ukrayna,83,1
+ben,Samuel Soares,KL,24,Portekiz,75,1
+ben,André Gomes,KL,22,Portekiz,70,1
+ben,António Silva,DF,23,Portekiz,82,1
+ben,Tomás Araújo,DF,24,Portekiz,81,1
+ben,Nicolás Otamendi,DF,38,Arjantin,79,1
+ben,Amar Dedić,DF,24,Bosna-Hersek,79,1
+ben,Alexander Bah,DF,28,Danimarka,79,1
+ben,Samuel Dahl,DF,23,İsveç,76,1
+ben,Rafael Obrador,DF,22,İspanya,75,1
+ben,Adrian Bajrami,DF,24,Arnavutluk,73,1
+ben,Florentino Luís,OS,27,Portekiz,81,1
+ben,Orkun Kökçü,OS,25,Türkiye,83,1
+ben,Fredrik Aursnes,OS,30,Norveç,82,1
+ben,Leandro Barreiro,OS,26,Lüksemburg,78,1
+ben,Richard Ríos,OS,26,Kolombiya,80,1
+ben,Enzo Barrenechea,OS,25,Arjantin,78,1
+ben,João Rego,OS,21,Portekiz,73,1
+ben,Vangelis Pavlidis,FV,28,Yunanistan,82,1
+ben,Kerem Aktürkoğlu,FV,28,Türkiye,81,1
+ben,Andreas Schjelderup,FV,22,Norveç,78,1
+ben,Gianluca Prestianni,FV,20,Arjantin,76,1
+ben,Bruma,FV,32,Portekiz,78,1
+ben,Franjo Ivanović,FV,23,Hırvatistan,77,1
+ben,Zeki Amdouni,FV,25,İsviçre,78,1
+ben,Henrique Araújo,FV,24,Portekiz,74,1
+fer,Dénes Dibusz,KL,36,Macaristan,76,1
+fer,Ádám Varga,KL,27,Macaristan,70,1
+fer,Gergő Szécsi,KL,37,Macaristan,66,1
+fer,Ibrahim Cissé,DF,30,Fransa,74,1
+fer,Stefan Gartenmann,DF,29,İsviçre,74,1
+fer,Raul Gustavo,DF,27,Brezilya,73,1
+fer,Gábor Szalai,DF,26,Macaristan,72,1
+fer,Endre Botka,DF,32,Macaristan,71,1
+fer,Cebrail Makreckis,DF,26,Letonya,73,1
+fer,Cristian Ramírez,DF,32,Ekvador,74,1
+fer,Eldar Ćivić,DF,30,Bosna-Hersek,71,1
+fer,Mohammad Abu Fani,OS,28,İsrail,76,1
+fer,Habib Maïga,OS,30,Fildişi Sahili,74,1
+fer,Philippe Rommens,OS,29,Belçika,74,1
+fer,Naby Keïta,OS,31,Gine,75,1
+fer,Alex Tóth,OS,21,Macaristan,72,1
+fer,Kristoffer Zachariassen,OS,32,Norveç,74,1
+fer,Bence Ötvös,OS,28,Macaristan,72,1
+fer,Matheus Saldanha,FV,27,Brezilya,76,1
+fer,Barnabás Varga,FV,32,Macaristan,76,1
+fer,Adama Traoré,FV,31,Mali,75,1
+fer,Kady Borges,FV,30,Brezilya,75,1
+fer,Lenny Joseph,FV,26,Fransa,72,1
+fer,Aleksandar Pešić,FV,34,Sırbistan,73,1
+fer,Zsombor Gruber,FV,22,Macaristan,71,1
+jag,Sławomir Abramowicz,KL,22,Polonya,73,1
+jag,Maksymilian Stryjek,KL,30,Polonya,69,1
+jag,Miłosz Piekutowski,KL,20,Polonya,64,1
+jag,Mateusz Skrzypczak,DF,26,Polonya,73,1
+jag,Adrián Diéguez,DF,30,İspanya,73,1
+jag,Dušan Stojinović,DF,26,Slovenya,71,1
+jag,Bernardo Vital,DF,25,Portekiz,72,1
+jag,Michal Sáček,DF,30,Çekya,72,1
+jag,João Moutinho,DF,28,Portekiz,72,1
+jag,Cezary Polak,DF,23,Polonya,70,1
+jag,Norbert Wojtuszek,DF,25,Polonya,70,1
+jag,Taras Romanczuk,OS,35,Polonya,73,1
+jag,Jarosław Kubicki,OS,31,Polonya,72,1
+jag,Jesús Imaz,OS,36,İspanya,75,1
+jag,Leon Flach,OS,25,ABD,72,1
+jag,Nené,OS,31,Portekiz,73,1
+jag,Oskar Pietuszewski,OS,18,Polonya,69,1
+jag,Dawid Drachal,OS,21,Polonya,70,1
+jag,Afimico Pululu,FV,27,Angola,75,1
+jag,Darko Churlinov,FV,26,Kuzey Makedonya,73,1
+jag,Kristoffer Hansen,FV,32,Norveç,72,1
+jag,Miki Villar,FV,30,İspanya,72,1
+jag,Lamine Diaby-Fadiga,FV,25,Fransa,71,1
+jag,Dimitris Rallis,FV,21,Yunanistan,69,1
+lch,Bartosz Mrozek,KL,26,Polonya,74,1
+lch,Filip Bednarek,KL,34,Polonya,69,1
+lch,Krzysztof Bąkowski,KL,23,Polonya,66,1
+lch,Antonio Milić,DF,32,Hırvatistan,74,1
+lch,Alex Douglas,DF,25,İsveç,73,1
+lch,Bartosz Salamon,DF,35,Polonya,72,1
+lch,Wojciech Mońka,DF,19,Polonya,68,1
+lch,Joel Pereira,DF,30,Portekiz,74,1
+lch,Michał Gurgul,DF,20,Polonya,72,1
+lch,Robert Gumny,DF,28,Polonya,73,1
+lch,Mateusz Skrzypczak,DF,26,Polonya,72,1
+lch,Radosław Murawski,OS,32,Polonya,73,1
+lch,Antoni Kozubal,OS,22,Polonya,74,1
+lch,Afonso Sousa,OS,26,Portekiz,76,1
+lch,Filip Jagiełło,OS,29,Polonya,73,1
+lch,Gísli Þórðarson,OS,22,İzlanda,71,1
+lch,Timothy Ouma,OS,22,Kenya,71,1
+lch,Mikael Ishak,FV,33,İsveç,76,1
+lch,Patrik Wålemark,FV,25,İsveç,74,1
+lch,Ali Gholizadeh,FV,30,İran,74,1
+lch,Daniel Håkans,FV,26,Finlandiya,73,1
+lch,Luis Palma,FV,26,Honduras,75,1
+lch,Bryan Fiabema,FV,23,Norveç,70,1
+lch,Kornel Lisman,FV,20,Polonya,68,1
+lil2,Mads Hedenstad Christiansen,KL,26,Norveç,71,1
+lil2,Stefan Hagerup,KL,32,Norveç,67,1
+lil2,Oliver Henriksrud,KL,21,Norveç,62,1
+lil2,Ruben Gabrielsen,DF,34,Norveç,71,1
+lil2,Espen Garnås,DF,31,Norveç,70,1
+lil2,Sander Moen Foss,DF,27,Norveç,69,1
+lil2,Lars Ranger,DF,27,Norveç,69,1
+lil2,Frederik Elkær,DF,24,Danimarka,69,1
+lil2,Kristoffer Tønnessen,DF,29,Norveç,69,1
+lil2,Uba Charles,DF,24,Nijerya,68,1
+lil2,Lucas Svenningsen,DF,20,Norveç,64,1
+lil2,Vebjørn Hoff,OS,30,Norveç,70,1
+lil2,Gjermund Åsen,OS,35,Norveç,70,1
+lil2,Eric Kitolano,OS,29,Norveç,70,1
+lil2,Markus Karlsbakk,OS,26,Norveç,70,1
+lil2,Harald Woxen,OS,21,Norveç,66,1
+lil2,Efe Lucky,OS,20,Nijerya,65,1
+lil2,Kevin Martin Krygård,OS,26,Norveç,69,1
+lil2,Thomas Lehne Olsen,FV,35,Norveç,72,1
+lil2,Felix Vá,FV,28,Angola,70,1
+lil2,Salieu Drammeh,FV,23,Gambiya,69,1
+lil2,Alexander Røssing-Lelesiit,FV,19,Norveç,69,1
+lil2,Jabir Abdihakim Ali,FV,27,İsveç,68,1
+lil2,El Schaddai Furaha,FV,20,Norveç,65,1
+ofi,Nikos Christogeorgos,KL,26,Yunanistan,71,1
+ofi,Daniel Naumov,KL,28,Bulgaristan,71,1
+ofi,Klidman Lilo,KL,23,Arnavutluk,65,1
+ofi,Vasilios Lampropoulos,DF,36,Yunanistan,71,1
+ofi,Giannis Christopoulos,DF,26,Yunanistan,70,1
+ofi,Matheus Bressan,DF,33,Brezilya,71,1
+ofi,Jordan Silva,DF,32,Meksika,70,1
+ofi,Borja González,DF,31,İspanya,72,1
+ofi,Nikos Marinakis,DF,33,Yunanistan,69,1
+ofi,Ilias Chatzitheodoridis,DF,29,Yunanistan,70,1
+ofi,Kevin Lewis,DF,27,Uruguay,70,1
+ofi,Zisis Karachalios,OS,30,Yunanistan,72,1
+ofi,Marko Bakić,OS,33,Karadağ,72,1
+ofi,Thanasis Androutsos,OS,29,Yunanistan,71,1
+ofi,Filip Bainović,OS,30,Sırbistan,71,1
+ofi,Juan Neira,OS,37,Arjantin,71,1
+ofi,Giannis Apostolakis,OS,22,Yunanistan,68,1
+ofi,Vangelis Nikokyrakis,OS,25,Yunanistan,67,1
+ofi,Thiago Nuss,FV,25,Arjantin,73,1
+ofi,Levan Shengelia,FV,31,Gürcistan,73,1
+ofi,Taxiarchis Fountas,FV,31,Yunanistan,74,1
+ofi,Eddie Salcedo,FV,25,İtalya,72,1
+ofi,Andrew Jung,FV,29,Fransa,71,1
+ofi,Giannis Theodosoulakis,FV,22,Yunanistan,67,1
+omo,Fabiano,KL,38,Brezilya,73,1
+omo,Francis Uzoho,KL,28,Nijerya,71,1
+omo,Charalampos Kyriakidis,KL,27,Kıbrıs Cumhuriyeti,66,1
+omo,Senou Coulibaly,DF,32,Mali,72,1
+omo,Nikolas Panagiotou,DF,26,Kıbrıs Cumhuriyeti,70,1
+omo,Filip Helander,DF,33,İsveç,72,1
+omo,Alpha Diounkou,DF,25,Senegal,71,1
+omo,Giannis Masouras,DF,30,Yunanistan,70,1
+omo,Amine Khammas,DF,27,Fas,71,1
+omo,Fotis Kitsos,DF,23,Yunanistan,69,1
+omo,Saad Agouzoul,DF,29,Fas,71,1
+omo,Mateo Marić,OS,28,Bosna-Hersek,72,1
+omo,Ioannis Kousoulos,OS,30,Kıbrıs Cumhuriyeti,71,1
+omo,Charalampos Charalampous,OS,24,Kıbrıs Cumhuriyeti,71,1
+omo,Novica Eraković,OS,27,Karadağ,71,1
+omo,Ewandro,OS,30,Brezilya,71,1
+omo,Roman Bezus,OS,36,Ukrayna,70,1
+omo,Carel Eiting,OS,28,Hollanda,73,1
+omo,Willy Semedo,FV,32,Yeşil Burun Adaları,74,1
+omo,Loizos Loizou,FV,23,Kıbrıs Cumhuriyeti,73,1
+omo,Mariusz Stępiński,FV,31,Polonya,73,1
+omo,Stevan Jovetić,FV,37,Karadağ,73,1
+omo,Andronikos Kakoullis,FV,25,Kıbrıs Cumhuriyeti,71,1
+omo,Saidou Alioum,FV,23,Kamerun,70,1
+rbs,Alexander Schlager,KL,30,Avusturya,77,1
+rbs,Janis Blaswich,KL,35,Almanya,75,1
+rbs,Salko Hamzić,KL,20,Avusturya,67,1
+rbs,Christian Zawieschitzky,KL,19,Avusturya,65,1
+rbs,Hendry Blank,DF,22,Almanya,74,1
+rbs,Joane Gadou,DF,19,Fransa,74,1
+rbs,Jacob Rasmussen,DF,29,Danimarka,76,1
+rbs,Jannik Schuster,DF,20,Avusturya,70,1
+rbs,Aleksa Terzić,DF,27,Sırbistan,75,1
+rbs,Frans Krätzig,DF,23,Almanya,75,1
+rbs,Stefan Lainer,DF,34,Avusturya,75,1
+rbs,Tim Trummer,DF,21,Avusturya,70,1
+rbs,Mads Bidstrup,OS,25,Danimarka,78,1
+rbs,Maurits Kjærgaard,OS,23,Danimarka,78,1
+rbs,Soumaïla Diabaté,OS,22,Mali,73,1
+rbs,Takumu Kawamura,OS,27,Japonya,75,1
+rbs,Mamady Diambou,OS,24,Mali,73,1
+rbs,Sota Kitano,OS,22,Japonya,73,1
+rbs,Valentin Sulzbacher,OS,21,Avusturya,69,1
+rbs,Karim Konaté,FV,22,Fildişi Sahili,78,1
+rbs,Adam Daghim,FV,21,Danimarka,75,1
+rbs,Moussa Yeo,FV,22,Mali,74,1
+rbs,Petar Ratkov,FV,23,Sırbistan,75,1
+rbs,Edmund Baidoo,FV,20,Gana,73,1
+rbs,Yorbe Vertessen,FV,25,Belçika,76,1
+rbs,Kerim Alajbegović,FV,19,Bosna-Hersek,72,1
+plz,Martin Jedlička,KL,28,Çekya,75,1
+plz,Florian Wiegele,KL,25,Avusturya,71,1
+plz,Marián Tvrdoň,KL,32,Slovakya,68,1
+plz,Sampson Dweh,DF,25,Liberya,76,1
+plz,Václav Jemelka,DF,31,Çekya,75,1
+plz,Svetozar Marković,DF,26,Sırbistan,75,1
+plz,Jan Paluska,DF,21,Çekya,71,1
+plz,Merchas Doski,DF,26,Irak,73,1
+plz,Karel Spáčil,DF,23,Çekya,72,1
+plz,Milan Havel,DF,32,Çekya,73,1
+plz,Amar Memić,DF,25,Bosna-Hersek,73,1
+plz,Lukáš Červ,OS,25,Çekya,77,1
+plz,Lukáš Kalvach,OS,31,Çekya,75,1
+plz,Pavel Šulc,OS,25,Çekya,78,1
+plz,Tomáš Ladra,OS,29,Çekya,74,1
+plz,Cheick Souaré,OS,24,Fransa,72,1
+plz,Jiří Panoš,OS,19,Çekya,70,1
+plz,Matěj Valenta,OS,26,Çekya,71,1
+plz,Adrian Zeljković,OS,24,Slovenya,72,1
+plz,Prince Kwabena Adu,FV,23,Gana,75,1
+plz,Rafiu Durosinmi,FV,23,Nijerya,76,1
+plz,Matěj Vydra,FV,34,Çekya,75,1
+plz,Daniel Vašulín,FV,28,Çekya,73,1
+plz,Christophe Kabongo,FV,23,Çekya,71,1
+plz,Denis Višinský,FV,23,Çekya,71,1

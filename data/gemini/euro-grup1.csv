@@ -1,0 +1,268 @@
+takim_id,oyuncu,mevki,yas,uyruk,guc,tahmini
+psg,Lucas Chevalier,KL,25,Fransa,84,1
+psg,Matvey Safonov,KL,27,Rusya,80,1
+psg,Alessandro Longoni,KL,18,İtalya,66,1
+psg,Achraf Hakimi,DF,28,Fas,87,1
+psg,Marquinhos,DF,32,Brezilya,86,1
+psg,Willian Pacho,DF,25,Ekvador,84,1
+psg,Illia Zabarnyi,DF,24,Ukrayna,82,1
+psg,Lucas Beraldo,DF,22,Brezilya,80,1
+psg,Nuno Mendes,DF,24,Portekiz,86,1
+psg,Lucas Hernandez,DF,30,Fransa,81,1
+psg,Lucas Digne,DF,33,Fransa,79,1
+psg,David Boly,DF,17,Fransa,65,1
+psg,Vitinha,OS,26,Portekiz,88,1
+psg,João Neves,OS,22,Portekiz,86,1
+psg,Fabián Ruiz,OS,30,İspanya,83,1
+psg,Warren Zaïre-Emery,OS,20,Fransa,82,1
+psg,Maghnes Akliouche,OS,24,Fransa,82,1
+psg,Senny Mayulu,OS,20,Fransa,76,1
+psg,Dro Fernández,OS,18,İspanya,71,1
+psg,Khvicha Kvaratskhelia,FV,25,Gürcistan,88,1
+psg,Ousmane Dembélé,FV,29,Fransa,87,1
+psg,Désiré Doué,FV,21,Fransa,84,1
+psg,Ferran Torres,FV,26,İspanya,82,1
+psg,Mika Godts,FV,21,Belçika,80,1
+psg,Quentin Ndjantou,FV,19,Fransa,70,1
+bay,Manuel Neuer,KL,40,Almanya,83,1
+bay,Jonas Urbig,KL,23,Almanya,78,1
+bay,Sven Ulreich,KL,38,Almanya,72,1
+bay,Dayot Upamecano,DF,28,Fransa,84,1
+bay,Jonathan Tah,DF,30,Almanya,84,1
+bay,Kim Min-jae,DF,30,Güney Kore,83,1
+bay,Alphonso Davies,DF,26,Kanada,85,1
+bay,Nathaniel Brown,DF,23,Almanya,80,1
+bay,Josip Stanišić,DF,26,Hırvatistan,80,1
+bay,Hiroki Itō,DF,27,Japonya,79,1
+bay,Sacha Boey,DF,26,Fransa,77,1
+bay,Cassiano Kiala,DF,17,Almanya,66,1
+bay,Joshua Kimmich,OS,31,Almanya,88,1
+bay,Jamal Musiala,OS,23,Almanya,89,1
+bay,Aleksandar Pavlović,OS,22,Almanya,83,1
+bay,Konrad Laimer,OS,29,Avusturya,81,1
+bay,Ismael Saibari,OS,25,Fas,81,1
+bay,Tom Bischof,OS,21,Almanya,78,1
+bay,Lennart Karl,OS,18,Almanya,75,1
+bay,Bara Sapoko Ndiaye,OS,18,Senegal,68,1
+bay,David Daiber,OS,19,Almanya,66,1
+bay,Harry Kane,FV,33,İngiltere,90,1
+bay,Michael Olise,FV,24,Fransa,87,1
+bay,Luis Díaz,FV,29,Kolombiya,86,1
+bay,Serge Gnabry,FV,31,Almanya,80,1
+rma,Thibaut Courtois,KL,34,Belçika,89,1
+rma,Andriy Lunin,KL,27,Ukrayna,81,1
+rma,Éder Militão,DF,28,Brezilya,85,1
+rma,Ibrahima Konaté,DF,27,Fransa,84,1
+rma,Antonio Rüdiger,DF,33,Almanya,84,1
+rma,Dean Huijsen,DF,21,İspanya,82,1
+rma,Raúl Asencio,DF,23,İspanya,79,1
+rma,Trent Alexander-Arnold,DF,28,İngiltere,86,1
+rma,Denzel Dumfries,DF,30,Hollanda,82,1
+rma,Marc Cucurella,DF,28,İspanya,83,1
+rma,Ferland Mendy,DF,31,Fransa,79,1
+rma,Álvaro Carreras,DF,23,İspanya,79,1
+rma,Jude Bellingham,OS,23,İngiltere,91,1
+rma,Federico Valverde,OS,28,Uruguay,89,1
+rma,Bernardo Silva,OS,32,Portekiz,86,1
+rma,Aurélien Tchouaméni,OS,26,Fransa,85,1
+rma,Eduardo Camavinga,OS,24,Fransa,84,1
+rma,Arda Güler,OS,21,Türkiye,82,1
+rma,Thiago Pitarch,OS,19,İspanya,68,1
+rma,Kylian Mbappé,FV,27,Fransa,92,1
+rma,Vinícius Júnior,FV,26,Brezilya,91,1
+rma,Rodrygo,FV,25,Brezilya,85,1
+rma,Yan Diomande,FV,20,Fildişi Sahili,82,1
+rma,Endrick,FV,20,Brezilya,80,1
+rma,Brahim Díaz,FV,27,Fas,81,1
+rma,Carlos Espí,FV,21,İspanya,75,1
+int,Josep Martínez,KL,28,İspanya,80,1
+int,Ivan Provedel,KL,32,İtalya,80,1
+int,Raffaele Di Gennaro,KL,33,İtalya,72,1
+int,Alessandro Bastoni,DF,27,İtalya,87,1
+int,Manuel Akanji,DF,31,İsviçre,83,1
+int,John Stones,DF,32,İngiltere,82,1
+int,Benjamin Pavard,DF,30,Fransa,82,1
+int,Yann Aurel Bisseck,DF,25,Almanya,80,1
+int,Federico Dimarco,DF,29,İtalya,85,1
+int,Carlos Augusto,DF,27,Brezilya,80,1
+int,Djed Spence,DF,26,İngiltere,78,1
+int,Nicolò Barella,OS,29,İtalya,87,1
+int,Hakan Çalhanoğlu,OS,32,Türkiye,85,1
+int,Curtis Jones,OS,25,İngiltere,81,1
+int,Piotr Zieliński,OS,32,Polonya,81,1
+int,Henrikh Mkhitaryan,OS,37,Ermenistan,78,1
+int,Petar Sučić,OS,23,Hırvatistan,78,1
+int,Andy Diouf,OS,23,Fransa,77,1
+int,Aleksandar Stanković,OS,21,Sırbistan,75,1
+int,Lautaro Martínez,FV,29,Arjantin,89,1
+int,Marcus Thuram,FV,29,Fransa,85,1
+int,Francesco Pio Esposito,FV,21,İtalya,77,1
+int,Ange-Yoan Bonny,FV,23,Fransa,77,1
+int,Luis Henrique,FV,24,Brezilya,78,1
+bar,Joan García,KL,25,İspanya,82,1
+bar,Wojciech Szczęsny,KL,36,Polonya,81,1
+bar,Dominik Livaković,KL,31,Hırvatistan,79,1
+bar,Pau Cubarsí,DF,19,İspanya,84,1
+bar,Jules Koundé,DF,28,Fransa,85,1
+bar,Alejandro Balde,DF,23,İspanya,83,1
+bar,João Cancelo,DF,32,Portekiz,82,1
+bar,Eric García,DF,25,İspanya,80,1
+bar,Andreas Christensen,DF,30,Danimarka,80,1
+bar,Gerard Martín,DF,24,İspanya,76,1
+bar,Xavi Espart,DF,19,İspanya,68,1
+bar,Pedri,OS,23,İspanya,90,1
+bar,Rodri,OS,30,İspanya,89,1
+bar,Dani Olmo,OS,28,İspanya,85,1
+bar,Frenkie de Jong,OS,29,Hollanda,85,1
+bar,Gavi,OS,22,İspanya,83,1
+bar,Fermín López,OS,23,İspanya,83,1
+bar,Marc Bernal,OS,19,İspanya,77,1
+bar,Brian Fariñas,OS,20,İspanya,67,1
+bar,Lamine Yamal,FV,19,İspanya,91,1
+bar,Raphinha,FV,29,Brezilya,88,1
+bar,Anthony Gordon,FV,25,İngiltere,83,1
+bar,Gabriel Jesus,FV,29,Brezilya,81,1
+bar,Karim Adeyemi,FV,24,Almanya,80,1
+bar,Roony Bardghji,FV,21,İsveç,76,1
+bar,Hamza Abdelkarim,FV,18,Mısır,66,1
+bar,Jesse Bisiwu,FV,18,Belçika,66,1
+atm,Jan Oblak,KL,33,Slovenya,86,1
+atm,Juan Musso,KL,32,Arjantin,79,1
+atm,Salvador Esquivel,KL,21,İspanya,66,1
+atm,Cristian Romero,DF,28,Arjantin,85,1
+atm,Robin Le Normand,DF,30,İspanya,82,1
+atm,Dávid Hancko,DF,28,Slovakya,83,1
+atm,Alejandro Grimaldo,DF,31,İspanya,84,1
+atm,Marc Pubill,DF,23,İspanya,79,1
+atm,Daniel Martínez,DF,20,İspanya,67,1
+atm,Jorge Domínguez,DF,20,İspanya,66,1
+atm,Morten Hjulmand,OS,27,Danimarka,83,1
+atm,Pablo Barrios,OS,23,İspanya,82,1
+atm,Koke,OS,34,İspanya,80,1
+atm,Marcos Llorente,OS,31,İspanya,82,1
+atm,Johnny Cardoso,OS,25,ABD,80,1
+atm,Lee Kang-in,OS,25,Güney Kore,80,1
+atm,Rodrigo Mendoza,OS,21,İspanya,75,1
+atm,Obed Vargas,OS,21,Meksika,73,1
+atm,Arnau Ortiz,OS,25,İspanya,71,1
+atm,Julián Alvarez,FV,26,Arjantin,88,1
+atm,Álex Baena,FV,25,İspanya,84,1
+atm,Ademola Lookman,FV,29,Nijerya,83,1
+atm,Jonathan David,FV,26,Kanada,82,1
+atm,Alexander Sørloth,FV,30,Norveç,81,1
+atm,Giuliano Simeone,FV,23,Arjantin,80,1
+atm,Jorge Castillo,FV,20,İspanya,65,1
+bvb,Gregor Kobel,KL,28,İsviçre,86,1
+bvb,Alexander Meyer,KL,35,Almanya,74,1
+bvb,Patrick Drewes,KL,33,Almanya,71,1
+bvb,Silas Ostrzinski,KL,23,Almanya,64,1
+bvb,Nico Schlotterbeck,DF,26,Almanya,85,1
+bvb,Waldemar Anton,DF,30,Almanya,81,1
+bvb,Julian Ryerson,DF,29,Norveç,80,1
+bvb,Ramy Bensebaini,DF,31,Cezayir,79,1
+bvb,Daniel Svensson,DF,24,İsveç,78,1
+bvb,Joane Gadou,DF,19,Fransa,75,1
+bvb,Kauã Prates,DF,18,Brezilya,70,1
+bvb,Filippo Mane,DF,21,İtalya,68,1
+bvb,Luca Reggiani,DF,18,İtalya,65,1
+bvb,Joey Veerman,OS,28,Hollanda,82,1
+bvb,Felix Nmecha,OS,26,Almanya,81,1
+bvb,Marcel Sabitzer,OS,32,Avusturya,80,1
+bvb,Jobe Bellingham,OS,21,İngiltere,78,1
+bvb,Emre Can,OS,32,Almanya,78,1
+bvb,Carney Chukwuemeka,OS,23,İngiltere,77,1
+bvb,Giannis Konstantelias,OS,23,Yunanistan,79,1
+bvb,Konstantinos Karetsas,OS,19,Yunanistan,77,1
+bvb,Ethan Nwaneri,OS,19,İngiltere,77,1
+bvb,Justin Lerma,OS,18,Ekvador,69,1
+bvb,Mussa Kaba,OS,18,Almanya,64,1
+bvb,Serhou Guirassy,FV,30,Gine,84,1
+bvb,Maximilian Beier,FV,24,Almanya,80,1
+bvb,Fábio Silva,FV,24,Portekiz,77,1
+bvb,Samuele Inacio,FV,18,İtalya,66,1
+bvb,Mathis Albert,FV,17,ABD,65,1
+rom,Mile Svilar,KL,27,Sırbistan,83,1
+rom,Pierluigi Gollini,KL,31,İtalya,76,1
+rom,Devis Vásquez,KL,28,Kolombiya,73,1
+rom,Giorgio De Marzi,KL,19,İtalya,64,1
+rom,Evan Ndicka,DF,27,Fildişi Sahili,82,1
+rom,Gianluca Mancini,DF,30,İtalya,82,1
+rom,Leonardo Balerdi,DF,27,Arjantin,80,1
+rom,Konstantinos Koulierakis,DF,22,Yunanistan,79,1
+rom,Nahuel Molina,DF,28,Arjantin,80,1
+rom,Wesley,DF,23,Brezilya,79,1
+rom,Devyne Rensch,DF,23,Hollanda,77,1
+rom,Mario Hermoso,DF,31,İspanya,78,1
+rom,Daniele Ghilardi,DF,23,İtalya,75,1
+rom,Emanuele Lulli,DF,19,İtalya,66,1
+rom,Manu Koné,OS,25,Fransa,82,1
+rom,Lorenzo Pellegrini,OS,30,İtalya,80,1
+rom,Bryan Cristante,OS,31,İtalya,79,1
+rom,Marten de Roon,OS,35,Hollanda,79,1
+rom,Niccolò Pisilli,OS,22,İtalya,77,1
+rom,Rodrigo Mora,OS,19,Portekiz,78,1
+rom,Alessandro Di Nunzio,OS,19,İtalya,65,1
+rom,Paulo Dybala,FV,33,Arjantin,84,1
+rom,Donyell Malen,FV,27,Hollanda,81,1
+rom,Matías Soulé,FV,23,Arjantin,80,1
+rom,Santiago Castro,FV,22,Arjantin,79,1
+rom,Antonio Arena,FV,17,İtalya,65,1
+scp,Rui Silva,KL,32,Portekiz,80,1
+scp,Kaique Pereira,KL,23,Brezilya,74,1
+scp,Diego Callai,KL,22,Brezilya,71,1
+scp,Francisco Silva,KL,20,Portekiz,65,1
+scp,Gonçalo Inácio,DF,25,Portekiz,83,1
+scp,Zeno Debast,DF,23,Belçika,80,1
+scp,Eduardo Quaresma,DF,24,Portekiz,78,1
+scp,Iván Fresneda,DF,22,İspanya,77,1
+scp,Georgios Vagiannidis,DF,25,Yunanistan,76,1
+scp,Ibrahima Ba,DF,21,Senegal,75,1
+scp,Nuno Santos,DF,31,Portekiz,77,1
+scp,Moncef Zekri,DF,18,Fas,67,1
+scp,Rodrigo Dias,DF,20,Portekiz,65,1
+scp,Sergi Altimira,OS,25,İspanya,79,1
+scp,Rodrigo Zalazar,OS,27,Uruguay,80,1
+scp,Issa Doumbia,OS,23,İtalya,76,1
+scp,Silas Andersen,OS,22,Danimarka,74,1
+scp,João Simões,OS,19,Portekiz,73,1
+scp,Pedro Lima,OS,23,Brezilya,72,1
+scp,Eduardo Felicíssimo,OS,19,Portekiz,68,1
+scp,Luis Suárez,FV,28,Kolombiya,81,1
+scp,Maximiliano Araújo,FV,26,Uruguay,79,1
+scp,Geny Catamo,FV,25,Mozambik,78,1
+scp,Fotis Ioannidis,FV,26,Yunanistan,78,1
+scp,Nestory Irankunda,FV,20,Avustralya,75,1
+scp,Luis Guilherme,FV,20,Brezilya,75,1
+scp,Flávio Gonçalves,FV,19,Portekiz,72,1
+scp,Jesse Derry,FV,19,İngiltere,68,1
+scp,Rafael Nel,FV,21,Portekiz,68,1
+por,Diogo Costa,KL,27,Portekiz,85,1
+por,Cláudio Ramos,KL,35,Portekiz,75,1
+por,João Costa,KL,30,Portekiz,70,1
+por,João Afonso,KL,22,Portekiz,68,1
+por,Jakub Kiwior,DF,26,Polonya,80,1
+por,Jan Bednarek,DF,30,Polonya,79,1
+por,Nehuén Pérez,DF,26,Arjantin,78,1
+por,Alberto Costa,DF,23,Portekiz,77,1
+por,Martim Fernandes,DF,20,Portekiz,77,1
+por,Francisco Moura,DF,27,Portekiz,77,1
+por,Chris Smalling,DF,36,İngiltere,76,1
+por,Dominik Prpić,DF,22,Hırvatistan,74,1
+por,Souza,DF,20,Brezilya,73,1
+por,Zaidu Sanusi,DF,29,Nijerya,73,1
+por,Alan Varela,OS,25,Arjantin,82,1
+por,Victor Froholdt,OS,20,Danimarka,80,1
+por,Gabri Veiga,OS,24,İspanya,80,1
+por,Seko Fofana,OS,31,Fildişi Sahili,79,1
+por,Hwang In-beom,OS,30,Güney Kore,79,1
+por,Pablo Rosario,OS,29,Dominik Cumhuriyeti,76,1
+por,Vasco Sousa,OS,23,Portekiz,74,1
+por,Tomás Pérez,OS,21,Arjantin,72,1
+por,Samu Aghehowa,FV,22,İspanya,83,1
+por,Santiago Giménez,FV,25,Meksika,81,1
+por,Pepê,FV,29,Brezilya,80,1
+por,Borja Sainz,FV,25,İspanya,79,1
+por,William Gomes,FV,20,Brezilya,76,1
+por,André Silva,FV,31,Portekiz,76,1
+por,Oskar Pietuszewski,FV,18,Polonya,72,1
+por,Gabriel Mec,FV,18,Brezilya,71,1

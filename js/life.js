@@ -1,5 +1,6 @@
 // Aşama 2: mağaza, ilişkiler, haftalık olaylar, sakatlık, bahis kuponları.
 import { clamp, pick, randInt, rand, money, addInbox, expectedGoals, leagueOf } from './engine.js';
+import * as Stories from './stories.js';
 
 // ---------- mağaza ----------
 export const CARS = [
@@ -97,10 +98,11 @@ const GIRL_NAMES = ['Elif', 'Zeynep', 'Defne', 'Ecem', 'Selin', 'Melis', 'Ceren'
 const SURN = ['Aydın', 'Kaya', 'Demir', 'Arslan', 'Erdem', 'Tekin', 'Yalın', 'Ateş', 'Uysal', 'Kılıç'];
 const JOBS = ['Mimar', 'Doktor', 'Oyuncu', 'Model', 'Avukat', 'Şarkıcı', 'Öğretmen', 'Spiker'];
 export function meetCandidates() {
+  const order = [0, 1, 2].sort(() => Math.random() - 0.5);
   return Array.from({ length: 3 }, (_, i) => ({
     name: `${pick(GIRL_NAMES)} ${pick(SURN)}`,
     job: pick(JOBS),
-    portrait: i % 3,            // Gemini portreleri gelince img/people/partner{0..2}.jpg
+    portrait: order[i],         // img/people/partner{0..2}.jpg
     likesFame: Math.random() < 0.5,
   }));
 }
@@ -182,8 +184,10 @@ export function weeklyLife(state, weekIndex) {
   // haftalık bayraklar sıfırlanır
   p.weekFlags = {};
   p.casinoWeek = 0;
-  // rastgele olay
-  if (!state.event && Math.random() < 0.18) state.event = randomEvent(state);
+  // kaptanlık: moral ve ün
+  if (p.captain) { p.morale = clamp(p.morale + 0.5, 0, 100); p.fame = clamp(p.fame + 0.1, 0, 100); }
+  // hikâye bölümü ya da rastgele olay
+  if (!state.event) state.event = Stories.weeklyStory(state, randomEvent);
 }
 
 // ---------- olaylar ----------
@@ -234,19 +238,11 @@ function randomEvent(state) {
   return pick(pool);
 }
 export function resolveEvent(state, i) {
-  const p = state.player, ev = state.event;
+  const ev = state.event;
   if (!ev) return null;
-  const fx = ev.options[i]?.fx || {};
-  if (fx.money) p.money += fx.money;
-  for (const k of ['family', 'coach', 'team']) if (fx[k]) relAdd(p, k, fx[k]);
-  if (fx.morale) p.morale = clamp(p.morale + fx.morale, 0, 100);
-  if (fx.fans) p.fans = clamp((p.fans ?? 50) + fx.fans, 0, 100);
-  if (fx.fame) p.fame = clamp(p.fame + fx.fame, 0, 100);
-  if (fx.energy) p.energy = clamp(p.energy + fx.energy, 0, 100);
-  if (fx.partner && p.partner) p.partner.value = clamp(p.partner.value + fx.partner, 0, 100);
-  if (fx.stat) p.stats[fx.stat] = clamp(p.stats[fx.stat] + 0.8, 1, 99);
+  const r = Stories.applyChoice(state, ev, i, relAdd);
   state.event = null;
-  return fx;
+  return r;
 }
 
 // ---------- sakatlık ----------

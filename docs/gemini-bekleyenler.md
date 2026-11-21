@@ -34,7 +34,8 @@ Semi-realistic digital painting portrait, head and shoulders, 1:1, dark neutral 
 - [ ] Berk Yılmazer → img/people/berk.jpg — `a fast-talking transfer-news journalist in his early 30s, slick short hair, trendy glasses, earbuds, phone pressed to his ear, sharp eager look`
 - [ ] Nur Karaca → img/people/nur.jpg — `an energetic live TV sports presenter in her late 20s, sleek black ponytail, blazer, holding a TV microphone, big bright smile`
 
-## 3) Karakterler — 1:1 (aynı şablon)
+## 3) Karakterler — 1:1 ✅ (gerçekçi basın fotoğrafı tarzıyla yeniden yapıldı; img/people/*.jpg)
+Not: coach.jpg gerçek kulüp hocası yerine kullanılmıyor (gerçek kişiye uydurma yüz olmasın); sadece ek antrenman olayında.
 - [ ] `a stern Turkish football head coach in his late 50s, short grey beard, dark club tracksuit, arms crossed` → img/people/coach.jpg
 - [ ] `a sharp football agent in his 50s, slicked-back grey hair, expensive navy suit, phone in hand, sly smile` → img/people/agent.jpg
 - [ ] `a warm Turkish mother in her late 40s, headscarf optional, kind smile` → img/people/mother.jpg
@@ -66,11 +67,20 @@ Real-estate photo of a fictional home in Istanbul, 4:3, golden hour light, invit
 - [ ] `a historic white Ottoman-style waterfront mansion (yalı) on the Bosphorus with a private pier` → house5
 
 ## Veri
-- [ ] Premier Lig kadroları — İLK DENEME REDDEDİLDİ (2024-25 verisi geldi: Wolves/West Ham/Leicester/Southampton
+- [x] Premier Lig kadroları — İLK DENEME REDDEDİLDİ (2024-25 verisi geldi: Wolves/West Ham/Leicester/Southampton
       vardı, Brentford/Coventry/Hull/Leeds yoktu; Salah, Trossard, Onana, Asensio, Ndidi gibi Süper Lig'e geçenler
       eski takımlarında; 8 oyuncu iki takımda). Sıkı promptla takım takım tekrar istendi.
-      ✅ Arsenal (kontrol edildi) → data/pl-kadrolar.csv. Kalan 19 takım: avl bou bre bha che cov cry eve ful hul ips lee liv mci mun new nfo sun tot
+      ✅ Arsenal, Hull, Ipswich, Leeds, Liverpool, Man City, Man Utd, Newcastle, Forest, Tottenham, Sunderland (kontrol edildi; şüpheli transferler web ile doğrulandı)
+      Tüm 20 PL takımı gerçek kadrolu ✅ (grup1 + grup2, 2026-11-21)
+      ✅ Arsenal (kontrol edildi) → data/pl-kadrolar.csv + js/kadrolar.js. Kalan 19 takım: avl bou bre bha che cov cry eve ful hul ips lee liv mci mun new nfo sun tot
+      Premier Lig oyunda AKTİF (2026-11-21): kadrosu gelmeyen takımlarda geçici İngilizce uydurma isimler var; gelen kadro eski kayıtlara da otomatik yüklenir.
+      Avrupa kupası yabancı takımları (61 takım) da gerçek kadro bekliyor. Gelen CSV'ler: python3 tools/kadro_ekle.py dosya.csv --yaz
 - [ ] La Liga, Serie A, Bundesliga kadroları — Aşama 4
 - [x] Süper Lig + 1. Lig kadroları
 - [x] Kulüp bilgileri
 - [x] Türkçe karakterli isimler
+
+## Konferans Ligi kadroları (2026-11-21 eklendi)
+- [ ] 34 KL takımı + 14 ön eleme rakibi şimdilik uydurma isimli. Aynı CSV promptuyla istenebilir.
+  KL: ata frb mon get bra aja twe gnt stv jab pao agf fck fcm fcn brn pfs lug thu hea mjb haj czv ucr kai csk kup bor rig egn kau lri ies ibe
+  Eleme rakipleri: rap leg mta par ros bas yb shr gor rij mal lud fcsb qar

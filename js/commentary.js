@@ -63,6 +63,18 @@ export const LINES = {
     'Top havada arkadan geliyor… {ad} sırtı dönük… yoksa?!',
     'Geriden yüksek bir top! {ad} kaleye arkası dönük, akrobasi zamanı mı?',
   ],
+  intro_uzuntop: [
+    'Uzun top! {ad} defansın arkasında, {kaleci} kalesinden çıkıyor!',
+    'Geriden yüksek bir top, {ad} ile {kaleci} arasında hız yarışı!',
+  ],
+  intro_duvar: [
+    'Ceza sahası önünde {ad}, yanında {arkadas}… ver-kaç kokusu!',
+    '{ad} topla, önü kalabalık, {arkadas} duvar olmaya hazır!',
+  ],
+  intro_pres: [
+    'Top rakipte ama {ad} bırakmıyor! Önde pres!',
+    '{rakip} geriden çıkmaya çalışıyor, {ad} üstüne basıyor!',
+  ],
   intro_penalti: [
     'PENALTI! Topun başına {ad} geçiyor. Kalbi olan izlemesin!',
     'Penaltı noktasında {ad}, karşısında {kaleci}. Sinir savaşı!',
@@ -91,6 +103,18 @@ export const LINES = {
   goal_penalti: [
     'Penaltı gol! {ad} soğukkanlı, {kaleci} öbür köşede!',
     'GOL! Penaltıyı tereyağından kıl çeker gibi attı!',
+  ],
+  goal_uzuntop: [
+    'GOL! Kaleciden önce davrandı {ad}, top boş ağlarda!',
+    'Hız yarışını kazandı {ad}! {kaleci} geç kaldı, GOL!',
+  ],
+  goal_duvar: [
+    'VER-KAÇ VE GOL! {ad} ile {arkadas} defansı ikiye böldü!',
+    'Ders kitabı gibi duvar pası! {ad} bitirdi, GOL!',
+  ],
+  goal_pres: [
+    'PRESTEN GOL! {ad} topu kaptı ve affetmedi!',
+    'Rakip geriden çıkayım derken {ad} topu çaldı, ağlara gönderdi!',
   ],
   goal_birebir: [
     'GOL! Kaleciyle birebirde affetmedi {ad}!',
@@ -229,6 +253,18 @@ export const BUILD = {
   rovasata: [
     ['Ceza sahasında karambol…', 'Top havaya sekti…', '{ad} sırtı dönük… yoksa?!'],
     ['{arkadas} kanattan çevirdi, top arkada kaldı…', '{ad} geriye doğru yükseliyor…', 'Havada! Akrobasi zamanı!'],
+  ],
+  uzuntop: [
+    ['{arkadas} geride topu kazandı…', 'Kafasını kaldırdı, uzun vurdu…', 'Top defansın arkasında! {ad} koşuyor, {kaleci} çıkıyor!'],
+    ['{rakip} ofsayt tuzağı kuruyor…', '{arkadas} kafayı kaldırdı, havadan aşırdı…', 'Tuzak bozuldu! {ad} topun peşinde!'],
+  ],
+  duvar: [
+    ['{takim} ceza sahası önünde paslaşıyor…', 'Top {ad:dat} geldi, önü kalabalık…', 'Yanında {arkadas}! Ver-kaç fırsatı!'],
+    ['{ad} sürüyor, iki defans önünde…', '{arkadas} yanına geldi, duvar oluyor…', 'Şimdi ya da hiç!'],
+  ],
+  pres: [
+    ['{rakip} geriden oyun kuruyor…', '{ad} pres için öne çıktı…', 'Kaleci kısa verdi! Top rakipte, {ad} üstüne basıyor!'],
+    ['Top auta çıktı, taç rakibin…', 'Taç atışı kısa kullanıldı…', '{ad} pres yapıyor! Hata gelebilir!'],
   ],
   penalti: [
     ['{ad} ceza sahasına girdi…', '{defans} kaydı, {ad} yerde!', 'Hakem beyaz noktayı gösteriyor! PENALTI!'],
