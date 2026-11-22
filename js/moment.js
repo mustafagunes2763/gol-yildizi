@@ -40,10 +40,14 @@ const HINTS = {
   vole: 'Top havada geliyor… gelince sert kaydır: vole!',
   arkadirek: 'Arka direk! Top gelince kaleye kafayla çevir',
   balik: 'Alçak orta! Balıklama atla: top gelince hızla kaydır',
+  kapma: 'Geri pas gelecek! Araya koş, kap ve vur',
+  donen: 'Kaleci çeldi! Dönen topa yetiş ve vur',
+  yerden: 'Yerden orta! Top gelince kaleye vur',
+  uclu: 'Üçlü pas! Arkadaşlara dokun, ilerle, vur',
 };
-const TIME_LIMIT = { acik: 10, kontra: 13, birebir: 8, uzuntop: 9, duvar: 11, pres: 11 };
-const RUNNERS = new Set(['acik', 'kontra', 'birebir', 'uzuntop', 'duvar', 'pres']);
-const HEADERS = new Set(['kafa', 'korner', 'rovasata', 'vole', 'arkadirek', 'balik']);
+const TIME_LIMIT = { acik: 10, kontra: 13, birebir: 8, uzuntop: 9, duvar: 11, pres: 11, kapma: 9, donen: 6, uclu: 14 };
+const RUNNERS = new Set(['acik', 'kontra', 'birebir', 'uzuntop', 'duvar', 'pres', 'kapma', 'donen', 'uclu']);
+const HEADERS = new Set(['kafa', 'korner', 'rovasata', 'vole', 'arkadirek', 'balik', 'yerden']);
 
 /**
  * @param {HTMLElement} host
@@ -84,9 +88,12 @@ export function playMoment(host, o) {
     const isHeader = HEADERS.has(kind);
     const oppNames = (o.oppNames && o.oppNames.length ? o.oppNames : ['Defans']).map((n) => n.split(' ').slice(-1)[0]);
     let foulInfo = null;
-    const keeperSpeed = 25 + o.keeper * 0.95;           // şut sırasında yana kayma
-    const keeperRun = 35 + o.keeper * 0.45;             // çıkış hızı
-    const keeperReach = 11 + o.keeper / 22;
+    // rakip gücü: güçlü takımlara karşı kaleci daha çevik ve erken tepki verir (−0.7 … 1)
+    const tough = clamp(((o.oppStr ?? o.keeper) - 62) / 26, -0.7, 1);
+    const keeperSpeed = 25 + o.keeper * 0.95 + tough * 28;     // şut sırasında yana kayma
+    const keeperRun = 35 + o.keeper * 0.45 + tough * 8;        // çıkış hızı
+    const keeperReach = 11 + o.keeper / 22 + tough * 2.5;
+    let detail = null;                                          // sonuç ayrıntısı (spiker için): near | corner | hold
     const tackleP = clamp(0.5 - st.teknik / 240 + (o.keeper - 65) / 300, 0.12, 0.45); // defans topu kapma şansı
 
     // ---------- kurulum ----------
@@ -227,6 +234,46 @@ export function playMoment(host, o) {
       defenders.push({ role: 'press', x: me.x + rand(-10, 10), y: me.y - rand(48, 60), slow: 0.95 });
       defenders.push({ role: 'zone', x: clamp(me.x - side * rand(25, 50), 30, 330), y: me.y - rand(95, 120) });
       if (o.defenders > 2) defenders.push({ role: 'zone', x: clamp(me.x + side * rand(60, 90), 30, 330), y: me.y - rand(110, 140) });
+    } else if (kind === 'kapma') {
+      // rakip stoper baskı altında kalecisine geri pas verecek: araya gir
+      me.hasBall = false;
+      me.x = rand(130, 230); me.y = rand(245, 275);
+      const c = { role: 'opp', x: clamp(me.x + rand(-60, 60), 80, 280), y: rand(150, 175) };
+      const o2 = { role: 'opp', x: c.x < GOAL_CX ? rand(240, 300) : rand(60, 120), y: rand(175, 215) };
+      defenders.push(c, o2);
+      press = { carrier: c, pass: null, t: 0, next: rand(1.1, 1.5), passes: 0, won: false, tryAt: 0, back: true };
+      mates.push({ x: me.x < GOAL_CX ? me.x + rand(70, 110) : me.x - rand(70, 110), y: me.y + rand(-10, 25), tx: null, name: mateName() });
+    } else if (kind === 'donen') {
+      // arkadaşın şut çekti, kaleci çeldi: dönen top
+      me.hasBall = false;
+      me.x = rand(140, 220); me.y = rand(150, 185);
+      keeper.x = GOAL_CX + rand(-25, 25); keeper.stun = 1.1; keeper.dive = Math.random() < 0.5 ? -1 : 1;
+      const tx = clamp(me.x + rand(-45, 45), 95, 265), ty = clamp(me.y - rand(25, 55), GOAL_Y + 60, 150);
+      const fr = 1.8, T = 0.9, k = fr / (1 - Math.exp(-fr * T));
+      loose = { vx: (tx - keeper.x) * k, vy: (ty - GOAL_Y - 16) * k, fr, grace: 0.25, x0: keeper.x, y0: GOAL_Y + 16 };
+      defenders.push({ role: 'press', x: clamp(tx + rand(-70, -40), 30, 330), y: ty + rand(-10, 20), slow: 0.82 });
+      defenders.push({ role: 'press', x: clamp(tx + rand(40, 70), 30, 330), y: ty + rand(0, 30), slow: 0.78 });
+      mates.push({ x: clamp(me.x + rand(-80, 80), 40, 320), y: rand(250, 290), name: mateName(), fixed: true });
+    } else if (kind === 'yerden') {
+      // kanattan çizgiye inen arkadaş yerden sert ortaladı: ilk vuruş
+      me.hasBall = false;
+      me.x = rand(155, 205); me.y = rand(100, 135);
+      const left = Math.random() < 0.5;
+      const sx = left ? rand(35, 60) : rand(300, 325), sy = rand(62, 80);
+      mates.push({ x: sx, y: sy + 8, name: mateName(), crosser: true });
+      defenders.push({ role: 'mark', x: me.x + (left ? -16 : 16), y: me.y - 10 });
+      defenders.push({ role: 'mark', x: me.x + rand(-40, 40), y: me.y + rand(30, 45), fixed: true });
+      const tt = rand(0.55, 0.68);
+      crossBall = { x: sx, y: sy, vx: (me.x - sx) / tt, vy: (me.y - sy) / tt, ground: true };
+    } else if (kind === 'uclu') {
+      // orta sahada üçlü paslaşma: iki duvar arkadaş
+      me.x = rand(130, 230); me.y = rand(330, 360);
+      const side = me.x < GOAL_CX ? 1 : -1;
+      mates.push({ x: clamp(me.x + side * rand(55, 75), 40, 320), y: me.y - rand(25, 40), name: mateName(), wall: true, fixed: true });
+      mates.push({ x: clamp(me.x - side * rand(10, 50), 50, 310), y: me.y - rand(150, 175), name: mateName(), wall: true, fixed: true, second: true });
+      defenders.push({ role: 'press', x: me.x + rand(-12, 12), y: me.y - rand(50, 62), slow: 0.95 });
+      defenders.push({ role: 'zone', x: clamp(me.x + side * rand(20, 60), 30, 330), y: me.y - rand(200, 225) });
+      defenders.push({ role: 'zone', x: clamp(me.x - side * rand(40, 80), 30, 330), y: me.y - rand(215, 240) });
     } else if (kind === 'pres') {
       // top rakipte, kendi ceza sahalarından çıkmaya çalışıyorlar
       me.hasBall = false;
@@ -243,6 +290,7 @@ export function playMoment(host, o) {
     const ball = { x: me.x, y: me.y - 10 };
     if (crossBall) { ball.x = crossBall.x; ball.y = crossBall.y; }
     if (kind === 'uzuntop') { ball.x = loose.x0; ball.y = me.y + 40; }
+    if (kind === 'donen') { ball.x = loose.x0; ball.y = loose.y0; }
     if (press) { ball.x = press.carrier.x; ball.y = press.carrier.y + 9; }
     if (window.__debug) window.__debug.moment = { kind, ball, me, keeper, defenders, mates, get loose() { return loose; }, get press() { return press; }, get path() { return path; }, get gesture() { return gesture; } };
 
@@ -311,7 +359,12 @@ export function playMoment(host, o) {
       }
       if (g.mode === 'path') {
         const avg = len / Math.max(dur, 1);
-        if (rs > 1.4 && rs > avg * 2.2) { const tail = g.pts.filter((q) => b.t - q.t < 140); if (tail.length > 1) { path = []; return release(tail, rs); } } // çizip sonunda fırlattı: şut
+        const tail = g.pts.filter((q) => b.t - q.t < 140);
+        // kısa, dümdüz ve kaleye dönük hareket: koşu değil şut (yavaşça vurulan şutlar koşuya dönmesin)
+        let pl = 0; for (let k = 1; k < g.pts.length; k++) pl += dist(g.pts[k], g.pts[k - 1]);
+        if (dur < 380 && len > 40 && len / Math.max(pl, 1) > 0.9 && rs > 0.5 && fwd(g.pts)) { path = []; return release(g.pts, rs); }
+        // çizip sonunda kaleye doğru fırlattı: şut (yana/geri fırlatma koşu sayılır)
+        if (tail.length > 1 && rs > 1.5 && rs > avg * 2.2 && (fwd(tail) || mateAim(tail))) { path = []; return release(tail, rs); }
         path = samplePath(g.pts); return;
       }
       // topsuzken: yanındaysa topu alıp vurur, değilse önce topa yetiş
@@ -321,10 +374,27 @@ export function playMoment(host, o) {
       }
       // çalım: oyuncundan başlayan hızlı yatay kaydırma
       if (g.nearMe && me.hasBall && kind !== 'serbest' && Math.abs(b.x - a.x) > 1.8 * Math.abs(b.y - a.y) && len > 25 && len < 110) return doDodge(Math.sign(b.x - a.x));
-      if (len >= 25) release(g.pts, rs);
-      else flash('Daha uzun kaydır');
+      if (len >= 25) {
+        const toGoal = fwd(g.pts), toMate = mateAim(g.pts);
+        // oyuncudan başlayıp kaleye ya da arkadaşa dönük olmayan kaydırma (yana/geri): koşu
+        if (g.nearMe && me.hasBall && canRun && !toGoal && !toMate) { path = samplePath(g.pts); return; }
+        if (!isHeader && !toGoal && !toMate) return flash(canRun ? 'Şut için kaleye doğru kaydır' : 'Kaleye doğru kaydır');
+        release(g.pts, rs);
+      } else flash('Daha uzun kaydır');
     });
     canvas.addEventListener('pointercancel', () => { gesture = null; });
+    // kaydırma yönü: kaleye dönük mü (top→kale yönüyle en fazla ~58°), bir arkadaşa mı
+    function fwd(pts) {
+      const a = pts[0], b = pts[pts.length - 1];
+      const ang = Math.atan2(b.y - a.y, b.x - a.x), goal = Math.atan2(GOAL_Y - ball.y, GOAL_CX - ball.x);
+      return angDiff(ang, goal) < 1.0;
+    }
+    function mateAim(pts) {
+      if (!canPass || !me.hasBall) return false;
+      const a = pts[0], b = pts[pts.length - 1];
+      const ang = Math.atan2(b.y - a.y, b.x - a.x);
+      return mates.some((m) => !m.crosser && angDiff(ang, Math.atan2(m.y - ball.y, m.x - ball.x)) < 0.32);
+    }
 
     function grabLoose(quiet) {
       loose = null; me.hasBall = true;
@@ -395,24 +465,25 @@ export function playMoment(host, o) {
       // --- KAFA ---
       if (isHeader) {
         const d = dist(ball, me);
-        const win = kind === 'rovasata' ? 22 : kind === 'balik' ? 26 : kind === 'vole' ? 32 : 30;
+        const win = kind === 'rovasata' ? 22 : kind === 'balik' ? 26 : kind === 'vole' || kind === 'yerden' ? 32 : 30;
         if (d > win) {
           const early = crossBall && crossBall.vx * (me.x - ball.x) + crossBall.vy * (me.y - ball.y) > 0;
           return finish('miss', early ? 'Erken kafa vurdun' : 'Topa yetişemedin');
         }
         // markajdaki defans kafayı kapabilir
-        const pDef = clamp((kind === 'vole' ? 0.18 : kind === 'arkadirek' ? 0.22 : 0.33) + (o.keeper - st.guc) / 250, 0.1, 0.5);
-        if (Math.random() < pDef) { crossBall = null; return finish('blocked', kind === 'vole' ? 'Defans kendini önüne attı' : kind === 'balik' ? 'Defans topa önce uzandı' : 'Defans kafada önde davrandı'); }
+        const pDef = clamp((kind === 'vole' ? 0.18 : kind === 'yerden' ? 0.2 : kind === 'arkadirek' ? 0.22 : 0.33) + (o.keeper - (kind === 'yerden' ? st.hiz : st.guc)) / 250 + Math.max(0, tough) * 0.06, 0.1, 0.5);
+        if (Math.random() < pDef) { crossBall = null; return finish('blocked', kind === 'vole' ? 'Defans kendini önüne attı' : kind === 'yerden' ? 'Defans ayağını uzattı, araya girdi' : kind === 'balik' ? 'Defans topa önce uzandı' : 'Defans kafada önde davrandı'); }
         crossBall = null;
-        const errMul = kind === 'rovasata' ? 0.16 : kind === 'vole' ? 0.14 : kind === 'arkadirek' ? 0.1 : 0.13;
-        ang += gauss() * errMul * (1 - (kind === 'vole' ? st.sut + st.teknik : st.guc + st.teknik) / 230) * tired;
+        const errMul = (kind === 'rovasata' ? 0.16 : kind === 'vole' ? 0.14 : kind === 'yerden' ? 0.12 : kind === 'arkadirek' ? 0.1 : 0.13) * (1 + Math.max(0, tough) * 0.2);
+        ang += gauss() * errMul * (1 - (kind === 'vole' || kind === 'yerden' ? st.sut + st.teknik : st.guc + st.teknik) / 230) * tired;
         const sp = kind === 'rovasata' ? clamp(380 + st.teknik * 2.5, 380, 640)
           : kind === 'vole' ? clamp(380 + st.sut * 3, 380, 700)
+          : kind === 'yerden' ? clamp(Math.min(raw, 360 + st.sut * 3.4), 300, 660)
             : kind === 'balik' ? clamp(400 + st.guc * 2.2, 400, 620)
               : clamp(300 + st.guc * 2.2 + st.teknik, 300, 560);
         const over = kind === 'vole' && raw > (400 + st.sut * 4) * 1.5 && Math.random() < 0.5;   // fazla sert vole üstten gider
         launchShot(ang, sp, 0, over);
-        if (kind === 'vole') flash('VOLE!'); else if (kind === 'balik') flash('Balıklama!');
+        if (kind === 'vole') flash('VOLE!'); else if (kind === 'balik') flash('Balıklama!'); else if (kind === 'yerden') flash('İlk vuruş!');
         if (kind === 'rovasata') keeperReactAt += 0.12;
         return;
       }
@@ -432,7 +503,14 @@ export function playMoment(host, o) {
       }
 
       // --- ŞUT ---
-      ang += gauss() * 0.075 * (1 - (st.sut + st.teknik) / 240) * tired;
+      // isabet: mesafe, şut/teknik, baskı (yakındaki defans) ve yorgunluk; rakip güçlüyse panik artar
+      const dG = Math.hypot(GOAL_CX - ball.x, GOAL_Y - ball.y);
+      const nearDef = defenders.some((d) => d.role !== 'wall' && d.stun <= 0 && dist(d, me) < 42);
+      const fatigue = o.energy < 30 ? 1.45 : o.energy < 55 ? 1.18 : 1;
+      const skill = clamp(1.3 - (st.sut + st.teknik) / 190, 0.4, 1.1);
+      const sigma = kind === 'penalti' ? 0.035 * skill * fatigue
+        : (0.03 + dG / 3600) * skill * fatigue * (nearDef ? 1.45 : 1) * (1 + Math.max(0, tough) * 0.25);
+      ang += gauss() * sigma;
       ang += clamp(wrap(midAng - Math.atan2(dy, dx)), -0.35, 0.35) * 0.6;
       const maxSpeed = 400 + st.sut * 4;
       const sp = clamp(raw * (0.85 + st.sut / 200), 230, maxSpeed);
@@ -447,7 +525,7 @@ export function playMoment(host, o) {
       me.hasBall = false; path = [];
       shot = { kind: 'shot', vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, cf, over, low };
       Sfx.kick(clamp(sp / 650, 0.3, 1));
-      keeperReactAt = elapsed + (kind === 'penalti' ? 0.05 : kind === 'serbest' ? 0.2 : 0.3 + Math.random() * 0.1 - o.keeper / 1500);
+      keeperReactAt = elapsed + (kind === 'penalti' ? 0.05 : kind === 'serbest' ? 0.2 : clamp(0.3 + Math.random() * 0.1 - o.keeper / 1500 - tough * 0.07, 0.12, 0.45));
       if (kind === 'penalti') {
         const r = Math.random();
         keeperTargetX = r < 0.42 ? POST_L + 24 : r < 0.84 ? POST_R - 24 : GOAL_CX;
@@ -537,6 +615,7 @@ export function playMoment(host, o) {
             const pz = press.pass;
             ball.x += pz.vx * dt; ball.y += pz.vy * dt;
             if (dist(me, ball) < BODY_R + BALL_R + 6) return winBall('Araya girdin!');
+            if (press.back && (dist(ball, pz.to) < BODY_R + 4 || ball.y < GOAL_Y + 8)) return finish('lost', 'Kaleci topu kontrol etti');
             if (dist(ball, pz.to) < BODY_R + 2) {
               press.carrier = pz.to; press.pass = null; press.t = 0; press.passes++;
               press.next = rand(1.3, 2.0) - press.passes * 0.15;
@@ -558,9 +637,11 @@ export function playMoment(host, o) {
             }
             if (press.t >= press.next) {
               const opts = defenders.filter((d) => d !== c);
-              const to = opts.reduce((b, d) => (!b || dist(d, me) > dist(b, me) ? d : b), null);
+              const to = press.back ? keeper : opts.reduce((b, d) => (!b || dist(d, me) > dist(b, me) ? d : b), null);
               const a = Math.atan2(to.y - ball.y, to.x - ball.x) + gauss() * 0.04;
-              press.pass = { to, vx: Math.cos(a) * 240, vy: Math.sin(a) * 240 };
+              const psp = press.back ? 135 + Math.max(0, tough) * 40 : 240;
+              press.pass = { to, vx: Math.cos(a) * psp, vy: Math.sin(a) * psp };
+              if (press.back) flash('Geri pas!');
               Sfx.kick(0.3);
             }
           }
@@ -667,14 +748,17 @@ export function playMoment(host, o) {
 
         // ver-kaç: duvar arkadaş topu boşluğa geri verir
         if (s.kind === 'pass' && s.target.wall && dist(ball, s.target) < BODY_R + 5) {
-          const P = { x: clamp(me.x + (GOAL_CX - me.x) * 0.35, 70, 290), y: clamp(me.y - rand(90, 115), GOAL_Y + 95, 230) };
+          const P = s.target.second
+            ? { x: clamp(me.x + (GOAL_CX - me.x) * 0.5, 90, 270), y: clamp(me.y - rand(70, 85), GOAL_Y + 105, 230) }
+            : { x: clamp(me.x + (GOAL_CX - me.x) * 0.35, 70, 290), y: clamp(me.y - rand(90, 115), GOAL_Y + 95, 230) };
+          if (s.target.second) for (const d of defenders) if (d.role !== 'wall' && dist(d, P) < 95) d.stun = Math.max(d.stun || 0, 0.9);
           const fr = 1.1, T = 0.85, k = fr / (1 - Math.exp(-fr * T));
           loose = { vx: (P.x - ball.x) * k, vy: (P.y - ball.y) * k, fr, grace: 0.15 };
           path = [P]; shot = null; phase = 'aim'; trail = [];
           s.target.wall = false;
           const near = defenders.filter((d) => d.role !== 'wall').sort((a, b) => dist(a, me) - dist(b, me))[0];
           if (near) near.stun = 1.3;
-          flash('Ver-kaç!'); Sfx.kick(0.4);
+          flash(s.target.second ? 'Üçlü pas!' : 'Ver-kaç!'); Sfx.kick(0.4);
           return;
         }
         // pas ulaştı -> arkadaş vurur
@@ -696,7 +780,7 @@ export function playMoment(host, o) {
           if (kind !== 'penalti' && s.kind === 'shot' && s.vy < 0) {
             const t = (keeper.y - ball.y) / s.vy;
             const px = t > 0 ? ball.x + s.vx * t : ball.x;
-            if (!s.tracked || Math.random() < dt * 4) s.tracked = true, keeperTargetX = clamp(px + gauss() * (110 - o.keeper) * 0.3, POST_L - 20, POST_R + 20);
+            if (!s.tracked || Math.random() < dt * 4) s.tracked = true, keeperTargetX = clamp(px + gauss() * (110 - o.keeper) * 0.3 * (1 - tough * 0.35), POST_L - 20, POST_R + 20);
           }
           const sp = kind === 'penalti' ? 280 : kind === 'serbest' ? keeperSpeed * 1.35 : s.kind === 'mateShot' ? keeperSpeed * 1.2 : keeperSpeed;
           keeper.x += clamp(keeperTargetX - keeper.x, -sp * dt, sp * dt);
@@ -706,7 +790,10 @@ export function playMoment(host, o) {
             const speed = Math.hypot(s.vx, s.vy);
             const slip = speed > 560 && dist(keeper, ball) > keeperReach * 0.6 && Math.random() < 0.35;
             if (!slip && rain && Math.random() < 0.13) { flash('Kaleci kaçırdı!'); keeper.stun = 1; }
-            else if (!slip) { s.vx *= 0.2; s.vy = 60; return finish('saved'); }
+            else if (!slip) {
+              if (speed > 470 || Math.abs(keeper.x - ball.x) > keeperReach * 0.55) { detail = 'corner'; s.vx = (ball.x < keeper.x ? -1 : 1) * 260; s.vy = 30; return finish('saved', 'Kaleci uzandı, kornere çeldi!'); }
+              detail = 'hold'; s.vx *= 0.1; s.vy = 20; return finish('saved', 'Kaleci topu kucakladı');
+            }
           }
         }
 
@@ -714,9 +801,11 @@ export function playMoment(host, o) {
         if (ball.y <= GOAL_Y + 2 && s.vy < 0) {
           if (s.kind === 'mateShot') return finish(s.scores ? 'assist' : 'tmMiss');
           if (s.over) return finish('over');
-          const nearPost = Math.abs(ball.x - POST_L) <= 3 || Math.abs(ball.x - POST_R) <= 3;
-          if (nearPost) { s.vy *= -0.5; return finish('post'); }
+          const nearPost = Math.abs(ball.x - POST_L) <= 3.5 || Math.abs(ball.x - POST_R) <= 3.5;
+          if (nearPost) { s.vy *= -0.5; s.vx += (ball.x < GOAL_CX ? 1 : -1) * 60; return finish('post'); }
           if (ball.x > POST_L + 2 && ball.x < POST_R - 2) return finish('goal');
+          const off = Math.min(Math.abs(ball.x - POST_L), Math.abs(ball.x - POST_R));
+          if (off < 16) { detail = 'near'; return finish('miss', 'Az farkla dışarıda!'); }
           return finish('miss');
         }
         const v = Math.hypot(s.vx, s.vy);
@@ -779,7 +868,7 @@ export function playMoment(host, o) {
     }
     function end() {
       cleanup();
-      resolve({ outcome, text: msg, foul: foulInfo });
+      resolve({ outcome, text: msg, foul: foulInfo, detail });
     }
     canvas.addEventListener('pointerdown', () => { if (phase === 'replay') end(); });
 

@@ -127,6 +127,22 @@ export const LINES = {
     'Ceza sahası önünde {ad}, yanında {arkadas}… ver-kaç kokusu!',
     '{ad} topla, önü kalabalık, {arkadas} duvar olmaya hazır!',
   ],
+  intro_kapma: [
+    '{defans} baskı altında, geri pas düşünüyor… {ad} sezdi!',
+    '{rakip} geriden oyun kurmaya çalışıyor, {ad} pas yolunu kolluyor!',
+  ],
+  intro_donen: [
+    '{arkadas} vurdu, {kaleci} çeldi! Top ceza sahasında sahipsiz!',
+    'Kaleci çıkardı ama top dışarı gitmedi! İkinci top kimin olacak?',
+  ],
+  intro_yerden: [
+    '{arkadas} çizgiye indi, yerden sert ortaladı!',
+    'Kanattan yerden kesme orta, {ad} hareketlendi!',
+  ],
+  intro_uclu: [
+    '{takim} orta sahada paslaşıyor, {ad} ile {arkadas} üçgen kurdu!',
+    'Kısa paslarla ileri çıkıyoruz, {ad} oyunun merkezinde!',
+  ],
   intro_pres: [
     'Top rakipte ama {ad} bırakmıyor! Önde pres!',
     '{rakip} geriden çıkmaya çalışıyor, {ad} üstüne basıyor!',
@@ -190,6 +206,22 @@ export const LINES = {
     'VER-KAÇ VE GOL! {ad} ile {arkadas} savunmayı ikiye böldü!',
     'GOOOL! Harika bir paslaşma, {ad} bitirdi!',
   ],
+  goal_kapma: [
+    'ARAYA GİRDİ VE GOL! {ad} geri pası okudu, affetmedi!',
+    'GOOOL! {defans} hata yaptı, {ad} cezayı kesti!',
+  ],
+  goal_donen: [
+    'GOL! Dönen topa ilk yetişen {ad}! Ağlar havalandı!',
+    'GOOOL! {kaleci} ilk şutu çıkardı ama {ad} ikinci topu affetmedi!',
+  ],
+  goal_yerden: [
+    'GOL! {arkadas} yerden çevirdi, {ad} ilk vuruşta ağlara gönderdi!',
+    'GOOOL! Kesme ortaya tek dokunuş, {ad} bitirdi!',
+  ],
+  goal_uclu: [
+    'GOL! Tek dokunuşlarla gelen bir atak, {ad} noktayı koydu!',
+    'GOOOL! {ad}, {arkadas} ve takım arkadaşları… pas pas pas, gol!',
+  ],
   goal_pres: [
     'PRESTEN GOL! {ad} topu kaptı ve affetmedi!',
     'GOOOL! {ad} topu rakipten çaldı ve ağlara gönderdi!',
@@ -204,21 +236,36 @@ export const LINES = {
   ],
   saved: [
     'Ve {kaleci} çıkardı! Eldivenlerine sağlık!',
-    'Kurtarış! {kaleci} bugün duvar örmüş!',
-    'Uff! Kaleci son anda uzandı, köşeden çeldi!',
+    'Kurtarış! {kaleci} yerinde, pozisyon sonuçsuz!',
+    '{ad} vurdu… {kaleci} izin vermedi!',
+  ],
+  saved_corner: [
+    'Uzandı {kaleci}! Parmak uçlarıyla kornere çeldi!',
+    'Müthiş kurtarış! {kaleci} topu köşeden çıkardı, korner!',
+    '{ad} çok sert vurdu, {kaleci} uçtu ve kornere gönderdi!',
+  ],
+  saved_hold: [
+    '{kaleci} topu iki eliyle kucakladı, tehlike yok.',
+    'Şut kalecinin üzerine, {kaleci} rahat kontrol etti.',
   ],
   miss: [
-    'Auta gitti! Top tribünlere hediye.',
-    'Az farkla dışarıda! Direk "az kalsın" dedi.',
-    'Kaçtı! Kale ile top arasında küçük bir anlaşmazlık…',
+    'Auta gitti! {ad} bu kez çerçeveyi bulamadı.',
+    'Dışarıda! {ad} vurdu ama top kaleyi bulmadı.',
+    'Kaçtı! İsabet yok, top auta çıktı.',
+  ],
+  miss_near: [
+    'AZ FARKLA DIŞARIDA! Top direğin hemen yanından auta çıktı!',
+    'Ooo! Santimlerle dışarı! {ad} direği yaladı!',
+    'Az kaldı! Top kaleyi ıskaladı, {kaleci} çok şanslı!',
   ],
   over: [
-    'Üstten aut! Bu şutla ancak uydu düşürülür!',
-    'Top tribünlerde! Taraftarlar hatıra fotoğrafı çekiyor.',
+    'Üstten aut! {ad} topun altına girdi.',
+    'Üstten dışarı! Şut çok sert, isabet yok.',
   ],
   post: [
-    'DİREK! Metal ses hâlâ kulaklarımızda!',
-    'Direkten döndü! {rakip} bugün şanslı!',
+    'DİREK! Top direkten döndü!',
+    'Direkten döndü! {rakip} bu kez kurtuldu!',
+    'Olamaz! {ad} direği buldu, top oyun alanına döndü!',
   ],
   blocked: [
     'Defans araya girdi, şut bloke!',
@@ -233,7 +280,7 @@ export const LINES = {
   ],
   tmMiss: [
     '{arkadas} kaçırdı! {ad} ellerini başına koydu!',
-    'Altın tepside sundu {ad}, {arkadas} tepsiyi düşürdü!',
+    '{ad} çok iyi pas verdi ama {arkadas} vuruşta isabeti bulamadı!',
   ],
   offside: [
     'Bayrak havada! Ofsayt. Bir adım erken, bir adım fazla!',
@@ -340,6 +387,22 @@ export const BUILD = {
   duvar: [
     ['{takim} ceza sahası önünde paslaşıyor…', 'Top {ad:dat} geldi, önü kalabalık…', 'Yanında {arkadas}! Ver-kaç fırsatı!'],
     ['{ad} sürüyor, iki defans önünde…', '{arkadas} yanına geldi, duvar oluyor…', 'Şimdi ya da hiç!'],
+  ],
+  kapma: [
+    ['{rakip} geriden çıkmaya çalışıyor…', '{defans} topla, önünde kimse yok gibi…', '{ad} pas yolunu kolluyor!'],
+    ['{defans} baskı altında…', 'Kaleciye dönmek istiyor…', '{ad} pusuda!'],
+  ],
+  donen: [
+    ['{arkadas} ceza sahası dışından vurdu…', '{kaleci} uzandı, çeldi!', 'Top ceza sahasında sahipsiz!'],
+    ['Karambol! Şut…', '{kaleci} çıkardı!', 'İkinci top {ad:dat} doğru!'],
+  ],
+  yerden: [
+    ['{arkadas} kanatta adamını geçti…', 'Çizgiye kadar indi…', 'Yerden sert ortaladı!'],
+    ['Top sağ kanatta…', '{arkadas} kafasını kaldırdı…', 'Kesme orta! {ad} hareketlendi!'],
+  ],
+  uclu: [
+    ['{takim} sabırla paslaşıyor…', 'Tek dokunuş, tek dokunuş…', 'Top {ad:loc}, yanında iki arkadaşı!'],
+    ['Orta sahada üçgen kuruldu…', '{arkadas} hazır…', '{ad} paslaşarak ilerleyecek!'],
   ],
   kosevurusu: [
     ['Şut! Defanstan sekti…', 'Korner kararı!', '{ad} topu köşe bayrağına koydu…'],

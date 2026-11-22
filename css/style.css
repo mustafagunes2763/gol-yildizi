@@ -793,3 +793,22 @@ td.fm i.fw { background: #22c55e; } td.fm i.fd { background: #94a3b8; } td.fm i.
 .ctpick button.on { border-color: var(--acc); background: rgba(34,197,94,.12); }
 .ctpick button.on small { color: var(--text); }
 .ctpick button.mine::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--acc); }
+
+/* borsa */
+.pfcard .pfv { font-size: 22px; font-weight: 800; }
+.pfcard .ralign { text-align: right; }
+.stk { padding: 10px 12px; }
+.stk.own { border-color: rgba(34,197,94,.45); }
+.stkrow { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.stkrow .tick { font: 700 11px/1 ui-monospace, monospace; background: var(--line); border-radius: 6px; padding: 6px 5px; min-width: 42px; text-align: center; }
+.stkrow .grow b { font-size: 14px; }
+.stkp { display: flex; flex-direction: column; align-items: flex-end; min-width: 74px; }
+.stkp small { font-size: 11px; font-weight: 700; }
+.spark { width: 64px; height: 26px; flex: 0 0 auto; }
+.spark.big { width: 100%; height: 110px; margin: 8px 0 4px; }
+.stkdet { margin-top: 8px; border-top: 1px solid var(--line); padding-top: 4px; }
+.stkdet .chips { margin: 6px 0 8px; }
+.stknews p { margin: 4px 0; }
+
+.tabs.shoptabs { overflow-x: auto; scrollbar-width: none; flex-wrap: nowrap; }
+.tabs.shoptabs button { flex: 0 0 auto; white-space: nowrap; }

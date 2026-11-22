@@ -126,17 +126,49 @@ export function matchNews(state, plan, res) {
   if (res.goals > 0 && seasonG >= 5) ctxLines.push(pick([`${SUR} sezondaki gol sayısını ${numDat(seasonG)} yükseltti.`, `Bu, ${ek(SUR, 'gen')} sezondaki ${seasonG}. golüydü.`, `${seasonG} gole ulaşan ${SUR}, gol krallığı yarışında iddialı.`]));
   if (streak >= 3) ctxLines.push(W === 'W' ? pick([`${T.name} üst üste ${streak}. galibiyetini aldı.`, `Seri ${streak} maça çıktı: ${T.name} kazanmayı alışkanlık haline getirdi.`]) : W === 'L' ? `${T.name} üst üste ${streak}. kez yenildi; alarm zilleri çalıyor.` : `${T.name} son ${streak} maçta galibiyet yüzü göremedi.`);
   if (rg > 0 && res.goals > 0 && Math.random() < 0.35) ctxLines.push(pick([`Akademiden rakibi Ahmet Akyurt'un bu sezonki gol sayısı ise ${rg}.`, `Gözler yine iki eski akademi arkadaşının gol yarışında: ${SUR} ${seasonG}, Ahmet Akyurt ${rg}.`]));
-  if (plan.fx.home && Math.random() < 0.4) ctxLines.push(pick(['İç sahada oynanan maçta tribünler doluydu.', 'Ev sahibi taraftar takımını 90 dakika boyunca yalnız bırakmadı.']));
-  if (!plan.fx.home && Math.random() < 0.4) ctxLines.push(pick(['Deplasmandaki zorlu atmosfere rağmen takım geri adım atmadı.', 'Deplasman tribünündeki küçük ama gürültülü grup sesini duyurdu.']));
+  if (plan.fx.home && Math.random() < 0.4) ctxLines.push(pick(['İç sahada oynanan maçta tribünler doluydu.', 'Ev sahibi taraftar takımını 90 dakika boyunca yalnız bırakmadı.', 'Statta kombine sahiplerinin neredeyse tamamı yerini aldı.', 'Maç öncesi taraftarların hazırladığı pankartlar dikkat çekti.']));
+  if (!plan.fx.home && Math.random() < 0.4) ctxLines.push(pick(['Deplasmandaki zorlu atmosfere rağmen takım geri adım atmadı.', 'Deplasman tribünündeki küçük ama gürültülü grup sesini duyurdu.', 'Uzun yolculuğun yorgunluğu ikinci yarıda hissedildi.', 'Ev sahibi tribünlerin baskısı ilk dakikalarda belirgindi.']));
+  if (plan.weather?.fx && Math.random() < 0.5) ctxLines.push(pick({ yagmur: ['Maç boyunca yağan yağmur zemini ağırlaştırdı.', 'Islak zemin pas trafiğini zorlaştırdı.'], kar: ['Kar altında oynanan maçta top kontrolü zordu.', 'Karla kaplı zeminde iki takım da zorlandı.'] }[plan.weather.fx] || ['Hava koşulları oyunun temposunu etkiledi.']));
+  if (res.rating >= 7.5 && Math.random() < 0.4) ctxLines.push(pick([`${SUR} maçın en yüksek notlarından birini aldı.`, `Teknik heyet ${ek(SUR, 'gen')} performansından memnun.`, `Maç sonunda ${SUR} için tribünlerden özel tezahürat yapıldı.`]));
   const quotes = res.goals > 0
-    ? [`Maç sonu konuşan ${SUR}: "Golü takım arkadaşlarımla birlikte attık, onların payı büyük."`, `${SUR}: "Gol atmak güzel ama önemli olan kazanmak."`, `${SUR} maç sonunda "Bu golü aileme armağan ediyorum" dedi.`, `${SUR}: "Hocamın güvenine gollerle cevap vermek istiyorum."`, `Genç golcü, "Daha yolun başındayım, çok çalışmam gerek" diye konuştu.`]
-    : W === 'L' ? [`${SUR}: "Bu yenilgiyi hak etmedik ama ders çıkaracağız."`, `${SUR} maç sonunda kısa konuştu: "Taraftarımızdan özür dileriz."`]
-    : [`${SUR}: "Önemli olan takımın kazanması."`, `${SUR}, "Her maçta biraz daha iyiye gidiyoruz" dedi.`];
+    ? [`${SUR}: "Topun bana gelmesini bekledim, gelince de affetmedim."`, `${SUR}: "Antrenmanda çalıştığımız hareket sahada işe yaradı."`, `${SUR} maç sonunda "Taraftarın desteği bize güç veriyor" dedi.`, `${SUR}: "Gol krallığını düşünmüyorum, takım kazansın yeter."`, `Maç sonu konuşan ${SUR}: "Golü takım arkadaşlarımla birlikte attık, onların payı büyük."`, `${SUR}: "Gol atmak güzel ama önemli olan kazanmak."`, `${SUR} maç sonunda "Bu golü aileme armağan ediyorum" dedi.`, `${SUR}: "Hocamın güvenine gollerle cevap vermek istiyorum."`, `Genç golcü, "Daha yolun başındayım, çok çalışmam gerek" diye konuştu.`]
+    : W === 'L' ? [`${SUR}: "Bu yenilgiyi hak etmedik ama ders çıkaracağız."`, `${SUR} maç sonunda kısa konuştu: "Taraftarımızdan özür dileriz."`, `${SUR}: "Pozisyonlara girdik ama bitiremedik, sorumluluk bende de."`, `${SUR}: "Kafamızı kaldırıp önümüzdeki maça bakacağız."`]
+    : [`${SUR}: "Önemli olan takımın kazanması."`, `${SUR}, "Her maçta biraz daha iyiye gidiyoruz" dedi.`, `${SUR}: "Gol atamadım ama takıma yardım etmeye çalıştım."`, `${SUR}: "Sabırlı olmamız gerekiyor, goller gelecek."`];
   const extraH = {
-    W: [`${TAKIM} YOLUNA DEVAM`, `${TAKIM} GÜLDÜ`, `${RAKIP} ÇARESİZ`, 'ÜÇ PUAN CEPTE'],
-    D: ['PUANLAR PAYLAŞILDI', `${TAKIM} TAKILDI`, 'KAZANAN ÇIKMADI'],
-    L: [`${TAKIM} YARALI`, `${RAKIP} SÜRPRİZİ`, 'ACI YENİLGİ'],
+    W: [`${TAKIM} YOLUNA DEVAM`, `${TAKIM} GÜLDÜ`, `${RAKIP} ÇARESİZ`, 'ÜÇ PUAN CEPTE', `${TAKIM} HATA YAPMADI`, 'GALİBİYET SERİSİ SÜRÜYOR', `${TAKIM} KAZANMAYI BİLDİ`, 'MOTOR ISINDI', `${RAKIP} ELİ BOŞ DÖNDÜ`],
+    D: ['PUANLAR PAYLAŞILDI', `${TAKIM} TAKILDI`, 'KAZANAN ÇIKMADI', 'TEK PUANA RAZI', `${TAKIM} İLE ${RAKIP} YENİŞEMEDİ`, 'DENGE BOZULMADI', 'İKİ TARAF DA MEMNUN DEĞİL'],
+    L: [`${TAKIM} YARALI`, `${RAKIP} SÜRPRİZİ`, 'ACI YENİLGİ', `${TAKIM} KAN KAYBEDİYOR`, 'ÜZÜCÜ AKŞAM', `${RAKIP} GÜLDÜ`, 'BEKLENMEDİK MAĞLUBİYET'],
   };
+  // durum havuzları: her gazetenin kendi üslubuyla ek manşet/spot/metin (add() içinde mevcut havuzlara eklenir)
+  const sit = res.goals >= 3 && W === 'L' ? 'hatL' : res.goals >= 3 ? 'hat' : res.goals === 2 ? 'two' : res.goals === 1 ? 'one' : W === 'L' ? 'loss' : 'none';
+  const MORE = {
+    hat: {
+      golsporu: { h: [`${AD} GECESİ`, `ÜÇ GOL, BİR İMZA: ${AD}`, `${AD} FİLELERİ DELDİ`, `HAT-TRICK KRALI ${AD}`, `${RAKIP} ${UP(ek(SUR, 'acc'))} DURDURAMADI`],
+        s: [`${SUR} maçın topunu eve götürdü`, `${FULL} kariyerinin en parlak gecelerinden birini yaşadı`, `${ek(T.name, 'gen')} genç golcüsü ${res.goals} golle sahneyi kapattı`],
+        b: [`${mac}. ${SUR} ilk golü erken buldu, ikinciyle maçı kopardı, üçüncüyle de imzasını attı. Maç sonunda takım arkadaşları onu omuzlarında taşıdı.`, `${mac}. ${O.name} savunması ${ek(SUR, 'acc')} durdurmak için her yolu denedi ama genç golcü bu gece ayrı bir seviyedeydi.`],
+        c: [`${SUR} maçın topunu takım arkadaşlarına gösteriyor`] },
+      tribun: { h: ['BU ÇOCUK BİZİM!', `${AD} BİR TANE!`, 'TRİBÜNLER SUSMADI'], s: ['Statta gece yarısına kadar tezahürat'], b: [`${mac}. Üç gol, üç ayrı sevinç. Kale arkasındaki taraftarlar maç bitince de yerinden kalkmadı.`], c: ['Taraftarlar hat-trick sonrası ayakta'] },
+      aksam: { h: ['ÜÇ ŞUT, ÜÇ GOL', 'VERİMLİLİK DERSİ'], s: [`${SUR} ceza sahasında kusursuzdu`], b: [`${mac}. ${ek(SUR, 'gen')} isabet oranı ve pozisyon seçimi dikkat çekiciydi. Bu performans istatistik tablolarında da üst sıralara taşıyor.`], c: [`${SUR} ceza sahasında`] },
+    },
+    two: {
+      golsporu: { h: [`${AD} ÇİFTE VURDU`, `İKİ GOL, İKİ İMZA: ${AD}`, `${AD} YİNE SAHNEDE`, `${TAKIM} ${UP(ek(SUR, 'abl'))} GÜÇ ALDI`], s: [`${SUR} iki golle maçın adamı`, `İki golün sahibi ${SUR} gol krallığında yükseliyor`], b: [`${mac}. ${SUR} iki golüyle maçın kaderini belirledi. Genç golcü ceza sahasındaki soğukkanlılığıyla göz doldurdu.`, `${mac}. ${O.name} savunması ilk golden sonra toparlanamadı, ${SUR} ikinci golle fişi çekti.`], c: [`${SUR} ikinci golünü kutluyor`] },
+      tribun: { h: ['ÇİFTE BAYRAM!', `${AD} İKİ, BİZ BİN KERE!`], s: ['İki golde de tribünler ayağa kalktı'], b: [`${mac}. İki gol, iki ayrı çılgınlık! ${SUR} bu formanın hakkını veriyor.`], c: ['Tribünlerde çifte sevinç'] },
+      aksam: { h: ['İKİDE İKİ', `${AD} VERİMLİ`], s: [`${SUR} iki isabetli şutu da gole çevirdi`], b: [`${mac}. ${SUR} topla az buluştu ama buluştuğu anlarda farkı yarattı.`], c: [`${SUR} gol anında`] },
+    },
+    one: {
+      golsporu: { h: [`${AD} SÖZÜNÜ TUTTU`, `${AD} SKORU AÇTI`, `${AD} KÖŞEYİ BULDU`, `GOL: ${AD}`], s: [`${SUR} sezonun ${seasonG}. golünü attı`, `${FULL} yine fileleri havalandırdı`], b: [`${mac}. ${SUR} bulduğu ilk fırsatta ağları sarstı. Hareketliliğiyle savunmayı sürekli meşgul etti.`, `${mac}. ${SUR} golünü attı, takımın hücum hattına güven verdi.`], c: [`${SUR} gol sevincinde`] },
+      tribun: { h: ['O ATAR, BİZ SEVİNİRİZ!', `${AD} DEDİK, GOL GELDİ!`], s: ['Tribünlerden genç golcüye özel tezahürat'], b: [`${mac}. ${SUR} topu ağlara gönderince tribünler bir anda ayağa kalktı. Bu çocuğun golleri hepimize iyi geliyor.`], c: [`${SUR} taraftarı selamlıyor`] },
+      aksam: { h: ['BİTİRİCİLİK', `${AD} FIRSATI KAÇIRMADI`], s: [`${SUR} az pozisyonda etkili oldu`], b: [`${mac}. ${ek(SUR, 'gen')} golü, takımın hücumdaki çözüm arayışında önemli bir rol oynadı.`], c: [`${SUR} şut anında`] },
+    },
+    none: {
+      golsporu: { h: [`${AD} GOL ATAMADI AMA…`, `${AD} ÇALIŞTI, DİDİNDİ`], s: [`${SUR} golsüz geçen maçta mücadelesiyle öne çıktı`], b: [`${mac}. ${SUR} gol bulamasa da savunmayı sürekli zorladı, pres ve koşularıyla takıma katkı verdi.`], c: [`${SUR} maç sırasında`] },
+      aksam: { h: ['GOLSÜZ GECE', 'FORVETİN SESSİZ AKŞAMI'], s: [`${SUR} bu maçta kaleyi bulamadı`], b: [`${mac}. ${SUR} ceza sahasında yeterince topla buluşamadı. Takımın kanatlardan yeterli servis yapamaması dikkat çekti.`], c: [`${SUR} pozisyon sonrası`] },
+    },
+    loss: {
+      sertsut: { h: [`${TAKIM} KAYIP`, 'BU GİDİŞ GİDİŞ DEĞİL', `${AD} DE ÇARE OLAMADI`, 'SORULAR ÇOĞALIYOR'], s: [`${T.name} sahadan eli boş ayrıldı`, 'Teknik heyetin tercihleri tartışılıyor'], b: [`${mac}. ${T.name} oyunun hiçbir bölümünde üstünlük kuramadı. Forvet hattı da beklenen etkiyi gösteremedi.`, `${mac}. Kötü oyun, kötü sonuç. ${T.name} bu performansla hedeflerinden uzaklaşıyor.`], c: ['Oyuncular maç sonunda başları önde'] },
+      aksam: { h: ['YENİLGİNİN ANATOMİSİ', 'ORTA SAHA KAYBETTİ'], s: [`${T.name} topa sahip olmakta zorlandı`], b: [`${mac}. Orta sahada ikili mücadeleleri kaybeden ${T.name}, hücum hattına yeterli top taşıyamadı.`], c: ['Maç sonu soyunma odasına giden oyuncular'] },
+    },
+  }[sit] || {};
   const enrich = (body) => {
     const extra = [];
     for (const l of ctxLines.slice().sort(() => Math.random() - 0.5)) if (extra.length < 2 && Math.random() < 0.6) extra.push(l);
@@ -144,7 +176,8 @@ export function matchNews(state, plan, res) {
     return [body, ...extra].join(' ');
   };
   const add = (paper, pools, extra) => {
-    const x = pools[paper] || pools.golsporu;
+    const x0 = pools[paper] || pools.golsporu, mx = (!extra && sit !== 'loss') || (extra?.pose === 'sad' && sit === 'loss') ? MORE[paper] : null;
+    const x = mx ? { h: [...x0.h, ...mx.h], s: [...x0.s, ...mx.s], b: [...x0.b, ...mx.b], c: [...x0.c, ...mx.c] } : x0;
     let auto = !extra && res.goals > 0 ? (goalPhoto || (paper === 'tribun' && Math.random() < 0.5 ? (plan.fx.home ? 'fans' : 'awayfans') : undefined)) : undefined;
     if (!auto && !extra && res.goals > 0 && paper === 'aksam' && Math.random() < 0.35) auto = 'analysis';
     if (!auto && !extra && res.goals >= 3 && Math.random() < 0.6) auto = 'hattrick_ball';

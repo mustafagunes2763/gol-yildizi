@@ -20,6 +20,7 @@ import * as Cup from './cup.js';
 import * as Winter from './winter.js';
 import * as Celeb from './celebrate.js';
 import * as Inv from './invest.js';
+import * as Stk from './stocks.js';
 import * as Cp from './couple.js';
 import * as Soc from './social.js';
 import * as Fam from './family.js';
@@ -417,9 +418,10 @@ const screens = {
 
   invest() {
     const p = state.player, I = Inv.ensure(p);
-    const tab = ['mulk', 'ahir', 'yaris'].includes(ui.invTab) ? ui.invTab : 'mulk';
+    const tab = ['mulk', 'borsa', 'ahir', 'yaris'].includes(ui.invTab) ? ui.invTab : 'mulk';
     let body = '';
-    if (tab === 'mulk') {
+    if (tab === 'borsa') body = stockTab(p);
+    else if (tab === 'mulk') {
       body = `<p class="muted small pad">Kira getiren mülkler değerini korur (satışta %85). İşletmeler daha çok kazandırabilir ama kötü haftada zarar eder (satışta %60).</p>
         ${Inv.PROPS.map((it) => { const own = I.props.includes(it.id); return `<div class="card shopitem ${own ? 'own' : ''}"><div class="shop-img"><span>${it.emoji}</span></div>
           <div class="grow"><b>${esc(Inv.propName(p, it))}</b> <em class="kindtag ${it.kind}">${it.kind === 'kira' ? 'KİRA' : 'İŞLETME'}</em><div class="muted small">${esc(it.desc)}</div>
@@ -448,7 +450,7 @@ const screens = {
     return `
       <header class="top"><button class="back" data-go="hub">‹</button><h2>💼 Yatırımlar</h2><span class="grow"></span><b class="money">${E.money(p.money)}</b></header>
       ${I.last ? `<div class="card small">Geçen hafta: <b class="${I.last.total >= 0 ? 'gain' : 'loss'}">${I.last.total >= 0 ? '+' : '−'}${E.money(Math.abs(I.last.total))}</b>${I.last.upkeep ? ` <span class="muted">(at bakımı dahil ${E.money(I.last.upkeep)})</span>` : ''}</div>` : ''}
-      <div class="tabs"><button class="${tab === 'mulk' ? 'on' : ''}" data-act="invTab" data-t="mulk">🏢 Mülkler</button><button class="${tab === 'ahir' ? 'on' : ''}" data-act="invTab" data-t="ahir">🐎 Ahır</button><button class="${tab === 'yaris' ? 'on' : ''}" data-act="invTab" data-t="yaris">🏁 Yarışlar</button></div>
+      <div class="tabs"><button class="${tab === 'mulk' ? 'on' : ''}" data-act="invTab" data-t="mulk">🏢 Mülkler</button><button class="${tab === 'borsa' ? 'on' : ''}" data-act="invTab" data-t="borsa">📈 Borsa</button><button class="${tab === 'ahir' ? 'on' : ''}" data-act="invTab" data-t="ahir">🐎 Ahır</button><button class="${tab === 'yaris' ? 'on' : ''}" data-act="invTab" data-t="yaris">🏁 Yarışlar</button></div>
       ${body}`;
   },
 
@@ -589,20 +591,23 @@ const screens = {
 
   shop() {
     const p = state.player;
-    const list = ui.shopTab === 'car' ? Life.CARS : Life.HOUSES;
+    const tab = Life.SHOP_TABS[ui.shopTab] ? ui.shopTab : 'car';
+    const list = Life.SHOP_TABS[tab][1];
+    const info = { car: 'Araba ün kazandırır ve her hafta moralini yükseltir (en iyi araban geçerli).', house: 'Ev her hafta ekstra enerji verir (en iyi evin geçerli).', lux: 'Lüks eşyalar ün ve moral getirir; bazıları sevgilini de mutlu eder.', gear: 'Performans ekipmanı antrenman verimini artırır, sakatlık riskini düşürür.', hobby: 'Hobiler her hafta moralini yükseltir, kafanı dağıtır.' }[tab];
     return `
       <header class="top"><button class="back" data-go="hub">‹</button><h2>Mağaza</h2><span class="grow"></span><b class="money">${E.money(p.money)}</b></header>
-      <div class="tabs"><button class="${ui.shopTab === 'car' ? 'on' : ''}" data-act="shopTab" data-t="car">🚗 Arabalar</button><button class="${ui.shopTab === 'house' ? 'on' : ''}" data-act="shopTab" data-t="house">🏠 Evler</button></div>
-      <p class="muted small pad">${ui.shopTab === 'car' ? 'Araba ün kazandırır ve her hafta moralini yükseltir.' : 'Ev her hafta ekstra enerji verir (en iyi evin geçerli).'} Satarken fiyatın %60'ını geri alırsın.</p>
+      <div class="tabs shoptabs">${Object.entries(Life.SHOP_TABS).map(([k, [l]]) => `<button class="${tab === k ? 'on' : ''}" data-act="shopTab" data-t="${k}">${l}</button>`).join('')}</div>
+      <p class="muted small pad">${info} Satarken fiyatın %60'ını geri alırsın.</p>
       ${list.map((it) => {
         const own = p.owned.includes(it.id);
+        const lock = it.needPartner && !p.partner;
         return `<div class="card shopitem ${own ? 'own' : ''}">
           <div class="shop-img"><span>${it.emoji}</span>${Life.SHOP_IMAGES.has(it.id) ? `<img src="img/shop/${it.id}.jpg" alt="">` : ''}</div>
           <div class="grow"><b>${esc(it.name)}</b><div class="muted small">${esc(it.desc)}</div>
-            <div class="small">${it.fame ? `Ün +${it.fame} · Moral +${it.morale}/hafta` : `Enerji +${it.energy}/hafta`}</div>
+            <div class="small">${tab === 'car' ? `Ün +${it.fame} · Moral +${it.morale}/hafta${it.energy ? ` · Enerji +${it.energy}/hafta` : ''}` : tab === 'house' ? `Enerji +${it.energy}/hafta` : Life.shopEffect(it)}</div>
             <div class="price">${E.money(it.price)}</div></div>
           ${own ? `<div class="ownbox">✓ Sende<button class="btn ghost sm" data-act="sell" data-id="${it.id}">Sat ${E.money(it.price * Life.SELL_RATE)}</button></div>`
-                : `<button class="btn" data-act="buy" data-id="${it.id}" ${p.money < it.price ? 'disabled' : ''}>Al</button>`}
+                : `<button class="btn" data-act="buy" data-id="${it.id}" ${p.money < it.price || lock ? 'disabled' : ''}>${lock ? 'Sevgili yok' : 'Al'}</button>`}
         </div>`;
       }).join('')}`;
   },
@@ -985,6 +990,48 @@ function couponCard(b, done) {
     <div class="row small"><span>${E.money(b.stake)} × ${b.odd.toFixed(2)}</span><b class="${done ? (b.won ? 'winc' : 'losec') : ''}">${done ? (b.won ? '+' + E.money(b.payout) : 'Yattı') : 'Olası ' + E.money(Math.round(b.stake * b.odd))}</b></div></div>`;
 }
 
+// Borsa sekmesi
+function spark(h, w = 72, hgt = 26, big = false) {
+  const lo = Math.min(...h), hi = Math.max(...h), rg = hi - lo || 1;
+  const pts = h.map((v, i) => `${(i / (h.length - 1) * w).toFixed(1)},${(hgt - 2 - (v - lo) / rg * (hgt - 4)).toFixed(1)}`).join(' ');
+  const up = h.at(-1) >= h[0];
+  return `<svg class="spark ${big ? 'big' : ''}" viewBox="0 0 ${w} ${hgt}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${up ? '#22c55e' : '#ef4444'}" stroke-width="${big ? 1.6 : 1.8}" vector-effect="non-scaling-stroke"/></svg>`;
+}
+const pct = (x) => `${x >= 0 ? '+' : '−'}%${Math.abs(x * 100).toFixed(1)}`;
+const fpx = (x) => (E.CUR.mode === 'EUR' ? '€' : '₺') + (E.CUR.mode === 'EUR' ? x / E.EUR_RATE : x).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const plx = (x) => Math.abs(E.conv(x)) < 0.5 ? E.money(0) : (x >= 0 ? '+' : '−') + E.money(Math.abs(x));
+function stockTab(p) {
+  const M = Stk.ensure(state), H = Stk.holdings(state), pf = Stk.portfolio(state);
+  const eur = E.CUR.mode === 'EUR';
+  const AMT = (eur ? [100, 1_000, 10_000, 100_000].map((v) => v * E.EUR_RATE) : [5_000, 50_000, 500_000, 5_000_000]);
+  const sort = ui.stkSort || 'all';
+  let list = Stk.STOCKS.slice();
+  if (sort === 'mine') list = list.filter((s) => H[s.code]);
+  if (sort === 'up') list.sort((a, b) => Stk.weekChange(state, b.code) - Stk.weekChange(state, a.code));
+  if (sort === 'div') list.sort((a, b) => b.div - a.div);
+  const row = (s) => {
+    const P = M.prices[s.code], ch = Stk.weekChange(state, s.code), h = H[s.code], open = ui.stkSel === s.code;
+    const val = h ? h.n * P.p : 0;
+    const news = M.news.filter((n) => n.code === s.code).slice(0, 3);
+    return `<div class="card stk ${open ? 'open' : ''} ${h ? 'own' : ''}"><div class="stkrow" data-act="stkSel" data-c="${s.code}">
+      <span class="tick">${s.code}</span><div class="grow"><b>${esc(s.name)}</b><div class="muted tiny">${s.sector}${s.div ? ` · temettü %${(s.div * 100).toFixed(1)}` : ''}${h ? ` · ${h.n} adet` : ''}</div></div>
+      ${spark(P.h.slice(-12))}<div class="stkp"><b>${fpx(P.p)}</b><small class="${ch >= 0 ? 'gain' : 'loss'}">${pct(ch)}</small></div></div>
+      ${open ? `<div class="stkdet">${spark(P.h, 300, 90, true)}
+        <div class="row tiny muted"><span>${P.h.length} hafta önce ${fpx(P.h[0])}</span><span>En yüksek ${fpx(Math.max(...P.h))} · En düşük ${fpx(Math.min(...P.h))}</span></div>
+        ${h ? `<div class="card small mt">Elinde <b>${h.n} adet</b> · Değer <b>${E.money(val)}</b> · Maliyet ${E.money(h.cost)} · <b class="${val - h.cost >= 0 ? 'gain' : 'loss'}">${plx(val - h.cost)}</b></div>` : ''}
+        ${news.length ? `<div class="stknews">${news.map((n) => `<p class="tiny">${n.dir > 0 ? '🟢' : '🔴'} ${esc(n.t)} <b class="${n.pct >= 0 ? 'gain' : 'loss'}">${pct(n.pct)}</b></p>`).join('')}</div>` : ''}
+        <b class="small">Al</b><div class="chips">${AMT.map((v) => `<button data-act="stkBuy" data-c="${s.code}" data-v="${v}" ${p.money < P.p * 1.002 ? 'disabled' : ''}>${E.moneyShort(v)}</button>`).join('')}<button data-act="stkBuy" data-c="${s.code}" data-v="${Math.floor(p.money)}" ${p.money < P.p * 1.002 ? 'disabled' : ''}>Tüm param</button></div>
+        ${h ? `<b class="small">Sat</b><div class="chips"><button data-act="stkSell" data-c="${s.code}" data-v="0.25">%25</button><button data-act="stkSell" data-c="${s.code}" data-v="0.5">%50</button><button data-act="stkSell" data-c="${s.code}" data-v="1">Hepsi</button></div>` : ''}
+        <p class="muted tiny">Alım-satımda %${(Stk.FEE * 100).toFixed(1)} komisyon alınır. Fiyatlar her hafta güncellenir.</p></div>` : ''}</div>`;
+  };
+  return `<div class="card pfcard"><div class="row"><div><span class="muted small">Portföy değeri</span><div class="pfv">${E.money(pf.value)}</div></div>
+      <div class="ralign"><span class="muted small">Kâr / zarar</span><div class="${pf.pl >= 0 ? 'gain' : 'loss'}"><b>${plx(pf.pl)}</b>${pf.cost ? ` <small>(${pct(pf.pl / pf.cost)})</small>` : ''}</div></div></div></div>
+    ${M.news.length ? `<div class="card stknews"><b class="small">📰 Piyasa haberleri</b>${M.news.slice(0, 3).map((n) => `<p class="tiny">${n.dir > 0 ? '🟢' : '🔴'} ${esc(n.t)} <b class="${n.pct >= 0 ? 'gain' : 'loss'}">${n.code} ${pct(n.pct)}</b></p>`).join('')}</div>` : ''}
+    <div class="chips">${[['all', 'Tümü'], ['mine', 'Hisselerim'], ['up', 'Haftanın yükselenleri'], ['div', 'Temettü']].map(([k, l]) => `<button class="${k === sort ? 'on' : ''}" data-act="stkSort" data-v="${k}">${l}</button>`).join('')}</div>
+    ${list.map(row).join('') || '<p class="muted pad">Henüz hissen yok. Bir şirkete dokunup alım yapabilirsin.</p>'}
+    <p class="muted small pad">Reklamını yaptığın markaların hisseleri ilgi görür. Temettü sezon sonunda ödenir.</p>`;
+}
+
 // Lig bölgeleri (Avrupa / düşme) — FotMob tarzı renkli şerit
 function leagueZones(lid, n) {
   const Z = { ucl: { t: 'Şampiyonlar Ligi', c: '#3b82f6' }, uclq: { t: 'ŞL ön eleme', c: '#60a5fa' }, uel: { t: 'Avrupa Ligi', c: '#f97316' }, uelq: { t: 'AL ön eleme', c: '#fdba74' }, uecl: { t: 'Konferans Ligi', c: '#22c55e' }, ueclq: { t: 'KL ön eleme', c: '#86efac' }, up: { t: 'Süper Lig\'e çıkış', c: '#22c55e' }, down: { t: 'Küme düşme', c: '#ef4444' } };
@@ -1190,7 +1237,7 @@ async function runMatch() {
       lateDone = true;
       spk('latePressure', {}, 'hl');
       const n = diff <= -2 ? 1 : E.randInt(1, 2);
-      for (let k = 0; k < n; k++) insert(plan.extraMoment(E.randInt(77, Math.min(89, plan.onTo)), E.pick(['acik', 'kafa', 'korner', 'kontra', 'uzuntop', 'duvar', 'vole', 'arkadirek', 'kosevurusu'])));
+      for (let k = 0; k < n; k++) insert(plan.extraMoment(E.randInt(77, Math.min(89, plan.onTo)), E.pick(['acik', 'kafa', 'korner', 'kontra', 'uzuntop', 'duvar', 'vole', 'arkadirek', 'kosevurusu', 'donen', 'yerden', 'uclu'])));
     }
     if (min === 60 && !leadTrim && diff >= 2) {
       leadTrim = true;
@@ -1206,7 +1253,7 @@ async function runMatch() {
         let cur = ev, guard = 0;
         while (cur && guard++ < 3) {
           const next = cur.chain; cur.chain = null;
-          const { outcome, text, foul } = await moment(cur, min, guard === 1);
+          const { outcome, text, foul, detail } = await moment(cur, min, guard === 1);
           for (const f of m.feed) if (f.cls?.startsWith('build')) f.cls = 'build old';
           m.res.outcomes.push(outcome);
           const vx = { defans: foul?.name || E.pick(cur.oppNames || ['Defans']) };
@@ -1254,7 +1301,7 @@ async function runMatch() {
             }
           } else {
             const key = { saved: 'saved', miss: 'miss', over: 'over', post: 'post', blocked: 'blocked', intercepted: 'intercepted', tmMiss: 'tmMiss' }[outcome];
-            if (key) spk(key, vx); else m.feed.push({ min, text: text || OUTCOME_TEXT[outcome] });
+            if (key) spk(detail && Spiker.LINES[key + '_' + detail] && Math.random() < 0.8 ? key + '_' + detail : key, vx); else m.feed.push({ min, text: text || OUTCOME_TEXT[outcome] });
           }
           cur = next;
           if (m.res.red) break;
@@ -1429,6 +1476,10 @@ app.addEventListener('click', async (e) => {
     case 'lb': ui.lbField = el.dataset.f; return render();
     case 'shopTab': ui.shopTab = el.dataset.t; return render();
     case 'invTab': ui.invTab = el.dataset.t; return render();
+    case 'stkSel': ui.stkSel = ui.stkSel === el.dataset.c ? null : el.dataset.c; return render();
+    case 'stkSort': ui.stkSort = el.dataset.v; return render();
+    case 'stkBuy': { const r = Stk.buy(state, el.dataset.c, +el.dataset.v); persist(); toast(r.ok ? `${r.n} adet ${el.dataset.c} alındı (${E.money(r.cost)})` : r.msg); return render(); }
+    case 'stkSell': { const r = Stk.sell(state, el.dataset.c, +el.dataset.v); persist(); toast(r.ok ? `${r.n} adet satıldı: ${E.money(r.back)} (${r.pl >= 0 ? 'kâr' : 'zarar'} ${E.money(Math.abs(r.pl))})` : r.msg); return render(); }
     case 'invBuy': { const r = Inv.buyProp(state, el.dataset.id); persist(); toast(r.ok ? 'Satın alındı!' : r.msg); return render(); }
     case 'invSell': { const r = Inv.sellProp(state, el.dataset.id); persist(); toast(r.ok ? `Satıldı: ${E.money(r.back)}` : r.msg); return render(); }
     case 'horseBuy': { const r = Inv.buyHorse(state, el.dataset.id); persist(); toast(r.ok ? `${r.h.name} ahırında!` : r.msg); return render(); }

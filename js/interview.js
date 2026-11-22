@@ -570,6 +570,70 @@ for (const [k, m] of Object.entries(MORE)) {
   for (const [tone, as] of Object.entries(m.a || {})) (c.a[tone] ||= []).push(...as);
 }
 
+
+// Ek soru ve cevaplar (ciddi gazetecilik; cevaplar oyuncunun tonuna göre)
+const MORE2 = {
+  debut: { q: { selin: ['İlk maçına çıkıyorsun. Teknik heyetten nasıl bir görev aldın?'], berk: ['İlk maçından önce kulübün senden beklentisi ne?'] },
+    a: { humble: [{ t: 'Hocamın istediklerini sahaya yansıtmaya çalışacağım. Takıma faydalı olmak yeterli.' }], bold: [{ t: 'Bu fırsatı bekliyordum. Hazırım ve bunu sahada göstereceğim.' }], witty: [{ t: 'Gece pek uyuyamadım ama sahaya çıkınca heyecan geçer diye düşünüyorum.' }], sharp: [{ t: 'Bu şansı daha önce almam gerekiyordu. Şimdi kimse beni kenara çekemeyecek.', target: 'coach' }] } },
+  derby: { q: { selin: ['Derbilerde duygu kontrolü ne kadar önemli? Sen nasıl hazırlanıyorsun?'], berk: ['Derbide gol atarsan piyasa değerin de yükselir. Bunu düşünüyor musun?'] },
+    a: { humble: [{ t: 'Sakin kalmak çok önemli. Duygularımızı oyuna değil, mücadeleye yansıtacağız.' }], bold: [{ t: 'Derbiler oyuncuların kendini kanıtladığı maçlar. Ben de hazırım.' }], witty: [{ t: 'Derbiden önce kimseye mesaj atmıyorum, telefon kapalı.' }], sharp: [{ t: '{rakip} oyuncuları bizi çok konuştu. Cevabı sahada vereceğiz.', target: 'opp' }] } },
+  stronger: { q: { selin: ['{rakip} karşısında nasıl bir oyun planı bekliyorsun?'], riza: ['Güçlü rakiplere karşı forvet ne yapmalı evlat?'] },
+    a: { humble: [{ t: 'Sabırlı olacağız. Az pozisyona gireceğiz, girdiğimizde de değerlendirmemiz gerekecek.' }], bold: [{ t: 'Güçlü rakipler beni daha çok motive ediyor. Bugün sürprize açığız.' }], witty: [{ t: 'Topu bana atsınlar, gerisini birlikte göreceğiz.' }], sharp: [{ t: 'Kimsenin bizi küçümsemesine izin vermeyeceğiz.', target: 'opp' }] } },
+  weaker: { q: { selin: ['Favori olduğunuz maçlarda motivasyonu nasıl koruyorsunuz?'], riza: ['Kolay görünen maç en zor maçtır derler. Katılıyor musun?'] },
+    a: { humble: [{ t: 'Rakibe saygı duyuyoruz. Bu ligde puan kaybetmek çok kolay.' }], bold: [{ t: 'Bugün farklı kazanmak istiyoruz. Gol yollarında etkili olacağım.' }], witty: [{ t: 'Kolay maç yok, sadece kolay unutulan maçlar var.' }], sharp: [{ t: 'Rehavet varsa hoca bunu antrenmanda zaten keser.' }] } },
+  lossStreak: { q: { selin: ['Kötü seriyi kırmak için soyunma odasında neler konuşuldu?'], nur: ['Taraftar sabırsızlanıyor. Onlara ne söylemek istersin?'] },
+    a: { humble: [{ t: 'Çok konuştuk, şimdi sahada göstermemiz gerekiyor. Sorumluluk hepimizde.', fx: { team: 2 } }], bold: [{ t: 'Bu seri bu hafta bitecek. Takım olarak buna inanıyoruz.' }], witty: [{ t: 'Kötü günler geçer, önemli olan bir arada kalmak.' }], sharp: [{ t: 'Herkes eleştiriyor ama kimse sahadaki emeği görmüyor.' }] } },
+  winStreak: { q: { selin: ['Seri devam ediyor. Bu başarının sırrı ne?'], riza: ['Kazanırken ayakları yere basmak gerekir evlat. Nasıl yapıyorsunuz?'] },
+    a: { humble: [{ t: 'Her maça yeni bir sayfa gibi bakıyoruz. Geçmiş galibiyetler puan getirmiyor.' }], bold: [{ t: 'Bu takım daha uzun bir seri yapabilir. Ben de katkı vermeye devam edeceğim.' }], witty: [{ t: 'Kimse soyunma odasındaki şanslı çorabını değiştirmiyor, sebebi bu olabilir.' }], sharp: [{ t: 'Sezon başında bizi küçümseyenler şimdi sessiz.' }] } },
+  titleRace: { q: { selin: ['Şampiyonluk yarışında hangi maçlar belirleyici olacak?'], berk: ['Şampiyonluk primi için kulüple konuşmalar yapıldı mı?'] },
+    a: { humble: [{ t: 'Her maç final. Tek tek bakacağız, sonunda nerede olduğumuzu göreceğiz.' }], bold: [{ t: 'Şampiyon olmak için buradayız. Saklamaya gerek yok.' }], witty: [{ t: 'Prim konuşmalarını menajerime bırakıyorum, ben sadece golleri düşünüyorum.' }], sharp: [{ t: 'Rakiplerimiz bizden çok hakemlerden medet umuyor.', target: 'opp' }] } },
+  relegation: { q: { selin: ['Alt sıralardan kurtulmak için takımın neye ihtiyacı var?'], nur: ['Taraftar umutlu mu olmalı?'] },
+    a: { humble: [{ t: 'Daha çok birlik ve daha az hata. Bunu yaparsak kurtuluruz.' }], bold: [{ t: 'Bu takım bu ligde kalacak. Ben gollerimle buna katkı vereceğim.' }], witty: [{ t: 'Tabloya bakmayı bıraktık, sadece bir sonraki maça bakıyoruz.' }], sharp: [{ t: 'Sezon başında yapılan hataların bedelini oyuncular ödüyor.', target: 'board' }] } },
+  rumor: { q: { berk: ['Yurt dışından gelen ilgiden haberin var mı?', 'Kulübünle sözleşme uzatma görüşmesi var mı?'], selin: ['Transfer söylentileri performansını etkiliyor mu?'] },
+    a: { humble: [{ t: 'Bunlar menajerimle kulübün konusu. Ben sahaya odaklanıyorum.' }], bold: [{ t: 'İlgi olması güzel. Ama benim hedefim burada şampiyonluklar kazanmak.' }], witty: [{ t: 'Telefonum çalıyor ama genelde annem arıyor.' }], sharp: [{ t: 'Kulüp beni tutmak istiyorsa bunu göstermeli.', target: 'board' }] } },
+  backInjury: { q: { selin: ['Sakatlık sürecinde en zorlandığın şey neydi?'], nur: ['Tekrar sahada olmak nasıl bir duygu?'] },
+    a: { humble: [{ t: 'Sağlık ekibimize çok teşekkür ediyorum. Sabırla çalıştık.' }], bold: [{ t: 'Döndüm ve eskisinden güçlüyüm. Bunu göreceksiniz.' }], witty: [{ t: 'Tribünden maç izlemek bana göre değilmiş, onu öğrendim.' }], sharp: [{ t: 'Sakatken unutulduğumu hissettim. Şimdi hatırlatacağım.' }] } },
+  backBan: { q: { selin: ['Ceza sürecinde kendini nasıl hazır tuttun?'], riza: ['Kart cezaları takıma pahalıya patlar evlat. Ders çıkardın mı?'] },
+    a: { humble: [{ t: 'Takımımı yalnız bıraktım, bunu telafi etmek istiyorum.', fx: { coach: 2 } }], bold: [{ t: 'Cezam bitti, enerjim tam. Bugün farkı göreceksiniz.' }], witty: [{ t: 'Tribünden izlerken ben de hakem kadar sinirlendim.' }], sharp: [{ t: 'O karar haksızdı ama artık geride kaldı.' }] } },
+  rivalPre: { q: { selin: ['Ahmet Akyurt ile aranızdaki rekabet takımına nasıl yansıyor?'], nur: ['Ahmet ile maç sonunda tokalaşacak mısın?'] },
+    a: { humble: [{ t: 'Ahmet iyi bir oyuncu. Rekabet ikimizi de daha iyi yapıyor.' }], bold: [{ t: 'Bugün kimin daha iyi olduğunu saha gösterecek.' }], witty: [{ t: 'Tokalaşırız tabii, ama önce skor tabelasına bakacağım.' }], sharp: [{ t: 'Ahmet sosyal medyada çok konuşuyor. Sahada görüşeceğiz.', fx: { fans: 2 } }] } },
+  europePre: { q: { selin: ['{kupa} gecesi öncesi takımın Avrupa tecrübesi yeterli mi?'], riza: ['Avrupa maçları başka evlat. Tempo, tecrübe… Hazır mısın?'] },
+    a: { humble: [{ t: 'Her maçta öğreniyoruz. Bu gece de elimizden geleni yapacağız.' }], bold: [{ t: 'Avrupa\'da kendimi göstermek istiyorum. Bu sahne bana yakışıyor.' }], witty: [{ t: 'Uçakta uyuyamadım ama marşı duyunca uyanacağım.' }], sharp: [{ t: 'Bizi küçük gören rakipler bu gece şaşıracak.', target: 'opp' }] } },
+  cupPre: { q: { selin: ['Kupada rotasyon olacak mı, sen oynayacak mısın?'], nur: ['Kupa maçları sürprizlere açık. Nasıl hazırlandınız?'] },
+    a: { humble: [{ t: 'Hoca kimi oynatırsa o en iyisini yapacak. Kupa bizim için önemli.' }], bold: [{ t: 'Kupayı müzeye götürmek istiyoruz. Ben de bunun için buradayım.' }], witty: [{ t: 'Kupa maçında herkes final gibi oynuyor, biz de öyle oynayacağız.' }], sharp: [{ t: 'Kupayı ciddiye almayan takımlar elenir. Biz ciddiyiz.' }] } },
+  goal: { q: { selin: ['Golü atarken neye karar verdin, köşeyi önceden mi seçtin?'], nur: ['Gol anını bir de senden dinleyelim!'], riza: ['O pozisyonda kaleciyi nasıl okudun evlat?'] },
+    a: { humble: [{ t: 'Arkadaşlarım çok iyi top taşıdı, ben de doğru yerde olmaya çalıştım.', fx: { team: 2 } }, { t: 'Kaleciye bakmadım, sadece köşeye odaklandım.' }], bold: [{ t: 'O pozisyonda gol atacağımı biliyordum. Bitiricilik benim işim.' }], witty: [{ t: 'Kaleciyi okuyamadım, şanslıyım ki o da beni okuyamadı.' }], sharp: [{ t: 'Bu golü beni eleştirenlere atıyorum.' }] } },
+  assist: { q: { riza: ['Golcüler bencil olur derler. Sen pası seçtin. Neden?'], nur: ['Asist sonrası arkadaşınla sevinçlerin dikkat çekti!'] },
+    a: { humble: [{ t: 'Arkadaşım daha iyi pozisyondaydı. Doğru olan pası vermekti.', fx: { team: 2 } }], bold: [{ t: 'Gol de atarım, attırırım da. Önemli olan takımın kazanması.' }], witty: [{ t: 'Pası verdim, şimdi sıra onda, bana bir gol borçlu.' }], sharp: [{ t: 'Herkes golleri konuşuyor, oyunun kalanını kimse görmüyor.' }] } },
+  lost: { q: { selin: ['Yenilginin taktik nedenleri sence neler?'], riza: ['Kaybetmek de futbolun parçası evlat. Ne öğrendin?'] },
+    a: { humble: [{ t: 'Orta sahada top kayıplarımız fazlaydı. Bunu düzeltmemiz gerekiyor.', fx: { coach: 1 } }], bold: [{ t: 'Bir maç kaybettik, sezonu değil. Haftaya karşılığını vereceğiz.' }], witty: [{ t: 'Bugün top bizi pek sevmedi, haftaya barışırız.' }], sharp: [{ t: 'Hakem kararları da maçı etkiledi, bunu herkes gördü.' }] } },
+  draw: { q: { selin: ['Beraberlik için hangi detay eksikti?'], nur: ['Son dakikalarda kazanabilirdiniz. Neden olmadı?'] },
+    a: { humble: [{ t: 'Son pasta daha isabetli olmalıydık. Bir puanı saygıyla karşılıyoruz.' }], bold: [{ t: 'Kazanmak için oynadık. Bir dahakine o pozisyonu gole çevireceğim.' }], witty: [{ t: 'Bir puan cebe, iki puan da bir sonraki maça borç.' }], sharp: [{ t: 'Rakip sadece savunma yaptı, futbol oynamadılar.', target: 'opp' }] } },
+  poor: { q: { selin: ['Bugün neden oyunun dışında kaldın?'], riza: ['Kötü maçlardan sonra ne yaparsın evlat?'] },
+    a: { humble: [{ t: 'Beklentileri karşılayamadım. Videoyu izleyip çalışacağım.', fx: { coach: 2 } }], bold: [{ t: 'Bir kötü maç beni tanımlamaz. Haftaya farklı olacak.' }], witty: [{ t: 'Bugünkü maçı unutmak için en iyi yol bir sonrakinde gol atmak.' }], sharp: [{ t: 'Bana top gelmedi, eleştirileri doğru yere yöneltin.', target: 'team' }] } },
+  great: { q: { selin: ['Bugünkü performansında neyi farklı yaptın?'], berk: ['Bu performans sonrası kulüplerin ilgisi artacak. Ne düşünüyorsun?'] },
+    a: { humble: [{ t: 'Takım çok iyi oynadı, ben de bunun bir parçasıydım.' }], bold: [{ t: 'Bu seviyeyi her hafta göstermek istiyorum. Gelecek benim.' }], witty: [{ t: 'Bugün kramponlar da iyiydi, onlara da teşekkür edeyim.' }], sharp: [{ t: 'Bu performans, bana güvenmeyenlere cevaptır.', target: 'coach' }] } },
+  hattrick: { q: { selin: ['Hat-trick yapmak nasıl bir his? Maçın topu nerede duracak?'], riza: ['Üç gol evlat! Bizim zamanımızda hat-trick yapana kuzu çevirirlerdi.'] },
+    a: { humble: [{ t: 'Takım arkadaşlarım olmasa bu goller olmazdı. Top evimin başköşesinde duracak.' }], bold: [{ t: 'Bu ilk hat-trick, son olmayacak.' }], witty: [{ t: 'Kuzuya hayır demem, ama önce top imzalanacak.' }], sharp: [{ t: 'Bu gollerle kimin forvet olduğu anlaşıldı sanırım.' }] } },
+  brace: { q: { selin: ['İki gol attın. Hangisi daha değerliydi?'], nur: ['İki gol! Gol krallığı yarışında iddialı mısın?'] },
+    a: { humble: [{ t: 'İkisi de takım için önemliydi. Asıl değerli olan üç puan.' }], bold: [{ t: 'Gol krallığı benim hedefim, saklamıyorum.' }], witty: [{ t: 'İkinci gol daha değerli, çünkü ilkinden sonra nefesim kalmamıştı.' }], sharp: [{ t: 'Beni yedeğe çekmek isteyenler bu golleri iyi izlesin.', target: 'coach' }] } },
+  winner: { q: { selin: ['Galibiyet golünü attın. O anki baskıyla nasıl başa çıktın?'], riza: ['Maçı kazandıran gol atmak forvetin en büyük işi. Nasıl hissettin?'] },
+    a: { humble: [{ t: 'Sakin kalmaya çalıştım. Takım arkadaşlarım güzel bir pozisyon hazırladı.' }], bold: [{ t: 'Kritik anlar için yaşıyorum. Böyle goller beni güçlendiriyor.' }], witty: [{ t: 'Baskı mı? Sadece kaleyi gördüm, gerisini sonradan fark ettim.' }], sharp: [{ t: 'Kazanan golü atan oyuncuyu kimse görmezden gelemez.' }] } },
+  bigLoss: { q: { selin: ['Bu kadar farklı yenilgiden sonra takım nasıl toparlanacak?'], riza: ['Ağır yenilgiler insanı büyütür evlat. Ne söyleyeceksin?'] },
+    a: { humble: [{ t: 'Taraftarımızdan özür diliyoruz. Bu tablo kabul edilemez.', fx: { fans: 2 } }], bold: [{ t: 'Bu yenilginin cevabını önümüzdeki haftalarda vereceğiz.' }], witty: [{ t: 'Böyle günlerde söylenecek fazla söz yok. Çalışmaya devam.' }], sharp: [{ t: 'Takımda bazı oyuncular sorumluluk almıyor.', target: 'team' }] } },
+  benched: { q: { selin: ['Bu hafta forma şansı bulamadın. Hocayla konuştun mu?'], berk: ['Az süre alıyorsun. Ara transferde ayrılık gündemde mi?'] },
+    a: { humble: [{ t: 'Hocanın tercihine saygı duyuyorum. Antrenmanda daha çok çalışacağım.', fx: { coach: 2 } }], bold: [{ t: 'Şansım geldiğinde forma bir daha kimseye geçmeyecek.' }], witty: [{ t: 'Kulübeden maç izlemek ayrı bir sanat, ama ben sahayı tercih ederim.' }], sharp: [{ t: 'Bu kadar az süre almak beni düşündürüyor.', target: 'coach' }] } },
+  postGeneric: { q: { selin: ['Maç içinde hocanın sana özel bir uyarısı oldu mu?'], nur: ['Taraftara maç sonrası mesajın ne?'] },
+    a: { humble: [{ t: 'Pozisyon almamla ilgili uyarılar yaptı, uygulamaya çalıştım.' }], bold: [{ t: 'Bir sonraki maça daha güçlü geleceğiz.' }], witty: [{ t: 'Taraftara mesajım: gelmeye devam edin, biz de koşmaya devam edeceğiz.' }], sharp: [{ t: 'Bazı kararları sonra konuşacağız, şimdi değil.' }] } },
+  preGeneric: { q: { selin: ['Rakibi nasıl analiz ettiniz, hangi zaafları var?'], riza: ['Maç öncesi ne yersin, nasıl hazırlanırsın evlat?'] },
+    a: { humble: [{ t: 'Video çalıştık, hocamız planı anlattı. Biz de sahaya yansıtacağız.' }], bold: [{ t: 'Rakibin savunması geçişlerde açık veriyor. Bugün bundan faydalanacağız.' }], witty: [{ t: 'Makarna, biraz uyku ve bol bol odaklanma. Klasik.' }], sharp: [{ t: 'Rakibin ne yaptığı beni ilgilendirmiyor, biz kendi oyunumuza bakarız.' }] } },
+};
+for (const [k, m] of Object.entries(MORE2)) {
+  const c = C[k]; if (!c) continue;
+  for (const [rid, qs] of Object.entries(m.q || {})) (c.q[rid] ||= []).push(...qs);
+  for (const [tone, as] of Object.entries(m.a || {})) (c.a[tone] ||= []).push(...as);
+}
+
 // Hedefe göre ek etki (sert cevaplar)
 const TARGET_FX = {
   opp: { fans: 4, fame: 1 },
@@ -595,7 +659,7 @@ function weighted(list) {
 }
 function vars(state, plan, res) {
   const p = state.player, opp = state.teams[plan.fx.opp], me = state.teams[p.clubId];
-  const cars = { car1: 'hatchback', car2: 'sedan', car3: 'lüks SUV', car4: 'spor coupe', car5: 'süper spor', car6: 'hiper araba' };
+  const cars = { car1: 'hatchback', car2: 'sedan', car7: 'elektrikli SUV', car9: 'arazi aracı', car3: 'lüks SUV', car4: 'spor coupe', car8: 'klasik cabrio', car5: 'süper spor', car10: 'limuzin', car6: 'hiper araba' };
   const car = (p.owned || []).map((id) => cars[id]).filter(Boolean).pop();
   const P = myPos(state);
   return {

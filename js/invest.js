@@ -1,6 +1,7 @@
 // Yatırımlar: kira getiren mülkler, risk taşıyan işletmeler ve yarış atları (at yarışı).
 // Tüm kişi ve at isimleri kurgusaldır.
 import { clamp, pick, rand, randInt, money, addInbox, shuffle } from './engine.js';
+import * as Stocks from './stocks.js';
 
 // ---------------------------------------------------------------- mülk ve işletmeler
 // kind: kira (sabit gelir, değer korur) · isletme (dalgalı gelir, risk)
@@ -61,6 +62,7 @@ const EVENTS = {
 // Haftalık: gelirler, at bakım masrafları, at dinlenmesi
 export function weekly(state, week) {
   const p = state.player, I = ensure(p);
+  Stocks.weekly(state);
   const lines = [];
   let total = 0;
   for (const id of I.props) {
@@ -137,6 +139,7 @@ export function sellHorse(state, hid) {
 // Sezon sonu: atlar yaşlanır, gelişir ya da yavaşlar; 10 yaşında emekli olur
 export function seasonEnd(state) {
   const p = state.player, I = ensure(p);
+  Stocks.seasonEnd(state);
   for (const h of I.horses) {
     h.age++;
     const d = h.age <= 4 ? randInt(1, 5) : h.age <= 6 ? randInt(-1, 2) : randInt(-6, -2);

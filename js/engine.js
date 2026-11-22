@@ -429,7 +429,7 @@ export function matchKits(home, away) {
 }
 
 // An türü dağılımı
-const MOMENT_KINDS = [['acik', 25], ['kontra', 14], ['birebir', 9], ['serbest', 10], ['kafa', 12], ['korner', 8], ['rovasata', 3], ['penalti', 6], ['uzuntop', 8], ['duvar', 8], ['pres', 7], ['kosevurusu', 5], ['vole', 6], ['arkadirek', 5], ['balik', 4]];
+const MOMENT_KINDS = [['acik', 25], ['kontra', 14], ['birebir', 9], ['serbest', 10], ['kafa', 12], ['korner', 8], ['rovasata', 3], ['penalti', 6], ['uzuntop', 8], ['duvar', 8], ['pres', 7], ['kosevurusu', 5], ['vole', 6], ['arkadirek', 5], ['balik', 4], ['kapma', 5], ['donen', 6], ['yerden', 7], ['uclu', 6]];
 export function momentKind(tactic) {
   const w = MOMENT_KINDS.map(([k, v]) => [k, v * ((TACTICS[tactic]?.mix || {})[k] || 1)]);
   let r = Math.random() * w.reduce((a, [, v]) => a + v, 0);
@@ -440,10 +440,10 @@ export function momentKind(tactic) {
 // Rakip taktikleri: an dağılımı, defans sayısı, pres, süre, goller
 export const TACTICS = {
   dengeli: { name: 'Dengeli', desc: 'Klasik 4-4-2, sürpriz yok.', mix: {}, def: 0, press: 1, time: 1, oppG: 1, myG: 1 },
-  pres: { name: 'Önde pres', desc: 'Topu çabuk kapmaya çalışırlar; arkaları boş, kontraya açıklar.', mix: { kontra: 1.8, birebir: 1.4, acik: 0.8, uzuntop: 1.7, pres: 0.6 }, def: 0, press: 1.18, time: 0.85, oppG: 1.1, myG: 1.1 },
-  katenacio: { name: 'Otobüs', desc: 'Kaleye otobüs çektiler. Duran toplar altın değerinde.', mix: { serbest: 1.6, korner: 1.6, kosevurusu: 1.7, vole: 1.4, kontra: 0.4, birebir: 0.5, duvar: 1.5, uzuntop: 0.4, pres: 1.3 }, def: 1, press: 0.9, time: 1.15, oppG: 0.7, myG: 0.75 },
-  kanat: { name: 'Kanat oyunu', desc: 'Kanatlardan ortalarla gelirler, ceza sahası kalabalık.', mix: { kafa: 1.7, korner: 1.4, rovasata: 1.5, arkadirek: 1.8, balik: 1.6, vole: 1.3 }, def: 0, press: 1, time: 1, oppG: 1.05, myG: 1 },
-  hucum: { name: 'Hücum', desc: 'Gol için her şeyi göze alırlar. Bol gollü maç kokusu!', mix: { kontra: 1.6, birebir: 1.5, serbest: 0.8, uzuntop: 1.5, pres: 1.4 }, def: -1, press: 0.95, time: 1, oppG: 1.3, myG: 1.2 },
+  pres: { name: 'Önde pres', desc: 'Topu çabuk kapmaya çalışırlar; arkaları boş, kontraya açıklar.', mix: { kontra: 1.8, birebir: 1.4, acik: 0.8, uzuntop: 1.7, pres: 0.6, uclu: 0.7, kapma: 1.3 }, def: 0, press: 1.18, time: 0.85, oppG: 1.1, myG: 1.1 },
+  katenacio: { name: 'Otobüs', desc: 'Kaleye otobüs çektiler. Duran toplar altın değerinde.', mix: { serbest: 1.6, korner: 1.6, kosevurusu: 1.7, vole: 1.4, kontra: 0.4, birebir: 0.5, duvar: 1.5, uzuntop: 0.4, pres: 1.3, donen: 1.5, uclu: 1.4, yerden: 1.2 }, def: 1, press: 0.9, time: 1.15, oppG: 0.7, myG: 0.75 },
+  kanat: { name: 'Kanat oyunu', desc: 'Kanatlardan ortalarla gelirler, ceza sahası kalabalık.', mix: { kafa: 1.7, korner: 1.4, rovasata: 1.5, arkadirek: 1.8, balik: 1.6, vole: 1.3, yerden: 1.7 }, def: 0, press: 1, time: 1, oppG: 1.05, myG: 1 },
+  hucum: { name: 'Hücum', desc: 'Gol için her şeyi göze alırlar. Bol gollü maç kokusu!', mix: { kontra: 1.6, birebir: 1.5, serbest: 0.8, uzuntop: 1.5, pres: 1.4, kapma: 1.5 }, def: -1, press: 0.95, time: 1, oppG: 1.3, myG: 1.2 },
 };
 function pickTactic(opp, me) {
   const d = opp.str - me.str;
@@ -518,7 +518,7 @@ export function planMatch(state) {
     min,
     kind: kind || momentKind(tactic),
     defenders: clamp(Math.round(2 + diff / 15 + Math.random() + T.def * 0.5), 1, 4),
-    keeper: clamp(keeperOvr + randInt(-2, 2), 40, 95),
+    keeper: clamp(keeperOvr + randInt(-2, 2), 40, 95), oppStr: opp.str,
     extraDef: T.def > 0 ? 1 : 0, pressMul: T.press, timeMul: T.time, foulRate: 0.22 + (tactic === 'pres' ? 0.08 : 0),
     oppNames: shuffle(oppDefs.slice()).slice(0, 4), weather,
   });
@@ -715,6 +715,8 @@ export function preSimRound(state, lid) {
 }
 
 // ---------- antrenman ----------
+// performans ekipmanı antrenman çarpanı (life.js GEAR ile aynı)
+const GEAR_TRAIN = { gear_krampon: 1.04, gear_krampon2: 1.07, gear_gym: 1.1, gear_hoca: 1.15 };
 export function train(state, stat, mult = 1) {
   const p = state.player;
   if (p.injury > 0) return { ok: false, msg: 'Sakatken antrenman yapamazsın.' };
@@ -722,7 +724,8 @@ export function train(state, stat, mult = 1) {
   p.energy -= TRAIN_COST;
   const cur = p.stats[stat];
   const ageF = p.age <= 21 ? 1.2 : p.age <= 26 ? 1 : p.age <= 30 ? 0.6 : 0.3;
-  const gain = Math.max(0.03, ((100 - cur) / 85) ** 1.35 * ageF * rand(0.7, 1.3) * mult * 0.55);
+  const gear = (p.owned || []).reduce((m, id) => Math.max(m, GEAR_TRAIN[id] || 1), 1);
+  const gain = Math.max(0.03, ((100 - cur) / 85) ** 1.35 * ageF * rand(0.7, 1.3) * mult * gear * 0.55);
   if (p.rel) p.rel.coach = clamp(p.rel.coach + 0.5, 0, 100);
   p.stats[stat] = clamp(cur + gain, 1, 99);
   state.updatedAt = Date.now();

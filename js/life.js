@@ -10,19 +10,66 @@ import * as Invest from './invest.js';
 export const CARS = [
   { id: 'car1', name: 'Kompakt Hatchback', desc: 'İkinci el ama sağlam', price: 900_000, fame: 1, morale: 1, emoji: '🚗' },
   { id: 'car2', name: 'Aile Sedanı', desc: 'Temiz, konforlu', price: 2_500_000, fame: 2, morale: 1, emoji: '🚙' },
+  { id: 'car7', name: 'Elektrikli SUV', desc: 'Sessiz, hızlı, şarjı evde', price: 4_500_000, fame: 3, morale: 2, emoji: '🔋' },
+  { id: 'car9', name: 'Arazi Aracı', desc: 'Kar, çamur, dağ yolu fark etmez', price: 6_000_000, fame: 3, morale: 2, emoji: '🛻' },
   { id: 'car3', name: 'Lüks SUV', desc: 'Siyah, heybetli', price: 8_000_000, fame: 4, morale: 2, emoji: '🚐' },
   { id: 'car4', name: 'Spor Coupe', desc: 'Kırmızı, iki kapı', price: 20_000_000, fame: 6, morale: 2, emoji: '🏎️' },
+  { id: 'car8', name: 'Klasik Cabrio (1967)', desc: 'Restore edilmiş, koleksiyonluk', price: 32_000_000, fame: 7, morale: 3, emoji: '🚘' },
   { id: 'car5', name: 'Süper Spor', desc: 'Makas kapılı canavar', price: 50_000_000, fame: 9, morale: 3, emoji: '🏁' },
+  { id: 'car10', name: 'Lüks Limuzin', desc: 'Şoförlü, arka koltukta masaj', price: 75_000_000, fame: 9, morale: 3, energy: 2, emoji: '🚖' },
   { id: 'car6', name: 'Hiper Araba', desc: 'Geleceğin arabası', price: 150_000_000, fame: 12, morale: 3, emoji: '🚀' },
 ];
 export const HOUSES = [
   { id: 'house1', name: 'Stüdyo Daire', desc: 'Küçük ama senin', price: 3_000_000, energy: 3, emoji: '🏠' },
   { id: 'house2', name: '2+1 Daire', desc: 'Şehir manzaralı', price: 10_000_000, energy: 6, emoji: '🏢' },
+  { id: 'house6', name: 'Bahçeli Müstakil Ev', desc: 'Sakin sokak, mangal keyfi', price: 18_000_000, energy: 8, emoji: '🏘️' },
   { id: 'house3', name: 'Rezidans', desc: 'Deniz manzaralı, yüksek kat', price: 35_000_000, energy: 10, emoji: '🌆' },
+  { id: 'house7', name: 'Dağ Evi', desc: 'Şömine, orman, kafa dinlemek için', price: 55_000_000, energy: 12, emoji: '🏔️' },
   { id: 'house4', name: 'Havuzlu Villa', desc: 'Bahçe, havuz, huzur', price: 90_000_000, energy: 14, emoji: '🏡' },
+  { id: 'house8', name: 'Çatı Katı Penthouse', desc: 'Teraslı, 360° şehir manzarası', price: 180_000_000, energy: 16, emoji: '🌃' },
   { id: 'house5', name: 'Boğaz Yalısı', desc: 'Özel iskelesiyle', price: 400_000_000, energy: 20, emoji: '🏛️' },
 ];
-const ITEMS = Object.fromEntries([...CARS, ...HOUSES].map((x) => [x.id, x]));
+// Lüks: tek seferlik ün, haftalık küçük moral, bazıları sevgiliyi de mutlu eder
+export const LUX = [
+  { id: 'lux_parfum', name: 'Parfümcüben imza parfüm', desc: 'Kendi kokun, kendi şişen', price: 30_000, fame: 0, morale: 1, partner: 3, emoji: '🧴' },
+  { id: 'lux_gozluk', name: 'SonGlasses güneş gözlüğü', desc: 'Havalimanı çıkışlarının vazgeçilmezi', price: 60_000, fame: 1, morale: 0, emoji: '🕶️' },
+  { id: 'lux_telefon', name: 'Xxxaomi Ultra telefon', desc: 'En yeni model, en iyi kamera', price: 90_000, fame: 0, morale: 1, emoji: '📱' },
+  { id: 'lux_takim', name: 'Terzi işi takım elbise', desc: 'Ödül törenleri için ölçüye özel', price: 250_000, fame: 1, morale: 1, emoji: '🤵' },
+  { id: 'lux_saat', name: 'Saatcim Chronograph', desc: 'Çelik kasa, safir cam', price: 450_000, fame: 1, morale: 1, emoji: '⌚' },
+  { id: 'lux_zincir', name: 'Altın zincir', desc: 'Göz alıcı ama abartmadan', price: 1_200_000, fame: 2, morale: 1, emoji: '📿' },
+  { id: 'lux_kolye', name: 'Pırlanta kolye (hediye)', desc: 'Sevdiğine özel', price: 3_500_000, fame: 1, morale: 1, partner: 10, emoji: '💎', needPartner: true },
+  { id: 'lux_saat2', name: 'Saatcim Tourbillon', desc: 'Sınırlı üretim, numaralı', price: 6_000_000, fame: 3, morale: 1, emoji: '⏱️' },
+  { id: 'lux_tablo', name: 'Çağdaş sanat tablosu', desc: 'Salonunun yeni yıldızı', price: 15_000_000, fame: 3, morale: 2, emoji: '🖼️' },
+  { id: 'lux_jet', name: 'Özel jet (ortaklık payı)', desc: 'Deplasman yorgunluğuna son', price: 250_000_000, fame: 8, morale: 2, energy: 4, emoji: '🛩️' },
+];
+// Performans: antrenman verimi, enerji ve sakatlık riski
+export const GEAR = [
+  { id: 'gear_krampon', name: 'Like Pro krampon', desc: 'Hafif, sağlam; şutta his farkı', price: 40_000, train: 1.04, emoji: '👟' },
+  { id: 'gear_uyku', name: 'Uyku takip bandı', desc: 'Uykunu ölç, toparlanmanı artır', price: 25_000, energy: 1, emoji: '😴' },
+  { id: 'gear_masaj', name: 'Masaj koltuğu', desc: 'Maç sonrası kaslar gevşer', price: 150_000, energy: 2, emoji: '💺' },
+  { id: 'gear_krampon2', name: 'amigos Elite kişiye özel krampon', desc: 'Ayak kalıbına göre üretilir', price: 350_000, train: 1.07, emoji: '🥾' },
+  { id: 'gear_diyet', name: 'Beslenme uzmanı (sezonluk)', desc: 'Kişisel menü, ölçülü takviye', price: 1_500_000, energy: 3, inj: 0.9, emoji: '🥗' },
+  { id: 'gear_kriyo', name: 'Kriyoterapi kabini', desc: 'Soğuk terapiyle hızlı toparlanma', price: 2_500_000, energy: 1, inj: 0.8, emoji: '🧊' },
+  { id: 'gear_gym', name: 'Ev spor salonu', desc: 'Ekstra mesai evde', price: 4_000_000, train: 1.1, emoji: '🏋️' },
+  { id: 'gear_hoca', name: 'Kişisel antrenör (sezonluk)', desc: 'Bitiricilik ve teknik çalışmaları', price: 7_000_000, train: 1.15, emoji: '🧑‍🏫' },
+  { id: 'gear_fizyo', name: 'Özel fizyoterapist', desc: 'Sakatlık riskini ciddi azaltır', price: 12_000_000, inj: 0.65, energy: 1, emoji: '🩺' },
+  { id: 'gear_oksijen', name: 'Hiperbarik oksijen odası', desc: 'Profesyonellerin toparlanma sırrı', price: 30_000_000, energy: 3, inj: 0.85, emoji: '🫧' },
+];
+// Hobi: haftalık moral, bazıları ün ve ilişki
+export const HOBBY = [
+  { id: 'hob_kulaklik', name: 'Readme stüdyo kulaklık', desc: 'Isınma listen hiç bu kadar net olmadı', price: 25_000, morale: 1, emoji: '🎧' },
+  { id: 'hob_konsol', name: 'PlayArena konsol seti', desc: 'Kamp akşamlarının kralı', price: 35_000, morale: 1, emoji: '🎮' },
+  { id: 'hob_xbox', name: 'XxxBox + direksiyon seti', desc: 'Yarış oyunlarında rakipsiz', price: 60_000, morale: 1, emoji: '🕹️' },
+  { id: 'hob_bisiklet', name: 'Yol bisikleti', desc: 'Sabah sahil turları', price: 120_000, morale: 1, energy: 1, emoji: '🚴' },
+  { id: 'hob_kamera', name: 'Profesyonel kamera', desc: 'Paslaş paylaşımların bir başka', price: 180_000, morale: 1, fame: 1, emoji: '📷' },
+  { id: 'hob_motor', name: 'Motosiklet', desc: 'Kulüp izin verirse…', price: 1_800_000, fame: 1, morale: 2, emoji: '🏍️' },
+  { id: 'hob_piyano', name: 'Kuyruklu piyano', desc: 'Kafa dağıtmanın en zarif yolu', price: 3_000_000, morale: 2, emoji: '🎹' },
+  { id: 'hob_karavan', name: 'Karavan', desc: 'Sezon arası yollara', price: 5_000_000, morale: 2, energy: 1, partner: 3, emoji: '🚌' },
+  { id: 'hob_tekne', name: 'Sürat teknesi', desc: 'Yazın koylar senin', price: 30_000_000, fame: 3, morale: 3, partner: 4, emoji: '🚤' },
+  { id: 'hob_yat', name: 'Lüks yat', desc: 'Mürettebatlı, 40 metre', price: 600_000_000, fame: 10, morale: 4, partner: 6, emoji: '🛥️' },
+];
+export const SHOP_TABS = { car: ['🚗 Arabalar', CARS], house: ['🏠 Evler', HOUSES], lux: ['💎 Lüks', LUX], gear: ['🏋️ Performans', GEAR], hobby: ['🎮 Hobi', HOBBY] };
+const ITEMS = Object.fromEntries([...CARS, ...HOUSES, ...LUX, ...GEAR, ...HOBBY].map((x) => [x.id, x]));
 export const SELL_RATE = 0.6;
 // Gemini görselleri geldikçe buraya eklenir (img/shop/<id>.jpg)
 export const SHOP_IMAGES = new Set([]);
@@ -38,18 +85,25 @@ export function initLife(p) {
 }
 
 const best = (p, list, key) => list.filter((x) => p.owned.includes(x.id)).reduce((m, x) => Math.max(m, x[key]), 0);
-export const houseEnergy = (p) => best(p, HOUSES, 'energy');
-export const carMorale = (p) => best(p, CARS, 'morale');
+const extra = (p, key) => [...LUX, ...GEAR, ...HOBBY, ...CARS].filter((x) => p.owned.includes(x.id)).reduce((m, x) => m + (x[key] || 0), 0);
+export const houseEnergy = (p) => best(p, HOUSES, 'energy') + Math.min(8, extra(p, 'energy'));
+export const carMorale = (p) => best(p, CARS, 'morale') + Math.min(6, [...LUX, ...HOBBY].filter((x) => p.owned.includes(x.id)).reduce((m, x) => m + (x.morale || 0), 0) * 0.5);
+// performans ekipmanı: antrenman verimi (en iyisi) ve sakatlık riski (çarpımsal, en az %50)
+export const trainMul = (p) => GEAR.filter((x) => (p.owned || []).includes(x.id) && x.train).reduce((m, x) => Math.max(m, x.train), 1);
+export const injMul = (p) => Math.max(0.5, GEAR.filter((x) => (p.owned || []).includes(x.id) && x.inj).reduce((m, x) => m * x.inj, 1));
+export const shopEffect = (it) => [it.fame ? `Ün +${it.fame}` : '', it.morale ? `Moral +${it.morale}/hafta` : '', it.energy ? `Enerji +${it.energy}/hafta` : '', it.partner ? `İlişki +${it.partner}` : '', it.train ? `Antrenman verimi +%${Math.round((it.train - 1) * 100)}` : '', it.inj ? `Sakatlık riski −%${Math.round((1 - it.inj) * 100)}` : ''].filter(Boolean).join(' · ');
 
 export function buy(state, id) {
   const p = state.player, it = ITEMS[id];
   if (!it || p.owned.includes(id)) return { ok: false, msg: 'Zaten sende var.' };
   if (p.money < it.price) return { ok: false, msg: 'Paran yetmiyor.' };
+  if (it.needPartner && !p.partner) return { ok: false, msg: 'Bunu hediye edecek biri yok.' };
   p.money -= it.price;
   p.owned.push(id);
   if (it.fame) p.fame = clamp(p.fame + it.fame, 0, 100);
+  if (it.partner && p.partner) p.partner.value = clamp((p.partner.value || 50) + it.partner, 0, 100);
   p.morale = clamp(p.morale + 5, 0, 100);
-  addInbox(state, `${it.name} artık senin! ${it.fame ? `Ün +${it.fame}.` : `Her hafta +${it.energy} enerji.`}`);
+  addInbox(state, `${it.emoji} ${it.name} artık senin! ${shopEffect(it)}.`);
   return { ok: true, item: it };
 }
 export function sell(state, id) {
@@ -270,7 +324,7 @@ export function resolveEvent(state, i) {
 // ---------- sakatlık ----------
 export function injuryRoll(state, minutes) {
   const p = state.player;
-  let risk = 0.018 * (minutes / 90);
+  let risk = 0.018 * (minutes / 90) * injMul(p);
   if (p.energy < 30) risk *= 3;
   if (p.age >= 30) risk *= 1.5;
   if (p.fragile > 0) risk *= 2.5;   // ağrı kesiciyle erken dönüş
