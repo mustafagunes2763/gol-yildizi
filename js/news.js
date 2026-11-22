@@ -328,7 +328,7 @@ export function leagueNews(state) {
   for (const [lid, L] of Object.entries(s.leagues)) {
     const round = L.fixtures[wk];
     if (!round) continue;
-    const lname = ({ SL: 'Süper Lig', L1: '1. Lig', PL: 'Premier Lig', LL: 'La Liga', SA: 'Serie A', BL: 'Bundesliga', FR: 'Ligue 1' })[lid] || lid;
+    const lname = ({ SL: 'Süper Lig', L1: '1. Lig', PL: 'Premier Lig', LL: 'La Liga', SA: 'Serie A', BL: 'Bundesliga', FR: 'Ligue 1', NL: 'Eredivisie', PT: 'Liga Portugal', BE: 'Pro League' })[lid] || lid;
     for (const m of round) {
       if (m.hg == null) continue;
       const H = state.teams[m.h], A = state.teams[m.a];
@@ -491,7 +491,7 @@ export function seasonNews(state, sum) {
   if (sum.myPos === 1) {
     out.push(clip(state, 'golsporu', {
       headline: `ŞAMPİYON ${UP(T.name)}!`,
-      sub: `${({ SL: 'Süper Lig', L1: '1. Lig', PL: 'Premier Lig', LL: 'La Liga', SA: 'Serie A', BL: 'Bundesliga', FR: 'Ligue 1' })[lid]} kupası ${ek(T.name, 'gen')} müzesinde`,
+      sub: `${({ SL: 'Süper Lig', L1: '1. Lig', PL: 'Premier Lig', LL: 'La Liga', SA: 'Serie A', BL: 'Bundesliga', FR: 'Ligue 1', NL: 'Eredivisie', PT: 'Liga Portugal', BE: 'Pro League' })[lid]} kupası ${ek(T.name, 'gen')} müzesinde`,
       body: `Sezon boyunca istikrarlı bir grafik çizen ${T.name}, ligi zirvede tamamladı. ${p.surname} sezonu ${s.goals} gol ve ${s.assists} asistle kapattı.`,
       caption: `${p.surname} şampiyonluk kupasını havaya kaldırdı`, pose: 'trophy',
     }));
@@ -615,6 +615,9 @@ export function awardNews(state, key, value) {
     champ_LL: [`${UP(state.teams[p.clubId].name)} İSPANYA ŞAMPİYONU!`, `${p.surname} La Liga'nın zirvesinde`, 'champions'],
     champ_SA: [`${UP(state.teams[p.clubId].name)} İTALYA ŞAMPİYONU!`, `${p.surname} Serie A'nın zirvesinde`, 'champions'],
     champ_BL: [`${UP(state.teams[p.clubId].name)} ALMANYA ŞAMPİYONU!`, `${p.surname} Bundesliga'nın zirvesinde`, 'champions'],
+    champ_NL: [`${UP(state.teams[p.clubId].name)} HOLLANDA ŞAMPİYONU!`, `${p.surname} Eredivisie'nin zirvesinde`, 'champions'],
+    champ_PT: [`${UP(state.teams[p.clubId].name)} PORTEKİZ ŞAMPİYONU!`, `${p.surname} Liga Portugal'ın zirvesinde`, 'champions'],
+    champ_BE: [`${UP(state.teams[p.clubId].name)} BELÇİKA ŞAMPİYONU!`, `${p.surname} Pro League'in zirvesinde`, 'champions'],
     champ_FR: [`${UP(state.teams[p.clubId].name)} FRANSA ŞAMPİYONU!`, `${p.surname} Ligue 1'in zirvesinde`, 'champions'],
     champ_L1: [`${UP(state.teams[p.clubId].name)} LİG ŞAMPİYONU`, "Süper Lig'e şampiyon olarak çıktılar", 'champions'],
     promo_L1: [`${UP(state.teams[p.clubId].name)} SÜPER LİG'DE!`, 'Yükselme sevinci', 'trophy'],
@@ -633,6 +636,36 @@ export function retireNews(state, sum) {
     sub: `${sum.years} sezon · ${sum.apps} maç · ${sum.goals} gol · ${sum.trophies} kupa`,
     body: `${sum.retiredAt} yaşında kramponlarını asan ${sum.name}, ${sum.clubs.join(', ')} formalarıyla unutulmaz anlar yaşattı. Futbol dünyası efsaneyi alkışlarla uğurladı.`,
     caption: `${sum.name} son kez tünelden geçerken`, photo: 'tunnel',
+  });
+}
+
+// Ulusal kupa haberi
+export function cupNews(state, plan, res) {
+  const p = state.player, fx = plan.fx;
+  const T = state.teams[p.clubId], O = state.teams[fx.opp];
+  const CN = fx.cupName || 'Kupa';
+  const sk = `${res.myGoals}-${res.oppGoals}${res.pens ? ` (pen. ${res.pens.join('-')})` : ''}`;
+  const TK = UP(T.name);
+  if (res.cupTrophy) return clip(state, pick(['golsporu', 'tribun']), {
+    headline: pick([`KUPA ${TK}'NIN!`, `${TK} ${UP(CN)} ŞAMPİYONU!`, 'KUPA EVİNE DÖNDÜ!']),
+    sub: `Finalde ${O.name} yenildi · ${sk}`,
+    body: `${T.name}, ${CN} finalinde ${ek(O.name, 'acc')} geçerek kupayı kaldırdı. ${res.goals ? `${p.surname} finalde attığı golle damgasını vurdu.` : `${p.surname} final kadrosundaydı.`} Takıma kulüp primi dağıtıldı.`,
+    caption: `${T.name} oyuncuları kupayla`, photo: ph('champions', 'trophy'),
+  });
+  if (res.koWon) {
+    if (!fx.final && Math.random() < 0.5 && !res.goals && !res.pensUsed) return null;
+    return clip(state, pick(['golsporu', 'tribun', 'aksam']), {
+      headline: fx.round === 'Yarı final' ? `${TK} FİNALDE!` : pick([`${TK} KUPADA TUR ATLADI`, `KUPADA ${TK} YOLUNA DEVAM`, `${UP(O.name)} ELENDİ`]),
+      sub: `${CN} ${fx.round} · ${sk}`,
+      body: `${CN} ${fx.round.toLocaleLowerCase('tr-TR')} maçında ${T.name}, ${ek(O.name, 'acc')} saf dışı bıraktı.${res.pensUsed ? ' Tur penaltılarla geldi!' : ''} ${res.goals ? `${p.surname} golüyle öne çıktı.` : ''}`,
+      caption: `${T.name} tur sevinci`, photo: res.pensUsed ? 'cheer' : ph('fans', 'cheer'),
+    });
+  }
+  return clip(state, pick(['sertsut', 'aksam']), {
+    headline: O.str + 6 < T.str ? pick(['KUPADA BÜYÜK SÜRPRİZ!', `${TK} KUPADA ŞOKTA`]) : pick([`${TK} KUPAYA VEDA ETTİ`, 'KUPA DEFTERİ KAPANDI']),
+    sub: `${CN} ${fx.round}: ${O.name} kazandı · ${sk}`,
+    body: `${T.name} ${CN} yolculuğuna ${fx.round.toLocaleLowerCase('tr-TR')} aşamasında veda etti.${res.pensUsed ? ' Penaltılar acımasızdı.' : ''}`,
+    caption: `${T.name} oyuncuları maç sonunda`, pose: 'sad', photo: ph('empty', 'sad'),
   });
 }
 

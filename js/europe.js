@@ -8,6 +8,7 @@ export const COMP = {
   UEL: { name: 'Avrupa Ligi', short: 'AL', icon: '🟠', fame: 2 },
   UECL: { name: 'Konferans Ligi', short: 'KL', icon: '🟢', fame: 1.5 },
   USC: { name: 'UEFA Süper Kupa', short: 'SK', icon: '🏆', fame: 2, cup: true },
+  CUP: { name: 'Ulusal kupa', short: 'Kupa', icon: '🏆', fame: 1, cup: true },
 };
 const LOWER = { UCL: 'UEL', UEL: 'UECL', UECL: null };
 const MDS = { UCL: 8, UEL: 8, UECL: 6 };

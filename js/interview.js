@@ -354,6 +354,216 @@ const C = {
   },
 };
 
+// ---------- ek senaryolar (Kasım 2026) ----------
+const NEW_CTX = {
+  // ===== MAÇ ÖNCESİ =====
+  cupPre: {
+    q: { nur: ['{kupa} maçı! Tek maç, kaybeden evine dönüyor. Hazır mısın?'], selin: ['{kupa}\'nda {rakip} ile tek maçlık eleme. Kupa maçlarının farkı ne?'], kenan: ['Hoca kupada rotasyon yapacak mı? Sen oynayacak mısın?'], riza: ['Kupa maçında sürpriz olur evlat. Nasıl hazırlandın?'] },
+    a: {
+      humble: [{ t: 'Kupada küçük takım yoktur. {rakip}\'e saygı duyuyoruz, işimizi yapacağız.', fx: { coach: 2 } }, { t: 'Hoca kimi oynatırsa oynatsın, herkes hazır.' }],
+      bold: [{ t: 'Bu kupayı kaldırmak istiyoruz. İlk adım bu akşam, golü ben atacağım.', promise: true }, { t: 'Tek maç mı? Bize bir maç yeter.' }],
+      witty: [{ t: 'Uzatmalara kalmasın, akşam yemeğine yetişmem lazım.' }, { t: 'Penaltıya kalırsa ilk ben atarım, kaleciye önceden haber vermem.' }],
+      sharp: [{ t: 'Kupa maçlarını önemsemeyenler var. Biz önemsiyoruz, sahada görürler.', target: 'press' }],
+    },
+  },
+  cupWin: {
+    q: { nur: ['{kupa}\'nda tur sizin! Sırada ne var?'], selin: ['{rakip} karşısında {skor}. Kupa yolculuğu nereye kadar?'], duygu: ['Kupa gecesi taraftar coştu, kutlama planı var mı?'] },
+    a: {
+      humble: [{ t: 'Tur atladık, bu takımın başarısı. Bir sonraki maça odaklanıyoruz.', fx: { coach: 2 } }],
+      bold: [{ t: 'Bu kupa bizim. Finali şimdiden düşünüyorum.', fx: { fame: 1 } }],
+      witty: [{ t: 'Kupalar parlak olur, ben de parlak şeyleri severim.' }],
+      sharp: [{ t: 'Kupada bizi favori görmeyenler şimdi kura çeksin.', target: 'press' }],
+    },
+  },
+  cupOut: {
+    q: { kenan: ['{kupa}\'na erken veda. Hayal kırıklığı mı?'], selin: ['{rakip} karşısında ne ters gitti?'], riza: ['Kupa böyledir evlat, bir gecede biter. Ne düşünüyorsun?'] },
+    a: {
+      humble: [{ t: 'Taraftarımızdan özür dileriz. Ligde telafi edeceğiz.', fx: { fans: 2 } }],
+      bold: [{ t: 'Bu acıyı ligde çıkaracağız. Kimse bizi bitti sanmasın.' }],
+      witty: [{ t: 'Kupa dolabında yer açmıştım, şimdilik oraya ayakkabı koyacağım.' }],
+      sharp: [{ t: 'Rotasyonla bu maç kazanılmazdı. Fazla söze gerek yok.', target: 'coach' }],
+    },
+  },
+  europePre: {
+    q: { nur: ['{kupa} gecesi! Avrupa sahnesi seni heyecanlandırıyor mu?'], selin: ['{kupa} maçında {rakip} karşısında. Avrupa tecrübesi seni nasıl değiştiriyor?'], berk: ['Avrupa vitrini… Scout\'lar tribünde olacak, farkında mısın?'], riza: ['Avrupa gecesi başka olur evlat. Marşı duyunca ne hissedeceksin?'] },
+    a: {
+      humble: [{ t: 'Ülkemizi temsil etmek büyük onur. Puanlarla döneceğiz inşallah.', fx: { fans: 2 } }, { t: 'Avrupa\'da her maç bir ders. Öğrenmeye geldik.' }],
+      bold: [{ t: 'Avrupa\'da da adımı duyuracağım. Bu gece golü ben atacağım.', promise: true }, { t: '{rakip} kim olursa olsun, biz buraya kazanmaya geldik.' }],
+      witty: [{ t: 'Marşı duyunca tüylerim diken diken oluyor, saç kesimimi de bozuyor.' }, { t: 'Scout mu? Ben onlara değil kaleye bakıyorum, inşallah onlar da bana bakar.' }],
+      sharp: [{ t: 'Avrupa\'da bizi küçümseyenler var. Bu gece cevabı alacaklar.', target: 'opp' }],
+    },
+  },
+  rivalPre: {
+    q: { kenan: ['{ahmet} dün "Gölgem bile ondan hızlı" dedi. Cevabın?', 'Akademiden beri {ahmet} ile kapışıyorsunuz. Bu maç kişisel mi?'], nur: ['Bugün {ahmet} ile karşı karşıyasın! Mesajın var mı?'], selin: ['{ahmet} ile rekabetiniz sizi nasıl besliyor?'] },
+    a: {
+      humble: [{ t: '{ahmet} iyi bir oyuncu, saygı duyuyorum. Önemli olan takımım.', fx: { coach: 2 } }, { t: 'Rekabet ikimizi de daha iyi yapıyor. Sahada konuşuruz.' }],
+      bold: [{ t: 'Bu maçtan sonra kimin gölgesinde kimin olduğunu herkes görecek.', promise: true, fx: { fans: 2 } }, { t: '{ahmet} her zaman bir adım geride oldu. Bugün de öyle olacak.' }],
+      witty: [{ t: 'Gölgesi benden hızlıysa gölgesini oynatsınlar, belki gol atar.' }, { t: '{ahmet} ile çocukken misket oynardık, yine ben kazanırdım.' }],
+      sharp: [{ t: '{ahmet} çok konuşuyor ama istatistikler ortada. Sussun artık!', target: 'opp' }],
+    },
+  },
+  oldClubPre: {
+    q: { kenan: ['Eski takımın {rakip} karşısındasın. Gol atarsan sevinecek misin?'], riza: ['Eski evine karşı oynamak zordur evlat. Nasıl hissediyorsun?'], nur: ['{rakip} taraftarı seni alkışlayacak mı, ıslıklayacak mı?'] },
+    a: {
+      humble: [{ t: '{rakip} benim için çok özel. Gol atarsam sevinmeyeceğim, saygımdan.', fx: { fans: 1 } }],
+      bold: [{ t: 'Profesyonelim. Gol atacağım ve takımım için sevineceğim.', promise: true }],
+      witty: [{ t: 'Eski soyunma odasındaki dolabımı merak ediyorum, hâlâ benim çoraplarım duruyor olabilir.' }],
+      sharp: [{ t: 'Orada bana gereken değeri vermediler. Bugün ne kaybettiklerini görecekler.', target: 'board' }],
+    },
+  },
+  nationalPre: {
+    q: { selin: ['Milli takıma çağrıldın! Bu formayı giymek ne ifade ediyor?'], nur: ['Ay-yıldızlı formayla tanıştın! Ailen ne dedi?'], riza: ['Milli forma ağırdır evlat. Taşıyabilecek misin?'] },
+    a: {
+      humble: [{ t: 'Hayatımın en gururlu anı. Bu formayı hak etmeye çalışacağım.', fx: { fans: 3 } }],
+      bold: [{ t: 'Milli takımda da kalıcı olacağım. Büyük turnuvalara gideceğiz.', fx: { fame: 1 } }],
+      witty: [{ t: 'Annem formamı çerçeveletti, yıkamama izin vermiyor.' }],
+      sharp: [{ t: 'Daha önce çağrılmam gerekiyordu, ama sonunda geldi.', target: 'board' }],
+    },
+  },
+  newClub: {
+    q: { nur: ['Yeni takımında ilk haftalar nasıl geçiyor?'], berk: ['Bu transfer için başka kulüpleri reddettin mi? Kulis öyle diyor.'], selin: ['{takim} formasıyla hedeflerin neler?'] },
+    a: {
+      humble: [{ t: 'Herkes beni çok iyi karşıladı. Hemen uyum sağlamak istiyorum.', fx: { team: 3 } }],
+      bold: [{ t: '{takim} ile kupalar kazanmaya geldim.', fx: { fans: 3 } }],
+      witty: [{ t: 'Şehri öğrendim, sadece trafiği öğrenemedim.' }],
+      sharp: [{ t: 'Eski kulübümde potansiyelimi göremediler. Burada göreceksiniz.', target: 'board' }],
+    },
+  },
+  captainPre: {
+    q: { selin: ['Kaptanlık bandı seni değiştirdi mi?'], riza: ['Kaptan olmak sorumluluk ister evlat. Soyunma odasında neler söylüyorsun?'], kenan: ['Kaptan olarak takım arkadaşlarını eleştirebiliyor musun?'] },
+    a: {
+      humble: [{ t: 'Bant kolumda ama hepimiz kaptanız. Birlikte güçlüyüz.', fx: { team: 4 } }],
+      bold: [{ t: 'Kaptan olarak bu takımı şampiyonluğa taşıyacağım.' }],
+      witty: [{ t: 'Kaptanlık güzel, sadece yazı tura atarken hep kaybediyorum.' }],
+      sharp: [{ t: 'Gerekirse sert konuşurum. Herkes sorumluluk almalı.', target: 'team' }],
+    },
+  },
+  crisisPre: {
+    q: { kenan: ['Sosyal medyadaki o paylaşımdan pişman mısın?', 'Taraftar sana çok kızgın. Özür dileyecek misin?'], duygu: ['Paslaş\'ta herkes seni konuşuyor! O paylaşım neydi öyle?'], nur: ['Sosyal medya krizinin ardından ilk maç. Ne söylemek istersin?'] },
+    a: {
+      humble: [{ t: 'Yanlış anlaşıldım ama kırılan varsa özür dilerim.', fx: { fans: 4, endCrisis: true } }],
+      bold: [{ t: 'Sosyal medya geçer, sahada konuşan kazanır.' }],
+      witty: [{ t: 'Telefonu annem aldı, artık paylaşımları o onaylıyor.', fx: { fans: 2 } }],
+      sharp: [{ t: 'Bazıları her şeyden olay çıkarıyor. Ben arkasındayım.', target: 'press', fx: { fans: -3 } }],
+    },
+  },
+  contractPre: {
+    q: { berk: ['Sözleşmen bitiyor. Kalacak mısın, gidecek misin?', 'Yeni sözleşme masada mı? Rakamlar konuşuluyor.'], kenan: ['Sözleşme bitiyor, taraftar seni bırakacak mı?'] },
+    a: {
+      humble: [{ t: 'Şu an sadece maça odaklıyım. Sözleşmeyi menajerim konuşuyor.' }],
+      bold: [{ t: 'Değerimi biliyorum. Hak ettiğim teklif gelirse konuşuruz.', fx: { fame: 1 } }],
+      witty: [{ t: 'Sözleşme mi? Ben hâlâ ilk maaşımı nereye harcadığımı düşünüyorum.' }],
+      sharp: [{ t: 'Kulüp bu konuda çok yavaş davranıyor. Sabrım sınırsız değil.', target: 'board' }],
+    },
+  },
+  // ===== MAÇ SONRASI =====
+  europeWin: {
+    q: { nur: ['Avrupa\'da muhteşem bir galibiyet! Ülkeye mesajın?'], selin: ['{kupa}\'nda {rakip} karşısında {skor}. Bu galibiyetin anlamı?'], berk: ['Bu performanstan sonra Avrupa kulüplerinden telefon gelir mi?'] },
+    a: {
+      humble: [{ t: 'Bu galibiyet ülkemizin. Ülke puanına katkı verdiğimiz için mutluyuz.', fx: { fans: 3 } }],
+      bold: [{ t: 'Avrupa bizi tanıdı. Bu daha başlangıç.', fx: { fame: 2 } }],
+      witty: [{ t: 'Rakip kaleci bana İngilizce bir şey söyledi, anlamadım ama gol attım.' }],
+      sharp: [{ t: 'Kura çekildiğinde bize gülenler şimdi düşünsün.', target: 'press' }],
+    },
+  },
+  europeLoss: {
+    q: { kenan: ['Avrupa\'da yine eli boş döndünüz. Seviye farkı mı?'], selin: ['{rakip} karşısında ne eksikti?'], riza: ['Avrupa acımasızdır evlat. Ne öğrendin?'] },
+    a: {
+      humble: [{ t: 'Çok şey öğrendik. Rövanşta bambaşka olacağız.', fx: { coach: 2 } }],
+      bold: [{ t: 'Seviye farkı yok. Bugün şanssızdık, rövanş bizim.' }],
+      witty: [{ t: 'Uçakta iyi uyuyamadık, bahane değil ama söyleyeyim.' }],
+      sharp: [{ t: 'Hakem Avrupa\'da hep büyükleri koruyor.', target: 'ref' }],
+    },
+  },
+  rivalWin: {
+    q: { kenan: ['{ahmet}\'i susturdun! Ona bir mesajın var mı?', 'Maç sonu {ahmet} ile tokalaştın mı?'], nur: ['Büyük rekabeti sen kazandın! Neler hissediyorsun?'], duygu: ['{ahmet} soyunma odasına koşarak gitti, gördün mü?'] },
+    a: {
+      humble: [{ t: '{ahmet}\'e saygım büyük. Bugün şanslı taraf bizdik.', fx: { coach: 2, fans: 1 } }],
+      bold: [{ t: 'Bu rekabette kimin önde olduğu belli. Söyleyecek başka şey yok.', fx: { fans: 3 } }],
+      witty: [{ t: '{ahmet}\'e "iyi maçtı" dedim, sanırım duymadı, kulaklarında benim golüm çınlıyordu.' }],
+      sharp: [{ t: '{ahmet} maçtan önce çok konuştu. Şimdi Paslaş\'tan da sussun!', target: 'opp' }],
+    },
+  },
+  rivalLoss: {
+    q: { kenan: ['{ahmet} bugün sana kafa tuttu ve kazandı. Acı mı?'], duygu: ['{ahmet} maç sonu sana göz kırptı, gördün mü?'], selin: ['{ahmet} ile kişisel düelloyu bu sefer kaybettin. Ders ne?'] },
+    a: {
+      humble: [{ t: 'Bugün onların günüydü. Tebrik ederim.', fx: { coach: 2 } }],
+      bold: [{ t: 'Rövanş var. O zaman konuşuruz.' }],
+      witty: [{ t: 'Göz kırptı mı? Gözüne bir şey kaçmıştır, rüzgâr vardı.' }],
+      sharp: [{ t: '{ahmet} yine şov yaptı. Futbolu değil, kamerayı seviyor.', target: 'opp' }],
+    },
+  },
+  oldClubGoal: {
+    q: { nur: ['Eski takımına gol attın ve sevinmedin! Neden?'], kenan: ['Eski takımına attığın golden sonra yöneticilere bakıyordun, mesaj mıydı?'], riza: ['Eski evine gol atmak zordur. Nasıl hissettin?'] },
+    a: {
+      humble: [{ t: 'O tribünler beni büyüttü. Sevinmek içimden gelmedi.', fx: { fans: 2 } }],
+      bold: [{ t: 'Profesyonelim, işimi yaptım. Takımım için önemli bir gol.' }],
+      witty: [{ t: 'Sevinmedim çünkü kafamda hâlâ eski formam vardı, kafam karıştı.' }],
+      sharp: [{ t: 'Evet, mesajdı. Beni gönderenler ne kaybettiklerini gördü.', target: 'board' }],
+    },
+  },
+  bigWin: {
+    q: { nur: ['{skor}! Gol yağmuru! Soyunma odası nasıl?'], selin: ['Farklı galibiyetin anahtarı neydi?'], kenan: ['{rakip} bugün sahada yoktu sanki. Kolay mıydı?'] },
+    a: {
+      humble: [{ t: 'Rakibe saygı duyuyoruz. Ciddiyetimizi 90 dakika koruduk.', fx: { coach: 2 } }],
+      bold: [{ t: 'Bu takım her hafta böyle oynayabilir. Herkes dikkat etsin.' }],
+      witty: [{ t: 'Skorbord görevlisi bugün mesai yaptı, ona da teşekkürler.' }],
+      sharp: [{ t: 'Maç öncesi bizi eleştirenler skora baksın.', target: 'press' }],
+    },
+  },
+  lateWin: {
+    q: { nur: ['Son dakikalarda gelen zafer! Kalp krizi geçirdik!'], riza: ['Pes etmemek, büyük takım işi. Sırrı ne evlat?'], selin: ['Son anlarda gelen galibiyet takım karakterini mi gösteriyor?'] },
+    a: {
+      humble: [{ t: 'Son düdüğe kadar inandık. Taraftarımız da inandı.', fx: { fans: 2, team: 2 } }],
+      bold: [{ t: 'Bu takım asla pes etmez. Son dakikalar bizim dakikalarımız.' }],
+      witty: [{ t: 'Annem televizyonu kapatmıştı, golü kaçırdı, şimdi tekrar izliyor.' }],
+      sharp: [{ t: 'Hakem uzatmayı kısa tutsaydı yine bizi engelleyecekti.', target: 'ref' }],
+    },
+  },
+};
+Object.assign(C, NEW_CTX);
+
+// Mevcut senaryolara ek sorular ve cevaplar (çeşitlilik)
+const MORE = {
+  preGeneric: {
+    q: { selin: ['Bugünkü maç için hazırlıklarınız nasıl geçti?'], nur: ['Isınmadan önce kısa bir soru: Formunu nasıl buluyorsun?'], kenan: ['Hoca seni neden bu kadar övüyor, torpil mi var?'] },
+    a: { humble: [{ t: 'Her hafta biraz daha iyi olmaya çalışıyorum.' }, { t: 'Antrenmanlar iyi geçti, hazırız.' }], bold: [{ t: 'Formum yükselişte. Bugün bunu göreceksiniz.' }], witty: [{ t: 'Torpil mi? Hocama her sabah simit götürüyorum, belki ondandır.' }, { t: 'Hazırlık mı? Dün akşam 12 saat uyudum, tam form.' }], sharp: [{ t: 'Torpil lafını kabul etmiyorum. Sahada hak ediyorum.', target: 'press' }] },
+  },
+  postGeneric: {
+    q: { kenan: ['Bugün sahada pek görünmedin, ne oldu?'], selin: ['Taktik açıdan bugün neyi iyi yaptınız?'] },
+    a: { humble: [{ t: 'Takım için koştum, gol atmasam da katkı verdim.' }, { t: 'Hocanın planını sahaya yansıttık.' }], bold: [{ t: 'Sessiz maçlar da olur. Haftaya fırtına gibi geleceğim.' }], witty: [{ t: 'Görünmedim çünkü kamuflaj formasıyla oynadık, şaka şaka.' }], sharp: [{ t: 'Toplar bana gelmiyorsa ben ne yapayım?', target: 'team' }] },
+  },
+  goal: {
+    q: { kenan: ['Golden sonra yaptığın sevinç kime mesajdı?'], duygu: ['Gol sevincini kime ithaf ettin?'] },
+    a: { humble: [{ t: 'Gol takım arkadaşlarımın emeği. Ben sadece son dokunuşu yaptım.' }, { t: 'Bu golü aileme armağan ediyorum.' }], bold: [{ t: 'Gol krallığı yarışındayım, bu sadece bir tanesi.' }], witty: [{ t: 'Sevinç mi? Antrenmanda çalıştık, ama yanlış yöne koştum.' }, { t: 'Golü aileme ithaf ediyorum… bir de kuzenime, ondan borç almıştım.' }], sharp: [{ t: 'Sevinç beni eleştirenlere mesajdı.', target: 'press' }] },
+  },
+  lost: {
+    q: { nur: ['Kaybettiniz ama mücadele iyiydi. Ne eksikti?'], kenan: ['Bu sezon hedefiniz ne, düşmemek mi?'] },
+    a: { humble: [{ t: 'Bitiricilik eksikti. Ben de dahil daha iyi olmalıyız.', fx: { coach: 2 } }], bold: [{ t: 'Düşmek mi? Bu takım yukarıya bakar.' }], witty: [{ t: 'Eksik olan gol, gerisi tamamdı.' }], sharp: [{ t: 'Kulüp yönetimi de aynaya bakmalı.', target: 'board' }] },
+  },
+  draw: {
+    q: { kenan: ['Bir puan… Bu sana yeter mi?'], riza: ['Beraberlik bazen galibiyettir evlat. Bu hangisi?'] },
+    a: { humble: [{ t: 'Deplasmanda bir puan her zaman değerlidir.' }], bold: [{ t: 'Bir puan bana yetmez. Üç puan için geldik.' }], witty: [{ t: 'Berabere bittiyse ikimiz de haklıyız demek.' }], sharp: [{ t: 'Hakem son dakikada bizi durdurdu.', target: 'ref' }] },
+  },
+  great: {
+    q: { nur: ['Maçın adamı sensin! Bu form nereden geliyor?'], riza: ['Bugün sahada adeta dans ettin evlat. Kimden öğrendin?'] },
+    a: { humble: [{ t: 'Hocalarıma ve aileme borçluyum.', fx: { coach: 2 } }], bold: [{ t: 'Bu daha başlangıç. En iyim henüz gelmedi.' }], witty: [{ t: 'Dans mı? Düğünlerde de böyleyim, sorun annemle.' }], sharp: [{ t: 'Beni yedekte oturtanlar umarım izlemiştir.', target: 'coach' }] },
+  },
+  poor: {
+    q: { kenan: ['Bugün sahada kayıptın. Gece hayatı mı yoruyor?'], selin: ['Performansından memnun değil gibisin. Neden?'] },
+    a: { humble: [{ t: 'Kötü bir gündü, kabul ediyorum. Çalışıp döneceğim.', fx: { coach: 2 } }], bold: [{ t: 'Kötü günler büyük oyunculara da olur.' }], witty: [{ t: 'Gece hayatı mı? Ben 22:00\'de uyuyorum, sorun yaşlılık olabilir.' }], sharp: [{ t: 'Gece hayatı iddiası yalan. Özel hayatıma karışmayın!', target: 'press' }] },
+  },
+  assist: {
+    q: { nur: ['Gol atmadın ama asistinle maçın kahramanısın!'], selin: ['Takım oyunu senin için ne ifade ediyor?'] },
+    a: { humble: [{ t: 'Asist de gol kadar güzel. Arkadaşım için mutluyum.', fx: { team: 3 } }], bold: [{ t: 'Haftaya hem atacağım hem attıracağım.' }], witty: [{ t: 'Arkadaşım bana bir yemek borçlu, faturayı ben seçeceğim.' }], sharp: [{ t: 'Gol atmak isterdim ama bencil değilim, bazıları gibi.', target: 'team' }] },
+  },
+};
+for (const [k, m] of Object.entries(MORE)) {
+  const c = C[k]; if (!c) continue;
+  for (const [rid, qs] of Object.entries(m.q || {})) (c.q[rid] ||= []).push(...qs);
+  for (const [tone, as] of Object.entries(m.a || {})) (c.a[tone] ||= []).push(...as);
+}
+
 // Hedefe göre ek etki (sert cevaplar)
 const TARGET_FX = {
   opp: { fans: 4, fame: 1 },
@@ -385,7 +595,8 @@ function vars(state, plan, res) {
   return {
     ad: p.surname, rakip: opp.name, takim: me.name, sehir: clubInfo(me.id).sehir || 'bu şehir',
     sevgili: p.partner?.name || 'sevgilin', araba: car || 'araban', pos: P?.pos ?? '',
-    skor: res ? `${res.myGoals}-${res.oppGoals}` : '', sonuc: res ? ({ W: 'kazandı', D: 'berabere kaldı', L: 'kaybetti' })[res.result] : '',
+    skor: res ? `${res.myGoals}-${res.oppGoals}` : '',
+    ahmet: 'Ahmet Akyurt', kupa: { UCL: 'Şampiyonlar Ligi', UEL: 'Avrupa Ligi', UECL: 'Konferans Ligi', USC: 'Süper Kupa' }[plan.fx.comp] || plan.fx.cupName || 'Avrupa', sonuc: res ? ({ W: 'kazandı', D: 'berabere kaldı', L: 'kaybetti' })[res.result] : '',
   };
 }
 function build(state, plan, ctxKey, when, res) {
@@ -430,11 +641,23 @@ export function preInterview(state, plan) {
   if ((p.casinoWeek || 0) < -500000) opts.push(['casino', 12]);
   if (opp.str >= me.str + 4) opts.push(['stronger', 8]);
   if (opp.str <= me.str - 4) opts.push(['weaker', 8]);
+  const rivalTeam = state.social?.rival?.team;
+  const oldClubs = new Set((p.career.seasons || []).map((x) => x.club).filter((c) => c !== p.clubId));
+  if (plan.fx.cup) opts.push(['cupPre', 30]);
+  else if (plan.fx.comp) opts.push(['europePre', 30]);
+  if (rivalTeam && opp.id === rivalTeam) opts.push(['rivalPre', 35]);
+  if (oldClubs.has(opp.id)) opts.push(['oldClubPre', 35]);
+  if (p.nat?.level && state.season.week > 0 && state.natMatch == null && (p.nat.caps + p.nat.u21caps) <= 2) opts.push(['nationalPre', 10]);
+  if ((p.career.seasons || []).length && p.career.seasons[p.career.seasons.length - 1].club !== p.clubId && state.season.week < 5) opts.push(['newClub', 25]);
+  if (p.captain) opts.push(['captainPre', 6]);
+  if (state.social?.crisis) opts.push(['crisisPre', 30]);
+  if (p.contract?.endsYear && p.contract.endsYear <= state.season.year + 1 && state.season.week > (state.season.totalWeeks || 34) * 0.6) opts.push(['contractPre', 12]);
   opts.push(['preGeneric', 8]);
   delete p.backFrom;
   return build(state, plan, weighted(opts), 'pre');
 }
 
+const rivalTeamOf = (state) => state.social?.rival?.team;
 // ---------- maç sonrası ----------
 export function postInterview(state, plan, res) {
   const p = state.player;
@@ -450,11 +673,19 @@ export function postInterview(state, plan, res) {
   else if (res.bicycle) key = 'bicycle';
   else if (res.goals >= 3) key = 'hattrick';
   else if (res.penMissed && Math.random() < 0.7) key = 'missedPen';
+  else if (rivalTeamOf(state) === opp.id && res.result === 'W' && Math.random() < 0.8) key = 'rivalWin';
+  else if (rivalTeamOf(state) === opp.id && res.result === 'L' && Math.random() < 0.8) key = 'rivalLoss';
+  else if (res.goals >= 1 && (p.career.seasons || []).some((x) => x.club === opp.id) && opp.id !== p.clubId) key = 'oldClubGoal';
+  else if (plan.fx.cup && Math.random() < 0.7) key = res.koWon ? 'cupWin' : 'cupOut';
+  else if (plan.fx.comp && !plan.fx.cup && res.result === 'W' && Math.random() < 0.6) key = 'europeWin';
+  else if (plan.fx.comp && !plan.fx.cup && res.result === 'L' && Math.random() < 0.6) key = 'europeLoss';
   else if (derby && res.result === 'W') key = 'derbyWin';
   else if (derby && res.result === 'L') key = 'derbyLoss';
   else if (res.goals === 2) key = 'brace';
   else if (res.goals >= 1 && res.result === 'W' && diff === 1) key = 'winner';
   else if (diff <= -3) key = 'bigLoss';
+  else if (diff >= 3 && Math.random() < 0.6) key = 'bigWin';
+  else if (res.result === 'W' && res.lateWinner && Math.random() < 0.7) key = 'lateWin';
   else if (res.goals >= 1) key = 'goal';
   else if (res.assists >= 1) key = 'assist';
   else if (res.outcomes?.some((o) => o === 'foulPen' || o === 'foulFk') && Math.random() < 0.3) key = 'oppRed';
@@ -478,6 +709,7 @@ export function applyAnswer(state, iv, ans) {
   // sert cevaba taraftar her zaman alkış tutmaz
   if (ans.tone === 'sharp' && Math.random() < 0.3) fx.fans = (fx.fans || 0) - 5;
   if (iv.partnerFx && p.partner) fx.partner = iv.partnerFx[ans.tone] || 0;
+  if (fx.endCrisis) { delete fx.endCrisis; if (state.social?.crisis) state.social.crisis.weeks = Math.min(state.social.crisis.weeks, 1); }
   const pressD = (fx.press || 0) + (ans.tone === 'witty' ? 4 : ans.tone === 'humble' ? 2 : ans.tone === 'bold' ? 3 : 0);
   p.press[iv.rid] = clamp((p.press[iv.rid] ?? 50) + pressD, 0, 100);
   apply(p, fx);
@@ -614,3 +846,4 @@ function effectSummary(fx) {
   if (fx.money) parts.push(`Ceza ₺${Math.abs(fx.money).toLocaleString('tr-TR')}`);
   return parts.join(' · ');
 }
+export const _C = C;

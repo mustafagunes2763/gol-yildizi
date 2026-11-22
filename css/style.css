@@ -733,3 +733,16 @@ td.fm i.fw { background: #22c55e; } td.fm i.fd { background: #94a3b8; } td.fm i.
 .cname { font-size: 10px; color: #fde68a; line-height: 1.15; min-height: 23px; } .cup2.locked .cname { color: #a8a29e; }
 .cyears { font-size: 9px; color: #d6d3d1aa; }
 @keyframes shine { 50% { filter: drop-shadow(0 0 16px #fde047); } }
+.feed p.pre { border-left: 3px solid #facc15; padding-left: 8px; color: #fde68a; }
+
+/* ---------- ulusal kupalar ---------- */
+.cupround { padding: 10px 12px; }
+.cuphead { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.cuprow.me { background: rgba(255, 196, 0, .12); border-radius: 8px; }
+.cuprow .t.win { font-weight: 700; }
+.cuprow .t.lose { opacity: .5; }
+.cupstat { font-size: 15px; }
+.comp.CUP { color: #ffd166; font-weight: 600; }
+.ctags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.ctags span { background: rgba(255,255,255,.07); border-radius: 999px; padding: 3px 9px; }
+.btn.dim { opacity: .55; }

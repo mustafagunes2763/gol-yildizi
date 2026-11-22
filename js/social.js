@@ -822,9 +822,9 @@ function goalOfWeek(state, lm) {
     const g = s.gotw; s.gotw = null;
     if (g.mine) {
       p.gotw = (p.gotw || 0) + 1;
-      p.fame = clamp((p.fame || 0) + 2, 0, 100);
+      p.fame = clamp((p.fame || 0) + 0.7, 0, 100);
       s.followers = Math.round(s.followers * 1.04);
-      addInbox(state, `🏅 Golün haftanın golü seçildi! (Ün +2, takipçi +%4)`);
+      addInbox(state, `🏅 Golün haftanın golü seçildi! (Takipçi +%4)`);
       pushFeed(s, PAGES.gundem, `🏅 Haftanın golü: ${me}! Oyların %${g.pct}'ini aldı. ${p.gotw > 1 ? `Bu sezonki ${p.gotw}. ödülü 🔥` : ''}`, { likes: s.followers * 0.1, img: lm?.bicycle ? 'header' : 'cheer' });
       pushFeed(s, personaAuthor('emir'), pick(['HAFTANIN GOLÜ BİZİM! 🏅📣', 'Oy veren herkese teşekkürler, ben 50 kere oy verdim 😂❤️']), { likes: randInt(300, 4000) });
     } else pushFeed(s, PAGES.gundem, `🏅 Haftanın golü: ${g.winner} (%${g.pct}).`, { likes: randInt(2000, 20000) });

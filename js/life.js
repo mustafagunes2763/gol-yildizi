@@ -266,12 +266,12 @@ export function resolveEvent(state, i) {
 // ---------- sakatlık ----------
 export function injuryRoll(state, minutes) {
   const p = state.player;
-  let risk = 0.025 * (minutes / 90);
+  let risk = 0.018 * (minutes / 90);
   if (p.energy < 30) risk *= 3;
   if (p.age >= 30) risk *= 1.5;
   if (p.fragile > 0) risk *= 2.5;   // ağrı kesiciyle erken dönüş
   if (Math.random() < risk) {
-    p.injury = randInt(1, 6);
+    p.injury = randInt(1, 5);
     p.morale = clamp(p.morale - 6, 0, 100);
     return p.injury;
   }

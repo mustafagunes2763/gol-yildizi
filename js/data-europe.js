@@ -172,7 +172,7 @@ export const UEL_2026 = ['cry', 'bou', 'sun', 'mil', 'juv', 'rso', 'cel', 'hof',
   'lyo', 'nec', 'oly', 'spa', 'stg', 'usg', 'and', 'ara', 'ben', 'bjk', 'fer', 'jag', 'lch', 'lil2', 'ofi', 'omo', 'rbs', 'plz'];
 // Kontenjan: Türkiye UCL 2 / UEL 1, İngiltere UCL 5 / UEL 3
 // Kontenjan (lig sırası): doğrudan katılanlar. Türkiye'nin elemeli yolları QUAL_PATHS'te.
-export const EURO_SLOTS = { TUR: { UCL: 1, UEL: 0, UECL: 0, league: 'SL' }, ENG: { UCL: 5, UEL: 2, UECL: 1, league: 'PL' }, ESP: { UCL: 5, UEL: 2, UECL: 1, league: 'LL' }, ITA: { UCL: 4, UEL: 2, UECL: 1, league: 'SA' }, GER: { UCL: 4, UEL: 2, UECL: 1, league: 'BL' }, FRA: { UCL: 4, UEL: 1, UECL: 1, league: 'FR' } };
+export const EURO_SLOTS = { TUR: { UCL: 1, UEL: 0, UECL: 0, league: 'SL' }, ENG: { UCL: 5, UEL: 2, UECL: 1, league: 'PL' }, ESP: { UCL: 5, UEL: 2, UECL: 1, league: 'LL' }, ITA: { UCL: 4, UEL: 2, UECL: 1, league: 'SA' }, GER: { UCL: 4, UEL: 2, UECL: 1, league: 'BL' }, FRA: { UCL: 4, UEL: 1, UECL: 1, league: 'FR' }, NED: { UCL: 2, UEL: 1, UECL: 1, league: 'NL' }, POR: { UCL: 2, UEL: 1, UECL: 1, league: 'PT' }, BEL: { UCL: 1, UEL: 1, UECL: 1, league: 'BE' } };
 // TFF 2026-27 erişim listesi (Türkiye Kupası oyunda yok: kupa şampiyonunun yerini lig 3.'sü alır).
 // 2. ön eleme Temmuz'da oynandığı için oyunda 3. ön elemeden başlanır.
 export const QUAL_PATHS = [
@@ -239,4 +239,53 @@ export const FR_NEW = {
   lor: { name: 'Lorient',    short: 'LOR', c1: '#F58220', c2: '#111111', str: 72, country: 'FRA' },
   tro: { name: 'Troyes',     short: 'TRO', c1: '#0055A4', c2: '#FFFFFF', str: 71, country: 'FRA' },
   lms: { name: 'Le Mans',    short: 'LMS', c1: '#E30613', c2: '#FFD100', str: 70, country: 'FRA' },
+};
+
+// Eredivisie 2026-27 (PSV, Feyenoord, AZ, NEC, Ajax, Twente zaten var). Yükselen: ADO Den Haag, Cambuur, Willem II.
+export const NL_NEW = {
+  utr: { name: 'Utrecht',          short: 'UTR', c1: '#E30613', c2: '#FFFFFF', str: 75, country: 'NED' },
+  gae: { name: 'Go Ahead Eagles',  short: 'GAE', c1: '#E30613', c2: '#FFD100', str: 73, country: 'NED' },
+  gro: { name: 'Groningen',        short: 'GRO', c1: '#00A651', c2: '#FFFFFF', str: 72, country: 'NED' },
+  hee: { name: 'Heerenveen',       short: 'HEE', c1: '#0055A4', c2: '#FFFFFF', str: 72, country: 'NED' },
+  pec: { name: 'PEC Zwolle',       short: 'PEC', c1: '#0055A4', c2: '#FFFFFF', str: 70, country: 'NED' },
+  spr: { name: 'Sparta Rotterdam', short: 'SPA', c1: '#E30613', c2: '#FFFFFF', str: 70, country: 'NED' },
+  fsi: { name: 'Fortuna Sittard',  short: 'FOR', c1: '#FFD100', c2: '#00A651', str: 70, country: 'NED' },
+  exc: { name: 'Excelsior',        short: 'EXC', c1: '#E30613', c2: '#111111', str: 68, country: 'NED' },
+  tel: { name: 'Telstar',          short: 'TEL', c1: '#FFFFFF', c2: '#0055A4', str: 67, country: 'NED' },
+  ado: { name: 'ADO Den Haag',     short: 'ADO', c1: '#FFD100', c2: '#00A651', str: 68, country: 'NED' },
+  cam: { name: 'Cambuur',          short: 'CAM', c1: '#FFD100', c2: '#0055A4', str: 67, country: 'NED' },
+  wil: { name: 'Willem II',        short: 'WIL', c1: '#E30613', c2: '#0A2240', str: 67, country: 'NED' },
+};
+// Liga Portugal 2026-27 (Benfica, Porto, Sporting, Braga zaten var). Yükselen: Marítimo, Académico de Viseu.
+export const PT_NEW = {
+  vsc: { name: 'Vitória Guimarães', short: 'VSC', c1: '#FFFFFF', c2: '#111111', str: 74, country: 'POR' },
+  scl: { name: 'Santa Clara',       short: 'SCL', c1: '#E30613', c2: '#FFFFFF', str: 72, country: 'POR' },
+  fam: { name: 'Famalicão',         short: 'FAM', c1: '#0A2240', c2: '#FFFFFF', str: 73, country: 'POR' },
+  est: { name: 'Estoril',           short: 'EST', c1: '#FFD100', c2: '#0055A4', str: 71, country: 'POR' },
+  gil: { name: 'Gil Vicente',       short: 'GIL', c1: '#E30613', c2: '#0055A4', str: 71, country: 'POR' },
+  mor: { name: 'Moreirense',        short: 'MOR', c1: '#00A651', c2: '#FFFFFF', str: 70, country: 'POR' },
+  rav: { name: 'Rio Ave',           short: 'RAV', c1: '#00A651', c2: '#FFFFFF', str: 70, country: 'POR' },
+  aro: { name: 'Arouca',            short: 'ARO', c1: '#FFD100', c2: '#0055A4', str: 70, country: 'POR' },
+  cpi: { name: 'Casa Pia',          short: 'CPI', c1: '#111111', c2: '#FFFFFF', str: 69, country: 'POR' },
+  nac: { name: 'Nacional',          short: 'NAC', c1: '#111111', c2: '#FFFFFF', str: 68, country: 'POR' },
+  ead: { name: 'Estrela Amadora',   short: 'EAD', c1: '#E30613', c2: '#00A651', str: 68, country: 'POR' },
+  alv: { name: 'Alverca',           short: 'ALV', c1: '#E30613', c2: '#FFFFFF', str: 68, country: 'POR' },
+  mrt: { name: 'Marítimo',          short: 'MAR', c1: '#00A651', c2: '#E30613', str: 67, country: 'POR' },
+  acv: { name: 'Académico de Viseu', short: 'ACV', c1: '#111111', c2: '#FFFFFF', str: 66, country: 'POR' },
+};
+// Jupiler Pro League 2026-27, 18 takım (Club Brugge, Union SG, Anderlecht, Gent, Sint-Truiden zaten var). Yükselen: Beveren, Kortrijk, Lommel.
+export const BE_NEW = {
+  gnk:  { name: 'Genk',             short: 'GNK', c1: '#0055A4', c2: '#FFFFFF', str: 75, country: 'BEL' },
+  rafc: { name: 'Antwerp',          short: 'ANT', c1: '#E30613', c2: '#FFFFFF', str: 73, country: 'BEL' },
+  sta:  { name: 'Standard Liège',   short: 'STA', c1: '#E30613', c2: '#FFFFFF', str: 72, country: 'BEL' },
+  wes:  { name: 'Westerlo',         short: 'WES', c1: '#FFD100', c2: '#0055A4', str: 70, country: 'BEL' },
+  kvm:  { name: 'Mechelen',         short: 'KVM', c1: '#FFD100', c2: '#E30613', str: 70, country: 'BEL' },
+  cha:  { name: 'Charleroi',        short: 'CHA', c1: '#111111', c2: '#FFFFFF', str: 70, country: 'BEL' },
+  ohl:  { name: 'OH Leuven',        short: 'OHL', c1: '#FFFFFF', c2: '#00A651', str: 68, country: 'BEL' },
+  cer:  { name: 'Cercle Brugge',    short: 'CER', c1: '#00A651', c2: '#111111', str: 68, country: 'BEL' },
+  zwa:  { name: 'Zulte Waregem',    short: 'ZWA', c1: '#E30613', c2: '#00A651', str: 67, country: 'BEL' },
+  lal:  { name: 'La Louvière',      short: 'LAL', c1: '#00A651', c2: '#FFFFFF', str: 66, country: 'BEL' },
+  bev:  { name: 'Beveren',          short: 'BEV', c1: '#FFD100', c2: '#0055A4', str: 67, country: 'BEL' },
+  kor:  { name: 'Kortrijk',         short: 'KOR', c1: '#E30613', c2: '#FFFFFF', str: 67, country: 'BEL' },
+  lom:  { name: 'Lommel',           short: 'LOM', c1: '#00A651', c2: '#FFFFFF', str: 66, country: 'BEL' },
 };

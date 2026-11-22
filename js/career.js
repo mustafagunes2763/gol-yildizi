@@ -119,7 +119,7 @@ export function playNat(state) {
   const r = simNat(m.level === 'A' ? TUR : TUR_U21, m.str, overall(p), m.level === 'A' ? 0.9 : 1.1);
   m.res = r;
   if (m.level === 'A') { n.caps++; n.goals += r.g; } else { n.u21caps++; n.u21goals += r.g; }
-  p.fame = clamp((p.fame || 0) + (m.level === 'A' ? 1.5 : 0.7) + r.g, 0, 100);
+  p.fame = clamp((p.fame || 0) + (m.level === 'A' ? 1 : 0.4) + r.g * 0.4, 0, 100);
   p.morale = clamp(p.morale + (r.my > r.op ? 4 : r.my < r.op ? -3 : 1) + r.g * 2, 0, 100);
   p.energy = clamp(p.energy - 12, 0, 100);
   const res = r.my > r.op ? 'kazandı' : r.my < r.op ? 'kaybetti' : 'berabere kaldı';

@@ -3,6 +3,62 @@ import { ek } from './news.js';
 // ileride audio/spiker/<id>.mp3 dosyası eklenirse o satır seslendirilir.
 // Yer tutucular: {ad} {takim} {rakip} {kaleci} {defans} {arkadas} {skor} {stad}
 
+export const SPIKER_NAME = 'Bedirhan Bülent Şimşek';
+
+// Maç önü bilgilendirme ve maç sonu: isim/takım içermez, klon sesle birebir kaydedilebilir.
+export const PRE = {
+  hello: [
+    'İyi akşamlar sevgili futbolseverler, ben Bedirhan Bülent Şimşek. Maçımıza hoş geldiniz!',
+    'Merhaba değerli seyirciler, Bedirhan Bülent Şimşek ile yine bir futbol gecesindeyiz.',
+    'Sevgili dostlar, iyi seyirler. Mikrofonda Bedirhan Bülent Şimşek, kemerleri bağlayın!',
+  ],
+  derby: [
+    'Bugün sıradan bir maç yok karşımızda. Bu bir derbi! Şehrin yarısı sevinecek, yarısı üzülecek.',
+    'Derbi günü! Tribünler günler öncesinden doldu, nefesler tutuldu.',
+  ],
+  euro: [
+    'Avrupa gecesindeyiz! Marş çalındı, ülkemizin gözü kulağı bu maçta.',
+    'Avrupa kupalarında yine sahnedeyiz. Bu gecenin puanı ülke puanına yazılacak.',
+  ],
+  cup: [
+    'Kupa gecesindeyiz! Tek maç, kaybedenin yolu burada bitiyor.',
+    'Kupa maçlarında sürpriz her zaman mümkündür. Bu akşam uzatma da var, penaltı da.',
+  ],
+  rival: [
+    'Bu maçın içinde bir maç daha var: akademiden beri süren o büyük rekabet bugün sahaya taşınıyor.',
+    'İki eski akademi arkadaşı, iki ezeli rakip, bu akşam aynı çimde!',
+  ],
+  top: [
+    'Zirve yarışının kritik bir haftasındayız. Bugün kaybedenin canı çok yanar.',
+    'Şampiyonluk kokusu alınan bir maç. Her pas, her şut altın değerinde.',
+  ],
+  bottom: [
+    'Ligin alt sıralarında nefes kesen bir mücadele var. Bu üç puan hayati.',
+    'Düşme hattından uzaklaşmak için bu maç kaçırılmamalı.',
+  ],
+  star: [
+    'Gözler genç golcümüzde. Son haftalarda attığı gollerle herkesin dilinde.',
+    'Takımın gol yükünü sırtlanan genç yıldızımız bugün de sahada.',
+  ],
+  generic: [
+    'Tribünler hazır, oyuncular ısındı. Güzel bir futbol izleyeceğimize inanıyorum.',
+    'Teknik direktörlerin hazırlıkları tamam. Bakalım sahada kim haklı çıkacak.',
+  ],
+};
+export const FT = {
+  W: ['Ve maç sona erdi! Galibiyet bizim!', 'Son düdük! Üç puan hanemize yazıldı!', 'Bitti bitti bitti! Tribünler bayram yeri!'],
+  D: ['Ve maç sona erdi. Puanlar paylaşıldı.', 'Son düdük çaldı, kazanan çıkmadı.'],
+  L: ['Ve maç sona erdi. Bugün olmadı, kafalar önde.', 'Son düdük. Acı bir mağlubiyet.'],
+  skor: 'Skor tabelası:',
+};
+export const NUM = ['sıfır', 'bir', 'iki', 'üç', 'dört', 'beş', 'altı', 'yedi', 'sekiz', 'dokuz'];
+export function preLine(kind) { const L = PRE[kind] || PRE.generic; const i = Math.floor(Math.random() * L.length); return { id: `pre_${kind}_${i + 1}`, text: L[i] }; }
+export function ftParts(result, hg, ag) {
+  const L = FT[result], i = Math.floor(Math.random() * L.length);
+  const n = (x) => (x <= 9 ? NUM[x] : String(x));
+  return { ids: [`ft_${result}_${i + 1}`, 'ft_skor', `num_${hg}`, `num_${ag}`], text: `${L[i]} ${FT.skor} ${n(hg)}, ${n(ag)}.`, show: `${L[i]} ${FT.skor} ${hg}-${ag}` };
+}
+
 export const LINES = {
   kickoff: [
     'Ve başladı! {takim} ile {rakip} karşı karşıya, tribünler tıklım tıklım!',
@@ -331,6 +387,10 @@ export function speak(line) {
 export function allLines() {
   const out = [];
   for (const [ev, list] of Object.entries(LINES)) list.forEach((t, i) => out.push({ id: `${ev}_${i + 1}`, text: t }));
+  for (const [k, L] of Object.entries(PRE)) L.forEach((t, i) => out.push({ id: `pre_${k}_${i + 1}`, text: t }));
+  for (const r of ['W', 'D', 'L']) FT[r].forEach((t, i) => out.push({ id: `ft_${r}_${i + 1}`, text: t }));
+  out.push({ id: 'ft_skor', text: FT.skor });
+  NUM.forEach((t, i) => out.push({ id: `num_${i}`, text: t }));
   for (const [k, seqs] of Object.entries(BUILD)) seqs.forEach((seq, si) => seq.forEach((t, i) => out.push({ id: `build_${k}_${si + 1}_${i + 1}`, text: t })));
   return out;
 }

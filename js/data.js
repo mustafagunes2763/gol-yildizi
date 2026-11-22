@@ -3,7 +3,7 @@
 // Değiştirmek istersen buradaki değerleri düzenlemen yeterli.
 
 import { KULUPLER } from './kulupler.js';
-import { PL_TEAMS, EURO_TEAMS, UECL_TEAMS, LL_NEW, SA_NEW, BL_NEW, FR_NEW } from './data-europe.js';
+import { PL_TEAMS, EURO_TEAMS, UECL_TEAMS, LL_NEW, SA_NEW, BL_NEW, FR_NEW, NL_NEW, PT_NEW, BE_NEW } from './data-europe.js';
 
 export const SEASON_START_YEAR = 2026;
 
@@ -49,7 +49,7 @@ export const TEAMS = {
   ist:  { name: 'İstanbulspor',    short: 'İST', c1: '#FFD200', c2: '#111111', str: 57 },
   bol:  { name: 'Boluspor',        short: 'BOL', c1: '#D71920', c2: '#FFFFFF', str: 56 },
 };
-Object.assign(TEAMS, PL_TEAMS, EURO_TEAMS, UECL_TEAMS, LL_NEW, SA_NEW, BL_NEW, FR_NEW);
+Object.assign(TEAMS, PL_TEAMS, EURO_TEAMS, UECL_TEAMS, LL_NEW, SA_NEW, BL_NEW, FR_NEW, NL_NEW, PT_NEW, BE_NEW);
 
 // Kulüp bilgisi: gerçek ana renk, stadyum, şehir, hoca, ezeli rakipler
 for (const [id, k] of Object.entries(KULUPLER)) {
@@ -83,6 +83,12 @@ export const LEAGUES = {
         teams: ['bay', 'bvb', 'lev', 'rbl', 'stu', 'hof', 'frb', ...Object.keys(BL_NEW)], promote: 0, relegate: 0 },
   FR: { id: 'FR', name: 'Ligue 1', tier: 1, country: 'FRA',
         teams: ['psg', 'om', 'mon', 'lil', 'lyo', 'lens', 'ren', ...Object.keys(FR_NEW)], promote: 0, relegate: 0 },
+  NL: { id: 'NL', name: 'Eredivisie', tier: 1, country: 'NED',
+        teams: ['psv', 'fey', 'aja', 'az', 'twe', 'nec', ...Object.keys(NL_NEW)], promote: 0, relegate: 0 },
+  PT: { id: 'PT', name: 'Liga Portugal', tier: 1, country: 'POR',
+        teams: ['ben', 'por', 'scp', 'bra', ...Object.keys(PT_NEW)], promote: 0, relegate: 0 },
+  BE: { id: 'BE', name: 'Jupiler Pro League', tier: 1, country: 'BEL',
+        teams: ['bru', 'usg', 'and', 'gnt', 'stv', ...Object.keys(BE_NEW)], promote: 0, relegate: 0 },
 };
 
 // Takım arkadaşı / rakip isimleri (gerçek kadrolar sonraki aşamada js/kadrolar.js ile gelecek)

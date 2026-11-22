@@ -5,6 +5,7 @@ import * as Career from './career.js';
 import { KADROLAR } from './kadrolar.js';
 import { weeklyLife, initLife, injuryRoll } from './life.js';
 import { NAME_POOLS, UCL_2026, UEL_2026, UECL_2026 } from './data-europe.js';
+import * as Cup from './cup.js';
 import * as Euro from './europe.js';
 
 export const SAVE_VERSION = 1;
@@ -235,6 +236,7 @@ export function addStatTo(S, teamId, name, g, a, me = false) {
 }
 export function addStat(state, teamId, name, g, a, me = false) {
   if (!name) return;
+  if (state._cupStats) return;
   if (state._euroStats) return addStatTo(state.euro.ps, teamId, name, g, a, me);
   const S = (state.season.ps ||= {});
   const k = `${teamId}|${name}`;
@@ -279,6 +281,7 @@ export function newSeason(state) {
   const nx = state.euroNext || { UCL: UCL_2026, UEL: UEL_2026, UECL: UECL_2026 };
   if (!nx.UECL) nx.UECL = UECL_2026;
   state.euro = Euro.createEuro(state, nx);
+  state.cups = Cup.createCups(state);
   state.player.season = emptySeasonStats();
   state.player.yellows = 0;   // sarı kartlar sezon sonunda silinir (kırmızı cezası devam eder)
 }
@@ -341,6 +344,8 @@ export function addInbox(state, text) {
 export function currentFixture(state) {
   const ef = Euro.euroFixture(state);
   if (ef) return ef;
+  const cf = Cup.cupFixture(state);
+  if (cf) return cf;
   const lid = leagueOf(state, state.player.clubId);
   const L = state.season.leagues[lid];
   const round = L.fixtures[state.season.week];
@@ -356,7 +361,7 @@ export function selection(state) {
   if (p.injury > 0) return 'injured';
   if (p.suspended > 0) return 'suspended';
   const rel = p.rel ? (p.rel.coach - 50) / 8 : 0;
-  const promise = (p.weekFlags?.coachPromise ? 5 : 0) - (p.weekFlags?.benched ? 12 : 0);
+  const promise = (p.weekFlags?.coachPromise ? 5 : 0) - (p.weekFlags?.benched ? 12 : 0) + (p.contract?.play || 0) * 3;
   const ovr = overall(p) + (p.morale - 50) / 10 + (p.energy < 30 ? -5 : 0) + rel + promise;
   const fvs = t.squad.filter((x) => x.pos === 'FV' && x.ovr).map((x) => x.ovr).sort((a, b) => b - a);
   if (fvs.length >= 3) {
@@ -460,14 +465,14 @@ export function planMatch(state) {
   const myXg = expectedGoals(me.str, opp.str, fx.home);
   const oppXg = expectedGoals(opp.str, me.str, !fx.home);
   const playingShare = role === 'out' ? 0 : (onTo - onFrom) / 90;
-  const teamGoals = poisson(myXg * T.myG * (1 - 0.65 * playingShare));
+  const teamGoals = poisson(myXg * T.myG * (1 - 0.55 * playingShare));
   const oppGoals = poisson(oppXg * T.oppG);
 
   const minutes = (n, from = 1, to = 90) => Array.from({ length: n }, () => randInt(from, to)).sort((a, b) => a - b);
 
   let momentCount = 0;
-  if (role === 'starter') momentCount = onTo < 90 ? randInt(4, 6) : randInt(5, 8);
-  else if (role === 'sub') momentCount = randInt(2, 3);
+  if (role === 'starter') momentCount = onTo < 90 ? randInt(3, 5) : randInt(4, 6);
+  else if (role === 'sub') momentCount = randInt(1, 3);
   const diff = opp.str - overall(p); // pozitif = zor
   const keeperOvr = Math.max(0, ...opp.squad.filter((x) => x.pos === 'KL' && x.ovr).map((x) => x.ovr)) || opp.str;
   const oppDefs = opp.squad.filter((x) => x.pos === 'DF').map((x) => x.name);
@@ -521,7 +526,14 @@ export function finishMatch(state, plan, res) {
   const p = state.player;
   const fx = plan.fx;
   const myG = res.myGoals, opG = res.oppGoals;
-  if (fx.comp) {
+  if (fx.cup) {
+    let pens = res.pens || null;
+    if (myG === opG && !pens) { const w = Math.random() < 0.5; pens = w ? [4, 3] : [3, 4]; res.pens = pens; }   // kırmızı kart vb. ile uzatma oynanmadıysa
+    const r = Cup.record(state, fx, myG, opG, pens);
+    res.koWon = r.won; res.pensUsed = r.tie.pens || null; res.et = !!r.tie.et;
+    if (r.champion) { res.cupTrophy = fx.cup; res.cupBonus = Cup.reward(state, fx); }
+    if (r.won) p.fame = clamp((p.fame || 0) + 0.6, 0, 100);
+  } else if (fx.comp) {
     const { comp, m } = Euro.findMatch(state, fx);
     m.hg = fx.home ? myG : opG; m.ag = fx.home ? opG : myG;
     const pens = res.pens ? (fx.home ? res.pens : [res.pens[1], res.pens[0]]) : null;
@@ -543,7 +555,7 @@ export function finishMatch(state, plan, res) {
     m.ag = fx.home ? opG : myG;
     applyResult(L.table, m);
   }
-  state._euroStats = !!fx.comp;
+  state._euroStats = !!fx.comp && !fx.cup; state._cupStats = !!fx.cup;
 
   res.result = myG > opG ? 'W' : myG < opG ? 'L' : 'D';
   // gol/asist kayıtları
@@ -559,7 +571,7 @@ export function finishMatch(state, plan, res) {
     for (let i = 0; i < res.assists; i++) addStat(state, p.clubId, pickScorer(state.teams[p.clubId]), 1, 0);
   }
   if (res.goals) for (let i = 0; i < res.goals; i++) if (Math.random() < 0.6) addStat(state, p.clubId, pickAssister(state.teams[p.clubId], meName), 0, 1);
-  state._euroStats = false;
+  state._euroStats = false; state._cupStats = false;
   const rating = matchRating(res);
   res.rating = rating;
 
@@ -573,11 +585,15 @@ export function finishMatch(state, plan, res) {
     p.career.goals += res.goals;
     p.career.assists += res.assists;
     p.morale = clamp(p.morale + (rating - 6.3) * 6, 0, 100);
-    p.fame = clamp(p.fame + res.goals * 0.8 + res.assists * 0.4 + (rating >= 8 ? 1 : 0), 0, 100);
+    // ün: alt ligde ve Avrupa'da farklı ağırlık (denge testi: Kasım 2026)
+    const tierMul = (LEAGUES[leagueOf(state, p.clubId)]?.tier || 1) >= 2 ? 0.6 : 1;
+    p.fame = clamp(p.fame + (res.goals * 0.25 + res.assists * 0.15 + (rating >= 8.5 ? 0.3 : 0)) * tierMul, 0, 100);
+    // sakatlık riski maça başlarkenki enerjiye göre
+    res.injury = injuryRoll(state, plan.onTo - plan.onFrom);
     p.energy = clamp(p.energy - (plan.onTo - plan.onFrom) / 90 * 25, 0, ENERGY_MAX);
-    // Maç tecrübesi: iyi oynarsan biraz gelişirsin
-    const xp = Math.max(0, (rating - 5.5)) * 0.05;
-    for (const k of STAT_KEYS) p.stats[k] = clamp(p.stats[k] + xp * rand(0.3, 1), 1, 99);
+    // Maç tecrübesi: iyi oynarsan biraz gelişirsin (stat yükseldikçe azalır)
+    const xp = Math.max(0, (rating - 5.5)) * 0.02;
+    for (const k of STAT_KEYS) p.stats[k] = clamp(p.stats[k] + xp * rand(0.3, 1) * (100 - p.stats[k]) / 45, 1, 99);
     // gol bonusu
     p.money += res.goals * Math.round(p.contract.goalBonus ?? p.contract.wage * 0.5);
     // ilişkiler
@@ -585,10 +601,15 @@ export function finishMatch(state, plan, res) {
       p.rel.coach = clamp(p.rel.coach + (rating >= 7.5 ? 3 : rating >= 6.5 ? 1 : rating < 5.5 ? -3 : 0), 0, 100);
       p.rel.team = clamp(p.rel.team + res.assists * 2 + (res.result === 'W' ? 1 : 0), 0, 100);
     }
-    // sakatlık riski
-    res.injury = injuryRoll(state, plan.onTo - plan.onFrom);
   } else {
     p.morale = clamp(p.morale - (plan.suspended ? 1 : 3), 0, 100);
+  }
+  // forma garantisi maddesi
+  const pl = p.contract?.play || 0;
+  if (pl && !plan.injured && !plan.suspended && (plan.role === 'out' || (pl === 2 && plan.role === 'sub'))) {
+    p.playBreach = (p.playBreach || 0) + 1;
+    if (p.playBreach === 3) addInbox(state, 'Cengiz Demirel: "Sözleşmendeki forma garantisi çiğneniyor. Bir kez daha olursa serbest kalma bedelin geçersiz sayılır, istediğin kulübe gidebilirsin."');
+    if (p.playBreach === 4) { addInbox(state, 'Cengiz Demirel: "Kulüp maddeyi ihlal etti. Sezon sonunda serbest kalma bedeli olmadan transfer olabilirsin."'); p.morale = clamp(p.morale - 5, 0, 100); }
   }
   if (plan.suspended && p.suspended > 0) p.suspended--;
   if (plan.injured) p.backFrom = 'injury';
@@ -606,6 +627,7 @@ export function advanceWeek(state) {
   const s = state.season;
   const p = state.player;
   Euro.simWeek(state, s.week);
+  Cup.simWeek(state, s.week);
   for (const [lid, L] of Object.entries(s.leagues)) {
     const round = L.fixtures[s.week];
     if (!round) continue;
@@ -661,7 +683,7 @@ export function train(state, stat, mult = 1) {
   p.energy -= TRAIN_COST;
   const cur = p.stats[stat];
   const ageF = p.age <= 21 ? 1.2 : p.age <= 26 ? 1 : p.age <= 30 ? 0.6 : 0.3;
-  const gain = Math.max(0.05, (100 - cur) / 85 * ageF * rand(0.7, 1.3) * mult);
+  const gain = Math.max(0.03, ((100 - cur) / 85) ** 1.35 * ageF * rand(0.7, 1.3) * mult * 0.55);
   if (p.rel) p.rel.coach = clamp(p.rel.coach + 0.5, 0, 100);
   p.stats[stat] = clamp(cur + gain, 1, 99);
   state.updatedAt = Date.now();
@@ -699,15 +721,15 @@ export function seasonOffers(state) {
   const all = Object.values(state.teams).filter((t) => t.id !== p.clubId && leagueOf(state, t.id));
   // Gücü oyuncuya yakın veya biraz üstündeki takımlar ilgilenir
   // sözleşmesi devam ediyorsa: sadece serbest kalma bedelini ödeyebilen kulüpler
-  const free = contractExpiring(state) || !p.contract.release;
+  const free = contractExpiring(state) || !p.contract.release || (p.playBreach || 0) >= 4;
   const afford = (t) => free || Math.max(0, t.str - 55) ** 2.4 * 90_000 >= p.contract.release;
-  const interested = shuffle(all.filter((t) => t.str <= score + 22 && t.str >= Math.min(score - 5, 78) && afford(t)));
+  const interested = shuffle(all.filter((t) => t.str <= score + 10 && t.str >= Math.min(score - 8, 78) && afford(t)));
   // Paslaş'taki transfer söylentilerinde adı geçen kulüpler önce gelir
   const rum = state.social?.rumors || [];
   if (rum.length) interested.sort((a, b) => rum.includes(b.id) - rum.includes(a.id));
   return interested.slice(0, 3).map((t) => ({
     clubId: t.id,
-    wage: Math.round(Math.max(p.contract.wage * 1.2, (t.str - 50) * 9000 * (1 + p.fame / 50)) / 5000) * 5000,
+    wage: Math.round(Math.max(p.contract.wage * 1.2, (t.str - 50) * 9000 * (1 + p.fame / 80)) / 5000) * 5000,
     years: randInt(2, 4),
   }));
 }
@@ -739,9 +761,10 @@ export function endSeason(state) {
 
   // Yaşlanma
   p.age++;
-  if (p.age >= 31) for (const k of STAT_KEYS) p.stats[k] = clamp(p.stats[k] - rand(0.5, 2.5) * (k === 'hiz' || k === 'guc' ? 1.5 : 1), 1, 99);
+  if (p.age >= 30) for (const k of STAT_KEYS) p.stats[k] = clamp(p.stats[k] - rand(1, 3) * (p.age >= 33 ? 1.5 : 1) * (k === 'hiz' || k === 'guc' ? 1.5 : 1), 1, 99);
 
   p.bets = [];
+  p.playBreach = 0;
   newSeason(state);
   state.phase = 'hub';
   addInbox(state, `${state.season.year}-${String(state.season.year + 1).slice(2)} sezonu başladı!`);
