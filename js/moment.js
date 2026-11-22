@@ -247,7 +247,8 @@ export function playMoment(host, o) {
     if (window.__debug) window.__debug.moment = { kind, ball, me, keeper, defenders, mates, get loose() { return loose; }, get press() { return press; }, get path() { return path; }, get gesture() { return gesture; } };
 
     // ---------- durum ----------
-    let phase = 'aim';   // aim | flying | done
+    let phase = 'ready';   // ready | aim | flying | done  (ready: pozisyon açılmadan önceki kısa hazırlık)
+    const READY = o.ready ?? 1.6; let readyT = 0;
     let shot = null;
     let outcome = null, outcomeAt = 0, msg = '';
     let trail = [];
@@ -267,6 +268,7 @@ export function playMoment(host, o) {
       return { x: (e.clientX - r.left) / scale, y: (e.clientY - r.top) / scale, t: performance.now() };
     };
     canvas.addEventListener('pointerdown', (e) => {
+      if (phase === 'ready') phase = 'aim';           // dokununca hazırlık beklemeden başla
       if (phase !== 'aim') return;
       canvas.setPointerCapture(e.pointerId);
       const p = toLocal(e);
@@ -958,7 +960,16 @@ export function playMoment(host, o) {
       ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
       ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(0, H - 34, W, 34);
       ctx.fillStyle = '#fff'; ctx.font = '600 12px system-ui'; ctx.textAlign = 'center';
-      if (phase === 'aim') ctx.fillText(`${o.minute}' ${HINTS[kind]}`, W / 2, H - 13);
+      if (phase === 'aim' || phase === 'ready') ctx.fillText(`${o.minute}' ${HINTS[kind]}`, W / 2, H - 13);
+      if (phase === 'ready') {
+        const left = READY - readyT, k = left - Math.floor(left);
+        ctx.fillStyle = 'rgba(0,0,0,.38)'; ctx.fillRect(0, 0, W, H - 34);
+        ctx.save(); ctx.translate(W / 2, H / 2 - 10); const sc = 1 + 0.25 * k; ctx.scale(sc, sc);
+        ctx.fillStyle = '#facc15'; ctx.font = '800 30px system-ui'; ctx.lineWidth = 5; ctx.strokeStyle = '#000';
+        const txt = left > 0.55 ? 'HAZIR OL!' : 'BAŞLA!';
+        ctx.strokeText(txt, 0, 0); ctx.fillText(txt, 0, 0); ctx.restore();
+        ctx.fillStyle = '#fff'; ctx.font = '600 12px system-ui'; ctx.fillText('Hemen başlamak için dokun', W / 2, H / 2 + 22);
+      }
       if (limit && phase === 'aim') {
         const pct = clamp(1 - elapsed / limit, 0, 1);
         ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.fillRect(20, H - 46, W - 40, 6);
@@ -990,7 +1001,10 @@ export function playMoment(host, o) {
       last = now;
       const steps = Math.max(1, Math.ceil(real / 0.02));
       const dt = real / steps;
-      if (phase === 'replay') {
+      if (phase === 'ready') {
+        readyT += real;
+        if (readyT >= READY) phase = 'aim';
+      } else if (phase === 'replay') {
         elapsed += dt;
         replay.i += 0.35 * dt * 60;            // ~1/3 hız
         if (replay.i >= replay.frames.length + 25) end();

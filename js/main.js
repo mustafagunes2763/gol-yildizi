@@ -17,6 +17,10 @@ import * as K from './contract.js';
 import * as Aw from './awards.js';
 import * as Eu from './europe.js';
 import * as Cup from './cup.js';
+import * as Winter from './winter.js';
+import * as Celeb from './celebrate.js';
+import * as Inv from './invest.js';
+import * as Soc from './social.js';
 import * as Fam from './family.js';
 import * as Bet from './betting.js';
 import * as CUI from './casino-ui.js';
@@ -86,7 +90,7 @@ function eventCard(ev) {
 function ovrRing(v, size = 62) {
   const r = 26, c = 2 * Math.PI * r, f = Math.max(0, Math.min(1, (v - 40) / 59));
   const col = v >= 85 ? '#facc15' : v >= 75 ? '#22c55e' : v >= 65 ? '#60a5fa' : '#94a3b8';
-  return `<div class="ring" style="width:${size}px;height:${size}px"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="${r}" fill="none" stroke="#ffffff1a" stroke-width="6"/><circle cx="32" cy="32" r="${r}" fill="none" stroke="${col}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${c * f} ${c}" transform="rotate(-90 32 32)"/></svg><b style="color:${col}">${v}</b><span>GÜÇ</span></div>`;
+  return `<div class="ovring" style="width:${size}px;height:${size}px"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="${r}" fill="none" stroke="#ffffff1a" stroke-width="6"/><circle cx="32" cy="32" r="${r}" fill="none" stroke="${col}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${c * f} ${c}" transform="rotate(-90 32 32)"/></svg><b style="color:${col}">${v}</b><span>GÜÇ</span></div>`;
 }
 function radar(stats) {
   const keys = E.STAT_KEYS, n = keys.length, R = 70, cx = 100, cy = 92;
@@ -100,6 +104,43 @@ function rehabCard(p) {
   const done = p.weekFlags?.rehab;
   return `<div class="card injury"><b>🩹 Sakatsın</b> · ${p.injury} hafta daha yoksun.
     ${done ? `<p class="small muted">Bu haftaki tedavi kararın verildi.</p>` : `<p class="small muted">Tedavi yöntemini seç:</p><div class="rehab">${Career.rehabOptions(state).filter((o) => o.ok !== false).map((o) => `<button class="${o.risky ? 'risky' : ''}" data-act="rehab" data-id="${o.id}"><span>${o.emoji}</span><b>${esc(o.name)}</b><small>${esc(o.desc)}${o.cost ? ` · ${E.money(o.cost)}` : ''}</small></button>`).join('')}</div>`}</div>`;
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function animateRace(R) {
+  const comm = () => document.getElementById('racecomm');
+  const mineIdx = R.field.findIndex((f) => f.mine);
+  const say = (t) => { R.comm = t; const c = comm(); if (c) c.textContent = t; };
+  await sleep(900); say('Ve kapılar açıldı! Atlar fırladı!'); Sfx.whistle?.();
+  const F = R.frames, dur = 7000, t0 = performance.now();
+  let lastSay = 0;
+  await new Promise((done) => {
+    const step = (now) => {
+      const k = Math.max(0, Math.min(1, (now - t0) / dur)), fi = Math.min(F.length - 1, Math.floor(k * (F.length - 1)));
+      const fr = F[fi];
+      R.cur = fr;
+      for (let i = 0; i < fr.length; i++) { const el = document.getElementById('hrs' + i); if (el) el.style.left = `calc(${fr[i] * 100}% * 0.86)`; }
+      if (now - lastSay > 1700 && k < 0.95) {
+        lastSay = now;
+        const rank = fr.map((x, i) => [x, i]).sort((a, b) => b[0] - a[0]);
+        const lead = R.field[rank[0][1]].name, myPos = rank.findIndex((x) => x[1] === mineIdx) + 1;
+        say(k < 0.3 ? `${lead} öne geçti! ${R.horse} şu an ${myPos}. sırada.` : k < 0.7 ? `Arka düzlükte ${lead} önde… ${R.horse} ${myPos}. sırada!` : `Son düzlük! ${lead} zorluyor… ${R.horse} ${myPos}.!`);
+      }
+      if (k < 1 && ui.race === R) requestAnimationFrame(step); else done();
+    };
+    requestAnimationFrame(step);
+  });
+  if (ui.race !== R) return;
+  say(R.place === 1 ? `${R.horse} çizgiyi ilk geçti!` : `${R.order[0].name} kazandı. ${R.horse} ${R.place}. oldu.`);
+  await sleep(800);
+  R.shown = true; render();
+}
+
+function winterCard() {
+  const W = state.winter, left = Winter.weeksLeft(state);
+  return `<div class="card wintercard"><b>❄️ Ara transfer dönemi</b><span class="muted small"> · ${left > 1 ? `${left} hafta kaldı` : 'son hafta!'}</span>
+    ${W.offers.map((o, i) => { const t = team(o.clubId); return `<div class="woffer">${badge(t, 38)}<div class="grow"><b>${esc(t.name)}</b> ${o.kind === 'loan' ? '<em class="loantag">KİRALIK</em>' : ''}<div class="muted small">${esc(Winter.leagueName(state, t.id))} · Güç ${t.str}</div><div class="small">${esc(Winter.offerLabel(state, o))}</div>
+      <div class="wbtns">${o.kind === 'loan' ? `<button class="btn sm" data-act="winterLoan" data-i="${i}">Kiralık git</button>` : `<button class="btn sm" data-act="winterSign" data-i="${i}">İmzala</button><button class="btn ghost sm" data-act="negotiate" data-src="winter" data-i="${i}">🤝 Pazarlık</button>`}<button class="btn ghost sm" data-act="winterNo" data-i="${i}">Reddet</button></div></div></div>`; }).join('')}
+  </div>`;
 }
 function natCard(m) {
   const lbl = m.level === 'A' ? 'A Milli Takım' : 'Ümit Milli Takım (U21)';
@@ -215,6 +256,7 @@ const screens = {
       </div>
       ${p.injury > 0 ? rehabCard(p) : p.fragile > 0 ? `<div class="card injury small">💉 Ağrı kesiciyle oynuyorsun: ${p.fragile} hafta daha sakatlık riskin yüksek.</div>` : ''}
       ${Career.campAvailable(state) ? `<div class="card campcard"><b>🏕️ Sezon öncesi kamp</b><p class="muted small">Kamp yerini ve antrenman odağını seç, hazırlık maçlarına çık, forma numaranı al.</p><button class="btn" data-go="camp">Kampa git</button></div>` : ''}
+      ${Winter.isOpen(state) && state.winter.offers.length ? winterCard() : ''}
       ${state.natMatch ? natCard(state.natMatch) : ''}
       ${state.event ? eventCard(state.event) : ui.evResult ? `<div class="card event evresult"><b>${esc(ui.evResult.title)}</b>${ui.evResult.result ? `<p>${esc(ui.evResult.result)}</p>` : ''}${ui.evResult.summary ? `<p class="small evsum">${esc(ui.evResult.summary)}</p>` : ''}<button class="btn ghost" data-act="evOk">Tamam</button></div>` : ''}
       ${state.phase === 'seasonEnd' ? `
@@ -237,6 +279,7 @@ const screens = {
         <button class="tile t-green" data-go="train">🏋️<span>Antrenman</span></button>
         <button class="tile t-purple" data-act="rest" ${p.rested ? 'disabled' : ''}>😴<span>Dinlen</span></button>
         <button class="tile t-pink" data-go="shop">🛍️<span>Mağaza</span></button>
+        <button class="tile t-green" data-go="invest">💼<span>Yatırım</span></button>
         <button class="tile t-red" data-go="life">❤️<span>İlişkiler</span></button>
         <button class="tile t-gold" data-go="casino">🎰<span>Gazino</span></button>
         <button class="tile rel t-purple" data-go="social"><img class="ticon" src="img/social/logo96.png" alt="" width="28" height="28"><span>Paslaş</span>${SUI.badgeCount(state) ? `<em class="tbadge">${SUI.badgeCount(state)}</em>` : ''}</button>
@@ -346,6 +389,59 @@ const screens = {
       ${rounds}`;
   },
 
+  invest() {
+    const p = state.player, I = Inv.ensure(p);
+    const tab = ['mulk', 'ahir', 'yaris'].includes(ui.invTab) ? ui.invTab : 'mulk';
+    let body = '';
+    if (tab === 'mulk') {
+      body = `<p class="muted small pad">Kira getiren mülkler değerini korur (satışta %85). İşletmeler daha çok kazandırabilir ama kötü haftada zarar eder (satışta %60).</p>
+        ${Inv.PROPS.map((it) => { const own = I.props.includes(it.id); return `<div class="card shopitem ${own ? 'own' : ''}"><div class="shop-img"><span>${it.emoji}</span></div>
+          <div class="grow"><b>${esc(Inv.propName(p, it))}</b> <em class="kindtag ${it.kind}">${it.kind === 'kira' ? 'KİRA' : 'İŞLETME'}</em><div class="muted small">${esc(it.desc)}</div>
+          <div class="small">Haftalık ~${E.money(it.base)}${it.vol >= 0.5 ? ' · dalgalı' : ''}</div><div class="price">${E.money(it.price)}</div></div>
+          ${own ? `<div class="ownbox">✓ Sende<button class="btn ghost sm" data-act="invSell" data-id="${it.id}">Sat ${E.money(it.price * Inv.SELL[it.kind])}</button></div>` : `<button class="btn" data-act="invBuy" data-id="${it.id}" ${p.money < it.price ? 'disabled' : ''}>Al</button>`}</div>`; }).join('')}`;
+    } else if (tab === 'ahir') {
+      const mk = Inv.market(state);
+      const hcard = (h, mine) => `<div class="card horse ${mine ? 'own' : ''}"><div class="hhead"><span class="hemo">🐎</span><div class="grow"><b>${esc(h.name)}</b><div class="muted small">${h.age} yaşında · Güç ${Inv.horseQ(h)}${mine ? ` · ${h.races} koşu, ${h.wins} birincilik` : ''}</div></div>${mine ? `<b class="small">${E.money(h.earned)}</b>` : `<b class="price">${E.money(h.price)}</b>`}</div>
+        <div class="hstats"><span>Hız</span>${bar(h.speed)}<span>Dayanıklılık</span>${bar(h.stamina, 100, 'blue')}${mine ? `<span>Form</span>${bar(h.form, 100, 'orange')}` : ''}</div>
+        <div class="muted small">Bakım: ${E.money(h.upkeep)}/hafta${mine && h.fatigue > 0 ? ` · 😮‍💨 ${h.fatigue} hafta dinlenmede` : ''}</div>
+        ${mine ? `<button class="btn ghost sm mt" data-act="horseSell" data-id="${h.id}">Sat</button>` : `<button class="btn sm mt" data-act="horseBuy" data-id="${h.id}" ${p.money < h.price || I.horses.length >= 4 ? 'disabled' : ''}>Satın al</button>`}</div>`;
+      body = `<h3 class="pad">Ahırın (${I.horses.length}/4)</h3>${I.horses.length ? I.horses.map((h) => hcard(h, true)).join('') : '<p class="muted pad">Henüz atın yok. Aşağıdan bir at al ve yarışlara kaydet.</p>'}
+        <h3 class="pad">At pazarı · bu sezon</h3>${mk.length ? mk.map((h) => hcard(h, false)).join('') : '<p class="muted pad">Pazardaki atlar satıldı. Yeni sezonda yenileri gelir.</p>'}`;
+    } else {
+      const races = Inv.racesThisWeek(state);
+      const sel = I.horses.find((h) => h.id === ui.raceHorse) || I.horses.find((h) => Inv.canRace(state, h).ok) || I.horses[0];
+      const tac = Inv.TACTICS[ui.raceTac] ? ui.raceTac : 'orta';
+      body = !I.horses.length ? '<p class="muted pad">Yarışmak için önce ahırına bir at almalısın.</p>' : `
+        <div class="card"><b>At</b><div class="chips">${I.horses.map((h) => `<button class="${h === sel ? 'on' : ''}" data-act="raceHorse" data-id="${h.id}">${esc(h.name)}${h.fatigue > 0 ? ' 😮‍💨' : ''}</button>`).join('')}</div>
+        <b class="mt">Taktik</b><div class="chips">${Object.entries(Inv.TACTICS).map(([k, t]) => `<button class="${k === tac ? 'on' : ''}" data-act="raceTac" data-t="${k}">${t.name}</button>`).join('')}</div><div class="muted small">${Inv.TACTICS[tac].desc}</div></div>
+        ${races.map((r) => { const c = sel ? Inv.canRace(state, sel) : { ok: false }; return `<div class="card race ${r.id}"><div class="row"><b>${r.id === 'gazi' ? '🏆 ' : '🏁 '}${esc(r.name)}</b><span class="muted small">${r.dist} m</span></div>
+          <div class="small">Kayıt ${E.money(r.fee)} · Birincilik ödülü <b>${E.money(r.prize)}</b> · Rakip seviyesi ~${r.field}</div>
+          <button class="btn sm mt" data-act="raceGo" data-r="${r.id}" ${!c.ok || p.money < r.fee ? 'disabled' : ''}>${c.ok ? 'Koşuya kaydet' : esc(c.why)}</button></div>`; }).join('')}
+        <p class="muted small pad">Gazi Koşusu sezonda bir kez, ${Inv.gaziWeek(state) + 1}. haftada koşulur.</p>`;
+    }
+    return `
+      <header class="top"><button class="back" data-go="hub">‹</button><h2>💼 Yatırımlar</h2><span class="grow"></span><b class="money">${E.money(p.money)}</b></header>
+      ${I.last ? `<div class="card small">Geçen hafta: <b class="${I.last.total >= 0 ? 'gain' : 'loss'}">${I.last.total >= 0 ? '+' : '−'}${E.money(Math.abs(I.last.total))}</b>${I.last.upkeep ? ` <span class="muted">(at bakımı dahil ${E.money(I.last.upkeep)})</span>` : ''}</div>` : ''}
+      <div class="tabs"><button class="${tab === 'mulk' ? 'on' : ''}" data-act="invTab" data-t="mulk">🏢 Mülkler</button><button class="${tab === 'ahir' ? 'on' : ''}" data-act="invTab" data-t="ahir">🐎 Ahır</button><button class="${tab === 'yaris' ? 'on' : ''}" data-act="invTab" data-t="yaris">🏁 Yarışlar</button></div>
+      ${body}`;
+  },
+
+  race() {
+    const R = ui.race;
+    if (!R) return '';
+    const lanes = R.field.map((f, i) => `<div class="lane ${f.mine ? 'mine' : ''}"><span class="lno">${i + 1}</span><span class="hrs" id="hrs${i}" style="left:calc(${(R.cur?.[i] || 0) * 100}% * 0.86)">🏇</span><span class="lname">${esc(f.name)}</span></div>`).join('');
+    const res = R.shown ? `<div class="card raceres"><b>${R.place === 1 ? '🏆 KAZANDIN!' : R.place <= 3 ? `🥈 ${R.place}. oldun` : `${R.place}. sırada bitirdin`}</b>
+      ${R.prize ? `<div>Ödül: <b class="gain">${E.money(R.prize)}</b></div>` : `<div class="muted small">Ödül yok. Kayıt ücreti: ${E.money(R.fee)}</div>`}
+      <ol class="small">${R.order.map((o) => `<li class="${o.mine ? 'me' : ''}">${esc(o.name)}</li>`).join('')}</ol>
+      <button class="btn big" data-act="raceDone">Tamam</button></div>` : '';
+    return `
+      <header class="top"><h2>🏁 ${esc(R.race.name)}</h2></header>
+      <div class="muted small pad">${R.race.dist} metre · ${esc(R.horse)} koşuyor</div>
+      <div class="rtrack" id="track">${lanes}<div class="finish"></div></div>
+      <div class="racecomm" id="racecomm">${esc(R.comm || 'Atlar start makinesinde…')}</div>
+      ${res}`;
+  },
+
   europe() {
     const E2 = state.euro, me = state.player.clubId;
     const mine = Eu.myEuroStatus(state)?.comp;
@@ -383,7 +479,7 @@ const screens = {
         <div><span>Taraftar</span><b>${Math.round(p.fans ?? 50)}</b></div>
       </div>
       <div class="card"><div class="row small muted"><span>Sözleşme</span><span>${p.contract.endsYear} yazına kadar</span></div>
-        <div class="ctags small">${p.contract.goalBonus ? `<span>⚽ Gol primi ${E.money(p.contract.goalBonus)}</span>` : ''}${p.contract.champ ? `<span>🏆 Şamp. primi ${E.money(p.contract.champ)}</span>` : ''}${p.contract.release ? `<span>🔓 Serbest kalma ${E.money(p.contract.release)}</span>` : ''}${p.contract.play ? `<span>👕 Forma garantisi: ${K.PLAY_TEXT[p.contract.play]}${p.playBreach ? ` (${p.playBreach} ihlal)` : ''}</span>` : ''}</div>
+        <div class="ctags small">${p.loan ? `<span>🔁 Kiralık · sözleşmen ${esc(team(p.loan.from).short || team(p.loan.from).name)}'da</span>` : ''}${p.contract.goalBonus ? `<span>⚽ Gol primi ${E.money(p.contract.goalBonus)}</span>` : ''}${p.contract.champ ? `<span>🏆 Şamp. primi ${E.money(p.contract.champ)}</span>` : ''}${p.contract.release ? `<span>🔓 Serbest kalma ${E.money(p.contract.release)}</span>` : ''}${p.contract.play ? `<span>👕 Forma garantisi: ${K.PLAY_TEXT[p.contract.play]}${p.playBreach ? ` (${p.playBreach} ihlal)` : ''}</span>` : ''}</div>
         ${state.phase === 'hub' ? `<button class="btn ghost sm mt ${K.raiseAvailable(state).ok ? '' : 'dim'}" data-act="raise">💰 Zam iste</button>` : ''}
         ${radar(p.stats)}</div>
       ${(() => { const c = clubInfo(p.clubId); return c.stadyum ? `<div class="card clubcard" style="--c1:${team(p.clubId).c1}">
@@ -641,7 +737,7 @@ const screens = {
       <div id="momentHost" class="moment-host ${m.inMoment ? 'on' : ''}"></div>
       ${m.inMoment ? '' : `
         ${m.choice ? `<div class="card choice"><b>${esc(m.choice.title)}</b><div class="evbtns">${m.choice.options.map((c, i) => `<button class="btn ${i ? 'ghost' : ''}" data-act="choice" data-v="${c.v}">${esc(c.label)}</button>`).join('')}</div><div class="cbar"></div></div>` : ''}
-        <div class="feed">${m.feed.slice().reverse().map((f) => `<p class="${f.cls || ''}"><b>${f.min}'</b> ${['spk', 'hl', 'goal', 'card-y', 'card-r'].includes(f.cls) && f.id ? '🎙️ ' : ''}${f.cls === 'card-y' ? '🟨 ' : f.cls === 'card-r' ? '🟥 ' : ''}${esc(f.text)}</p>`).join('')}</div>
+        <div class="feed">${m.feed.slice().reverse().map((f) => `<p class="${f.cls || ''}"><b>${f.min}'</b> ${['spk', 'hl', 'goal', 'card-y', 'card-r'].includes(f.cls) && f.id ? '🎙️ ' : ''}${f.cls === 'card-y' ? '🟨 ' : f.cls === 'card-r' ? '🟥 ' : ''}${esc(f.text)}${f.img ? `<img class="celimg" src="img/news/celeb_${f.img}.jpg" alt="">` : ''}</p>`).join('')}</div>
         ${m.done ? `
           <div class="card ft" id="matchEnd">
             <h3>Maç sonu</h3>
@@ -727,9 +823,9 @@ const screens = {
         return `<div class="card offer">${badge(t, 44)}<div class="grow"><b>${esc(t.name)}</b><div class="muted small">${LEAGUES[E.leagueOf(state, t.id)].name} · Güç ${t.str}</div><div class="small">${E.money(o.wage)}/hafta · ${o.years} yıl</div>
           <button class="btn ghost sm mt" data-act="negotiate" data-src="season" data-i="${i}">🤝 Pazarlık et</button></div><button class="btn" data-act="seasonAccept" data-i="${i}">İmzala</button></div>`;
       }).join('') : '<p class="muted pad">Bu yaz teklif gelmedi.</p>'}
-      <div class="card"><p class="small">${expiring ? `Sözleşmen bitiyor. ${esc(team(p.clubId).name)} sana ${E.money(Math.round(p.contract.wage * 1.15 / 500) * 500)}/hafta ile 2 yıl uzatma teklif ediyor.` : `Sözleşmen ${p.contract.endsYear} yazına kadar sürüyor.${p.contract.release ? ` Serbest kalma bedelin ${E.money(p.contract.release)}.` : ''}`}</p>
+      <div class="card"><p class="small">${expiring ? `Sözleşmen bitiyor. ${esc(team(Winter.parentClub(state)).name)} sana ${E.money(Math.round(p.contract.wage * 1.15 / 500) * 500)}/hafta ile 2 yıl uzatma teklif ediyor.` : `Sözleşmen ${p.contract.endsYear} yazına kadar sürüyor.${p.contract.release ? ` Serbest kalma bedelin ${E.money(p.contract.release)}.` : ''}`}</p>
       ${expiring ? `<button class="btn big" data-act="negotiate" data-src="renew">🤝 Uzatma pazarlığı</button>` : ''}
-      <button class="btn big ghost" data-act="stay">${esc(News.ek(team(p.clubId).name, 'loc'))} kal${expiring ? ' (teklifi kabul et)' : ''}</button></div>`}`;
+      <button class="btn big ghost" data-act="stay">${p.loan ? `${esc(News.ek(team(p.loan.from).name, 'dat'))} dön` : `${esc(News.ek(team(p.clubId).name, 'loc'))} kal`}${expiring ? ' (teklifi kabul et)' : ''}</button></div>`}`;
   },
 
   retired() {
@@ -1016,7 +1112,7 @@ async function runMatch() {
   m.week = state.season.week;
   // yorumcu: maç boyunca birkaç "ilginç bilgi"
   const triv = Trivia.pool(state, plan);
-  const trivMins = new Set(E.shuffle([6, 13, 21, 28, 34, 41, 52, 58, 64, 71, 78, 84]).slice(0, 4));
+  const trivMins = new Set(E.shuffle([6, 13, 21, 28, 34, 41, 52, 58, 64, 71, 78, 84]).slice(0, E.randInt(2, 3)));
   const yorum = (min) => { const t = Trivia.line(triv); if (!t) return; m.feed.push({ min, text: `🎙️ ${Trivia.NAME}: ${t}`, cls: 'yorum' }); if (!m.fast) Voice.say(t, 'yorum'); };
   yorum(0);
   screen = 'match';
@@ -1089,6 +1185,14 @@ async function runMatch() {
             addMine(); m.res.goals++; (m.res.goalKinds ||= []).push(cur.kind);
             m.feed.push({ min, text: `GOOOL! ${p.name} ${p.surname}!`, cls: 'goal' });
             spk(Spiker.LINES['goal_' + cur.kind] && Math.random() < 0.75 ? 'goal_' + cur.kind : 'goal');
+            // gol sevinci
+            render(); await wait(m.fast ? 300 : 900);
+            const cid = await ask('⚽ GOL! Nasıl sevineceksin?', Celeb.options(state, plan, m.res), 'takim');
+            const cel = Celeb.apply(state, cid, plan, { ad: p.surname });
+            m.feed.push({ min, text: `🎉 ${cel.line}`, cls: 'hl celeb', img: cel.img });
+            (m.res.celebs ||= []).push(cid);
+            if (cel.crisis) m.res.celebCrisis = true;
+            if (cel.card) { render(); await wait(m.fast ? 300 : 900); myCard('yellow', min); }
           } else if (outcome === 'assist') {
             addMine(); m.res.assists++; spk('assist', {}, 'goal');
           } else if (outcome === 'foulPen' || outcome === 'foulFk') {
@@ -1195,6 +1299,7 @@ async function runMatch() {
   Sfx.whistle(true); Sfx.stopCrowd();
   if (m.res.red) plan.onTo = Math.max(plan.onFrom, m.res.redMin);
   E.finishMatch(state, plan, m.res);
+  if (m.res.celebs?.length) Soc.onCelebrate(state, m.res.celebs, !!m.res.celebCrisis);
   if (m.res.played) { p.recent = [...(p.recent || []), m.res.rating].slice(-5); }
   const recentAvg = p.recent?.length ? p.recent.reduce((a, b) => a + b, 0) / p.recent.length : 0;
   const lidMe = E.leagueOf(state, p.clubId);
@@ -1292,6 +1397,24 @@ app.addEventListener('click', async (e) => {
     case 'euroView': ui.euroView = el.dataset.v; return render();
     case 'lb': ui.lbField = el.dataset.f; return render();
     case 'shopTab': ui.shopTab = el.dataset.t; return render();
+    case 'invTab': ui.invTab = el.dataset.t; return render();
+    case 'invBuy': { const r = Inv.buyProp(state, el.dataset.id); persist(); toast(r.ok ? 'Satın alındı!' : r.msg); return render(); }
+    case 'invSell': { const r = Inv.sellProp(state, el.dataset.id); persist(); toast(r.ok ? `Satıldı: ${E.money(r.back)}` : r.msg); return render(); }
+    case 'horseBuy': { const r = Inv.buyHorse(state, el.dataset.id); persist(); toast(r.ok ? `${r.h.name} ahırında!` : r.msg); return render(); }
+    case 'horseSell': { if (!confirm('Atı satmak istediğine emin misin?')) return; const r = Inv.sellHorse(state, el.dataset.id); persist(); toast(r.ok ? `Satıldı: ${E.money(r.back)}` : 'Satılamadı'); return render(); }
+    case 'raceHorse': ui.raceHorse = el.dataset.id; return render();
+    case 'raceTac': ui.raceTac = el.dataset.t; return render();
+    case 'raceGo': {
+      const I = Inv.ensure(state.player);
+      const h = I.horses.find((x) => x.id === ui.raceHorse) || I.horses.find((x) => Inv.canRace(state, x).ok);
+      if (!h) return toast('Koşabilecek atın yok.');
+      const r = Inv.runRace(state, el.dataset.r, h.id, Inv.TACTICS[ui.raceTac] ? ui.raceTac : 'orta');
+      if (!r || r.error) return toast(r?.error || 'Koşu başlatılamadı.');
+      persist();
+      ui.race = r; go('race');
+      return animateRace(r);
+    }
+    case 'raceDone': ui.race = null; ui.invTab = 'yaris'; return go('invest');
     case 'buy': { const r = Life.buy(state, el.dataset.id); persist(); return toast(r.ok ? `${r.item.name} alındı!` : r.msg); }
     case 'sell': { const r = Life.sell(state, el.dataset.id); persist(); return toast(r.ok ? `${r.item.name} satıldı` : r.msg); }
     case 'event': {
@@ -1327,7 +1450,7 @@ app.addEventListener('click', async (e) => {
     case 'socTab': case 'socPost': case 'socReply': case 'socDm': case 'socProf': case 'socProfClose': case 'socStory': case 'socStoryClose':
     case 'socStoryPost': case 'socLive': case 'socLiveAns': case 'socLiveEnd': case 'socVote': SUI.handle(act, el); return;
     case 'casinoTab': ui.casinoTab = el.dataset.t; return render();
-    case 'slot': case 'barbut': case 'rBet': case 'rUndo': case 'rClear': case 'rRepeat': case 'rSpin': case 'bjDeal': case 'bjHit': case 'bjStand': case 'bjDouble':
+    case 'slot': case 'barbut': case 'barbutRoll': case 'rBet': case 'rUndo': case 'rClear': case 'rRepeat': case 'rSpin': case 'bjDeal': case 'bjHit': case 'bjStand': case 'bjDouble':
     case 'kPrice': case 'kBuy': case 'kAll': case 'pkSit': case 'pkRebuy': case 'pkMove': case 'pkNext': case 'pkLeave':
       Sfx.unlock(); CUI.handle(act, el); return;
     case 'stake': ui.stake = +el.dataset.v; return render();
@@ -1409,7 +1532,8 @@ app.addEventListener('click', async (e) => {
       let offer, kind;
       if (src === 'start') { offer = state.offers[+el.dataset.i]; kind = 'start'; }
       else if (src === 'season') { offer = ui.seasonOffers[+el.dataset.i]; kind = 'transfer'; }
-      else { offer = { clubId: p.clubId, wage: Math.round(p.contract.wage * 1.15 / 500) * 500, years: 2 }; kind = 'renew'; }
+      else if (src === 'winter') { offer = state.winter.offers[+el.dataset.i]; kind = 'transfer'; }
+      else { offer = { clubId: Winter.parentClub(state), wage: Math.round(p.contract.wage * 1.15 / 500) * 500, years: 2 }; kind = 'renew'; }
       ui.neg = K.openNegotiation(state, offer, kind); ui.neg.src = src; ui.neg.idx = +el.dataset.i;
       return go('negotiate');
     }
@@ -1419,6 +1543,18 @@ app.addEventListener('click', async (e) => {
       const step = { champ: Math.max(10000, Math.round((n.offer.champ || 0) * 0.1 / 10000) * 10000), wage: Math.max(5000, Math.round(n.offer.wage * 0.05 / 5000) * 5000), sign: Math.max(10000, Math.round(n.offer.sign * 0.1 / 10000) * 10000), goal: Math.max(1000, Math.round(n.offer.goal * 0.1 / 1000) * 1000), release: Math.max(100000, Math.round(n.offer.release * 0.1 / 100000) * 100000), years: 1 }[k];
       n.demand[k] = k === 'years' ? Math.min(5, Math.max(1, n.demand.years + dir)) : Math.max(step, n.demand[k] + dir * step);
       return render();
+    }
+    case 'winterNo': Winter.dismiss(state, +el.dataset.i); persist(); return render();
+    case 'winterLoan': {
+      const r = Winter.acceptLoan(state, +el.dataset.i, E.acceptOffer);
+      addNews([News.loanNews(state, r.to, r.from)]);
+      persist(); return go('hub');
+    }
+    case 'winterSign': {
+      const r = Winter.acceptTransfer(state, +el.dataset.i, E.acceptOffer);
+      state.player.winterFrom = r.old;
+      addNews([News.signingNews(state, r.to, r.old)]);
+      persist(); return go('hub');
     }
     case 'negBluff': K.bluff(state, ui.neg); return render();
     case 'raise': {
@@ -1430,12 +1566,21 @@ app.addEventListener('click', async (e) => {
     case 'negSubmit': K.submitDemand(ui.neg); return render();
     case 'negAccept': K.acceptCurrent(ui.neg); ui.neg.log.push({ who: 'agent', text: 'Teklifi kabul ettik. Hayırlı olsun!' }); return render();
     case 'negBack': {
-      const src = ui.neg?.src, walked = ui.neg?.status === 'walked'; ui.neg = null;
+      const src = ui.neg?.src, walked = ui.neg?.status === 'walked', idx = ui.neg?.idx; ui.neg = null;
+      if (src === 'winter') { if (walked && state.winter?.offers[idx]) { Winter.dismiss(state, idx); persist(); } return go('hub'); }
       if (src === 'raise') { if (walked) { state.player.morale = Math.max(0, state.player.morale - 4); if (state.player.rel) state.player.rel.coach = Math.max(0, state.player.rel.coach - 3); persist(); } return go('profile'); }
       return go(src === 'start' ? 'offers' : 'seasonEnd');
     }
     case 'negSign': {
       const n = ui.neg, p = state.player, old = p.clubId;
+      if (n.src === 'winter') {
+        const r = Winter.acceptTransfer(state, n.idx, E.acceptOffer, { clubId: n.clubId, wage: n.offer.wage, years: n.offer.years });
+        const k = K.signContract(state, n);
+        p.winterFrom = r.old;
+        addNews([News.signingNews(state, n.clubId, r.old)]);
+        E.addInbox(state, `Cengiz Demirel komisyonunu aldı: ${E.money(k.commission)}.`);
+        ui.neg = null; persist(); return go('hub');
+      }
       if (n.src === 'raise') {
         const r = K.signContract(state, n);
         E.addInbox(state, `${team(p.clubId).name} ile yeni sözleşme: ${E.money(n.offer.wage)}/hafta, ${n.offer.years} yıl. Cengiz'in komisyonu: ${E.money(r.commission)}.`);
@@ -1515,6 +1660,9 @@ app.addEventListener('submit', (e) => {
   go('offers');
 });
 
+// yatay şerit kimliği: ekran + sınıf + aynı sınıftan kaçıncı olduğu
+let lastScreen = null;
+function hKey(el) { const c = el.className || el.tagName; const same = [...app.querySelectorAll(el.tagName)].filter((x) => x.className === el.className); return `${screen}|${c}|${same.indexOf(el)}`; }
 function render() {
   // aile olaylarından gelen haberler (bebek, boşanma)
   if (state?.newsQueue?.length && screen !== 'match') {
@@ -1528,7 +1676,18 @@ function render() {
   const pop = ui.popup.length && screen !== 'match' ? `
     <div class="np-overlay"><div class="np-wrap">${News.clippingHtml(ui.popup[0])}</div>
       <button class="btn big" data-act="npNext">${ui.popup.length > 1 ? `Sonraki haber (${ui.popup.length - 1})` : 'Kapat'}</button></div>` : '';
+  // yatay kayan şeritler (sekmeler, lig seçici, bahis miktarları) yeniden çizilince başa sarmasın
+  const hs = {};
+  app.querySelectorAll('*').forEach((el, i) => { if (el.scrollLeft > 0) hs[hKey(el)] = el.scrollLeft; });
   app.innerHTML = html + pop + (ui.toast ? `<div class="toast">${esc(ui.toast)}</div>` : '');
+  if (lastScreen === screen && Object.keys(hs).length) {
+    app.querySelectorAll('*').forEach((el) => { if (el.scrollWidth <= el.clientWidth) return; const k = hKey(el); if (hs[k] == null) return; el.scrollLeft = hs[k]; });
+  }
+  if (lastScreen !== screen) {
+    // yeni ekranda seçili sekme görünür olsun
+    requestAnimationFrame(() => app.querySelectorAll('.chips .on, .lgpick .on, .tabs .on, .ctabs .on, .stakes .on').forEach((el) => { const box = el.parentElement; if (box.scrollWidth > box.clientWidth) box.scrollLeft = Math.max(0, el.offsetLeft - box.clientWidth / 2 + el.offsetWidth / 2); }));
+  }
+  lastScreen = screen;
   if (screen === 'casino') CUI.afterRender(ui.casinoTab);
   Music.onScreen(screen);
   // maç bitince röportaj ve sonuçlar en altta: otomatik aşağı kaydır

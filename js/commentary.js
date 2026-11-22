@@ -1,5 +1,5 @@
 import { ek } from './news.js';
-// Spiker: heyecanlı + esprili anlatım. Her satırın bir kimliği var;
+// Spiker: heyecanlı canlı yayın anlatımı (golde coşku, espri yok). Her satırın bir kimliği var;
 // ileride audio/spiker/<id>.mp3 dosyası eklenirse o satır seslendirilir.
 // Yer tutucular: {ad} {takim} {rakip} {kaleci} {defans} {arkadas} {skor} {stad}
 
@@ -8,47 +8,47 @@ export const SPIKER_NAME = 'Bedirhan Bülent Şimşek';
 // Maç önü bilgilendirme ve maç sonu: isim/takım içermez, klon sesle birebir kaydedilebilir.
 export const PRE = {
   hello: [
-    'İyi akşamlar sevgili futbolseverler, ben Bedirhan Bülent Şimşek. Maçımıza hoş geldiniz!',
-    'Merhaba değerli seyirciler, Bedirhan Bülent Şimşek ile yine bir futbol gecesindeyiz.',
-    'Sevgili dostlar, iyi seyirler. Mikrofonda Bedirhan Bülent Şimşek, kemerleri bağlayın!',
+    'İyi akşamlar sayın seyirciler, ben Bedirhan Bülent Şimşek. Karşılaşmaya çok az kaldı, yayınımıza hoş geldiniz.',
+    'Merhaba değerli futbolseverler, mikrofonda Bedirhan Bülent Şimşek. Takımlar sahaya çıkıyor, maç birazdan başlıyor.',
+    'Bedirhan Bülent Şimşek ile canlı yayındayız. Hakem son kontrollerini yapıyor, nefesler tutuldu.',
   ],
   derby: [
-    'Bugün sıradan bir maç yok karşımızda. Bu bir derbi! Şehrin yarısı sevinecek, yarısı üzülecek.',
-    'Derbi günü! Tribünler günler öncesinden doldu, nefesler tutuldu.',
+    'Bu akşam önemli bir derbi var. Haftalardır beklenen maçta tribünler hıncahınç dolu.',
+    'Derbi maçlarında form durumu geride kalır. Doksan dakika boyunca tek bir hata bile maçı belirleyebilir.',
   ],
   euro: [
-    'Avrupa gecesindeyiz! Marş çalındı, ülkemizin gözü kulağı bu maçta.',
-    'Avrupa kupalarında yine sahnedeyiz. Bu gecenin puanı ülke puanına yazılacak.',
+    'Avrupa gecesindeyiz. Marş çalındı, iki takım da sahada yerini aldı.',
+    'Avrupa kupalarında kritik bir maç. Alınacak her sonuç hem takıma hem ülke puanına yazılacak.',
   ],
   cup: [
-    'Kupa gecesindeyiz! Tek maç, kaybedenin yolu burada bitiyor.',
-    'Kupa maçlarında sürpriz her zaman mümkündür. Bu akşam uzatma da var, penaltı da.',
+    'Kupa gecesindeyiz. Tek maç oynanacak, kaybeden takım kupaya veda edecek.',
+    'Kupada sürprizlere hazırlıklı olmak gerek. Eşitlik bozulmazsa uzatmalar ve penaltılar oynanacak.',
   ],
   rival: [
-    'Bu maçın içinde bir maç daha var: akademiden beri süren o büyük rekabet bugün sahaya taşınıyor.',
-    'İki eski akademi arkadaşı, iki ezeli rakip, bu akşam aynı çimde!',
+    'Bu maçta ayrıca iki oyuncunun rekabeti de var. Akademi yıllarından beri birbirleriyle yarışıyorlar.',
+    'Gözler iki eski akademi arkadaşında. Bu akşam karşı karşıyalar.',
   ],
   top: [
-    'Zirve yarışının kritik bir haftasındayız. Bugün kaybedenin canı çok yanar.',
-    'Şampiyonluk kokusu alınan bir maç. Her pas, her şut altın değerinde.',
+    'Zirve yarışı için kritik bir hafta. Bu maçı kaybeden takım üst sıralarda zor durumda kalacak.',
+    'Şampiyonluk hesapları yapılırken çok önemli bir karşılaşma. Her puan değerli.',
   ],
   bottom: [
-    'Ligin alt sıralarında nefes kesen bir mücadele var. Bu üç puan hayati.',
-    'Düşme hattından uzaklaşmak için bu maç kaçırılmamalı.',
+    'Ligin alt sıralarını ilgilendiren önemli bir maç. Alınacak üç puan hayati önemde.',
+    'Düşme hattından uzaklaşmak isteyen takım için bu akşam kayıp yok.',
   ],
   star: [
-    'Gözler genç golcümüzde. Son haftalarda attığı gollerle herkesin dilinde.',
-    'Takımın gol yükünü sırtlanan genç yıldızımız bugün de sahada.',
+    'Gözler son haftalarda attığı gollerle dikkat çeken genç golcümüzde.',
+    'Takımın en skorer oyuncusu bu akşam da ilk düdükten itibaren sahada.',
   ],
   generic: [
-    'Tribünler hazır, oyuncular ısındı. Güzel bir futbol izleyeceğimize inanıyorum.',
-    'Teknik direktörlerin hazırlıkları tamam. Bakalım sahada kim haklı çıkacak.',
+    'Oyuncular ısınmayı tamamladı, takımlar sahadaki yerini aldı. İyi bir maç bekliyoruz.',
+    'İki takımın da hazırlıkları tamam. Bakalım sahada hangisi üstün gelecek.',
   ],
 };
 export const FT = {
-  W: ['Ve maç sona erdi! Galibiyet bizim!', 'Son düdük! Üç puan hanemize yazıldı!', 'Bitti bitti bitti! Tribünler bayram yeri!'],
-  D: ['Ve maç sona erdi. Puanlar paylaşıldı.', 'Son düdük çaldı, kazanan çıkmadı.'],
-  L: ['Ve maç sona erdi. Bugün olmadı, kafalar önde.', 'Son düdük. Acı bir mağlubiyet.'],
+  W: ['Ve maç sona erdi! Takımımız sahadan galibiyetle ayrılıyor!', 'Son düdük çaldı! Bu akşam kazanan biziz!', 'Hakem maçı bitirdi! Değerli bir galibiyet!'],
+  D: ['Ve maç sona erdi. Takımlar puanları paylaşıyor.', 'Son düdük çaldı, bu akşam kazanan çıkmadı.'],
+  L: ['Ve maç sona erdi. Bu akşam sahadan mağlubiyetle ayrılıyoruz.', 'Son düdük çaldı. Takımımız için zor bir akşam oldu.'],
   skor: 'Skor tabelası:',
 };
 export const NUM = ['sıfır', 'bir', 'iki', 'üç', 'dört', 'beş', 'altı', 'yedi', 'sekiz', 'dokuz'];
@@ -61,10 +61,10 @@ export function ftParts(result, hg, ag) {
 
 export const LINES = {
   kickoff: [
-    'Ve başladı! {takim} ile {rakip} karşı karşıya, tribünler tıklım tıklım!',
-    'Hakem düdüğü çaldı, 90 dakikalık roman başlıyor sevgili seyirciler!',
-    'Top yuvarlak, saha yeşil, heyecan dorukta. Başlıyoruz!',
-    'Çekirdekler hazır mı? Çünkü maç başladı!',
+    'Hakemin düdüğüyle maç başladı! {takim} ile {rakip} karşı karşıya!',
+    'Ve başladı! İlk düdük çaldı, {takim} ile {rakip} arasındaki karşılaşmada top yuvarlanıyor!',
+    'Maçımız başladı! Tribünlerden büyük bir uğultu yükseliyor!',
+    'Santra yapıldı, karşılaşma başladı!',
   ],
   weather_yagmur: [
     'Bardaktan boşanırcasına yağmur var, top çimde kayıyor, kaleciler dikkat!',
@@ -136,56 +136,71 @@ export const LINES = {
     'Penaltı noktasında {ad}, karşısında {kaleci}. Sinir savaşı!',
   ],
   goal: [
-    'GOOOOL! {ad}! Bu nasıl bir vuruş! Ağlar havalandı!',
-    'VE GOL! {ad} imzayı attı! Tribünler yıkılıyor!',
-    'GOOOL! {kaleci} sadece baktı! Bakmak da bir sanattır ama bugün değil!',
-    'Ağları sarstı {ad}! Skor {skor}!',
+    'GOOOL! {ad}! Ve top ağlarda! Skor {skor}!',
+    'GOL GOL GOL! {ad} vurdu ve gol! {kaleci} uzandı ama yetişemedi!',
+    'VE GOL! {ad} fırsatı kaçırmadı, skor {skor}!',
+    'GOOOL! {ad} müthiş vurdu, top filelerde!',
   ],
   goal_serbest: [
-    'GOOOL! Frikikten harika gol! Top kavis aldı, köşeye yerleşti, baraj hâlâ şaşkın!',
-    'Muhteşem frikik! {ad} topu adresine teslim etti, kargo bile bu kadar hızlı değil!',
+    'GOOOL! Serbest vuruştan harika gol! {ad} topu barajın üstünden köşeye gönderdi!',
+    'Frikikten GOL! {ad} çok iyi vurdu, {kaleci} kıpırdayamadı!',
   ],
   goal_kafa: [
-    'KAFAYLA GOL! {ad} kafasını sadece düşünmek için kullanmıyor!',
-    'GOOOL! Müthiş yükseldi, alnının tam ortası!',
+    'KAFAYLA GOL! {ad} yükseldi ve topu ağlara gönderdi!',
+    'GOOOL! {ad} kafayı vurdu, top filelerde!',
   ],
   goal_korner: [
-    'KORNERDEN GOL! {ad} ceza sahasında herkesten yüksekti!',
+    'KORNERDEN GOL! {ad} ceza sahasında herkesten yüksekte!',
+    'Korner ve GOL! {ad} kafayla tamamladı!',
   ],
   goal_rovasata: [
-    'RÖVAŞATA! İNANILMAZ! {ad} havada ters döndü ve top ağlarda! Bu gol yıllarca konuşulur!',
-    'AMAN ALLAHIM! Rövaşatayla gol! Akrobat mı futbolcu mu karar veremedik!',
+    'RÖVAŞATA VE GOL! İnanılmaz! {ad} havada ters döndü ve top ağlarda!',
+    'MUHTEŞEM BİR GOL! {ad} rövaşatayla filelere gönderdi!',
   ],
   goal_penalti: [
-    'Penaltı gol! {ad} soğukkanlı, {kaleci} öbür köşede!',
-    'GOL! Penaltıyı tereyağından kıl çeker gibi attı!',
+    'Penaltı GOL! {ad} soğukkanlı, {kaleci} diğer köşede!',
+    'GOL! {ad} penaltıyı köşeye yerleştirdi!',
   ],
   intro_kosevurusu: ['Korner! Topun başında {ad} var, ceza sahası kalabalık!', '{ad} köşe bayrağına koştu, korneri kendisi kullanacak!'],
   intro_vole: ['Top ceza sahası dışına sekti… {ad} bekliyor!', 'Uzaklaştırılan top havada… {ad} gözünü topa dikti!'],
   intro_arkadirek: ['{arkadas} kanattan çevirecek… {ad} arka direkte unutuldu!', 'Orta ön direği geçebilir… arka direkte {ad} tek başına!'],
   intro_balik: ['{arkadas} çizgiye indi, sert ve alçak çevirecek…', 'Alçak orta geliyor! {ad} kendini atacak mı?'],
-  goal_kosevurusu: ['{ad} korneri adrese teslim gönderdi, gol!', 'Kornerden müthiş orta, ağlar havalandı!'],
-  goal_vole: ['VOLEEE! {ad} havadan vurdu, top füze gibi ağlarda!', 'Ne vuruş! {ad} yere düşürmeden vurdu, {kaleci} sadece baktı!', 'Bu vole yılın golü adayı! {ad} inanılmaz!'],
-  goal_arkadirek: ['Arka direkte {ad}! Kafayı içeri çevirdi, gol!', '{ad} arka direkte unutulmayacak bir kafa vurdu!'],
-  goal_balik: ['BALIKLAMA! {ad} kendini attı, top ağlarda!', '{ad} çimlere uzanarak kafayı vurdu, muhteşem!'],
+  goal_kosevurusu: [
+    'GOL! {ad} korneri harika kullandı, top ağlarda!',
+    'Kornerden GOL! Ceza sahasında karambol ve top filelerde!',
+  ],
+  goal_vole: [
+    'VOLEEE VE GOL! {ad} topu yere düşürmeden vurdu!',
+    'GOOOL! Ne vuruş! {ad} voleyle ağları havalandırdı!',
+    'GOL! {ad} müthiş bir vole vurdu, {kaleci} sadece izledi!',
+  ],
+  goal_arkadirek: [
+    'Arka direkte {ad}! Ve GOL!',
+    'GOOOL! {ad} arka direkte boş kaldı ve affetmedi!',
+  ],
+  goal_balik: [
+    'BALIKLAMA GOL! {ad} kendini attı, top ağlarda!',
+    'GOOOL! {ad} uzanarak kafayı vurdu, muhteşem gol!',
+  ],
   goal_uzuntop: [
-    'GOL! Kaleciden önce davrandı {ad}, top boş ağlarda!',
-    'Hız yarışını kazandı {ad}! {kaleci} geç kaldı, GOL!',
+    'GOL! {ad} kaleciden önce davrandı ve topu ağlara gönderdi!',
+    'GOOOL! {ad} hız yarışını kazandı, {kaleci} geç kaldı!',
   ],
   goal_duvar: [
-    'VER-KAÇ VE GOL! {ad} ile {arkadas} defansı ikiye böldü!',
-    'Ders kitabı gibi duvar pası! {ad} bitirdi, GOL!',
+    'VER-KAÇ VE GOL! {ad} ile {arkadas} savunmayı ikiye böldü!',
+    'GOOOL! Harika bir paslaşma, {ad} bitirdi!',
   ],
   goal_pres: [
     'PRESTEN GOL! {ad} topu kaptı ve affetmedi!',
-    'Rakip geriden çıkayım derken {ad} topu çaldı, ağlara gönderdi!',
+    'GOOOL! {ad} topu rakipten çaldı ve ağlara gönderdi!',
   ],
   goal_birebir: [
-    'GOL! Kaleciyle birebirde affetmedi {ad}!',
+    'GOL! {ad} kaleciyle karşı karşıya kaldı ve affetmedi!',
+    'GOOOL! {ad} birebirde {kaleci} karşısında çok sakin!',
   ],
   assist: [
-    'GOL! Pas {ad:abl}, bitiren {arkadas}! Ortak mülkiyet!',
-    'Harika paylaşım! {ad} servis etti, {arkadas} tabağı temizledi!',
+    'GOL! {ad} harika bir pas verdi, {arkadas} tamamladı!',
+    'GOOOL! Asist {ad:abl}, golü atan {arkadas}!',
   ],
   saved: [
     'Ve {kaleci} çıkardı! Eldivenlerine sağlık!',
@@ -265,24 +280,24 @@ export const LINES = {
     '{ad} kollarını açtı ama hakem duymazdan geldi.',
   ],
   teamGoal: [
-    'GOL! {takim} öne geçiyor… {skor}!',
-    'Gol {takim:abl}! Skor {skor}.',
+    'GOL! {takim} golü buldu! Skor {skor}!',
+    'GOOOL {takim:abl}! Skor tabelası {skor}!',
   ],
   oppGoal: [
-    'Gol {rakip:abl}… Skor {skor}. Soğuk duş!',
-    '{rakip} buldu golü. Sessizlik… {skor}.',
+    'Gol {rakip:abl}. Skor {skor}.',
+    '{rakip} golü buldu. Skor {skor}.',
   ],
   latePressure: [
-    'Son dakikalar! {takim} yüklenmeye başladı, herkes ileride!',
-    'Saat işliyor, {takim} geride! Kaleci bile çıkacak neredeyse!',
+    'Son dakikalara girdik! {takim} tüm hatlarıyla rakip yarı sahaya yüklendi!',
+    'Zaman daralıyor! {takim} gol için baskı kuruyor!',
   ],
   halftime: [
-    'İlk yarı bitti. Çay simit molası!',
-    'Devre arası. Teknik direktör soyunma odasında konuşmasını hazırlıyor.',
+    'Hakem ilk yarıyı bitirdi. Skor {skor}.',
+    'İlk 45 dakika sona erdi, takımlar soyunma odasına gidiyor. Skor {skor}.',
   ],
   fulltime: [
     'Ve maç sona erdi! Skor {skor}.',
-    'Son düdük! {skor}. Futbol yine konuştu!',
+    'Son düdük çaldı! Karşılaşma {skor} sona erdi.',
   ],
 };
 

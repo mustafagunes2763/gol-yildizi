@@ -704,9 +704,9 @@ td.fm i.fw { background: #22c55e; } td.fm i.fd { background: #94a3b8; } td.fm i.
 .formdots i { width: 17px; height: 17px; border-radius: 5px; display: grid; place-items: center; font: 800 10px system-ui; font-style: normal; color: #fff; }
 .formdots .fW { background: #16a34a; } .formdots .fD { background: #64748b; } .formdots .fL { background: #dc2626; }
 .formdots small { margin-left: 6px; color: var(--muted); }
-.ring { position: relative; flex: none; display: grid; place-items: center; }
-.ring svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.ring b { font-size: 22px; line-height: 1; margin-top: -6px; } .ring span { position: absolute; bottom: 11px; font-size: 8px; letter-spacing: 1px; color: var(--muted); }
+.ovring { position: relative; flex: none; display: grid; place-items: center; }
+.ovring svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ovring b { font-size: 22px; line-height: 1; margin-top: -6px; } .ovring span { position: absolute; bottom: 11px; font-size: 8px; letter-spacing: 1px; color: var(--muted); }
 .tile { position: relative; overflow: hidden; transition: transform .12s ease, border-color .2s; box-shadow: 0 2px 8px #0004; }
 .tile:active { transform: scale(.94); }
 .tile::before { content: ''; position: absolute; inset: 0; opacity: .16; background: radial-gradient(circle at 50% 0%, var(--tc, #fff), transparent 70%); pointer-events: none; }
@@ -746,3 +746,28 @@ td.fm i.fw { background: #22c55e; } td.fm i.fd { background: #94a3b8; } td.fm i.
 .ctags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .ctags span { background: rgba(255,255,255,.07); border-radius: 999px; padding: 3px 9px; }
 .btn.dim { opacity: .55; }
+.wintercard { border: 1px solid #60a5fa55; background: linear-gradient(160deg, #0f2747, var(--card)); }
+.woffer { display: flex; gap: 10px; align-items: flex-start; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.wbtns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.loantag { font-style: normal; font-size: 10px; font-weight: 800; background: #2563eb; color: #fff; border-radius: 6px; padding: 1px 6px; }
+.feed p.celeb { border-left: 3px solid #facc15; }
+.celimg { display: block; width: 100%; border-radius: 10px; margin-top: 6px; aspect-ratio: 4 / 3; object-fit: cover; }
+
+/* ---------- yatırımlar ve at yarışı ---------- */
+.gain { color: #4ade80; } .loss { color: #f87171; }
+.kindtag { font-style: normal; font-size: 10px; font-weight: 800; border-radius: 6px; padding: 1px 6px; background: #334155; color: #e2e8f0; }
+.kindtag.isletme { background: #7c2d12; color: #fed7aa; }
+.horse .hhead { display: flex; align-items: center; gap: 10px; }
+.horse .hemo { font-size: 30px; }
+.hstats { display: grid; grid-template-columns: 92px 1fr; gap: 4px 8px; align-items: center; font-size: 12px; margin: 8px 0 4px; color: var(--muted); }
+.card.race.gazi { border: 1px solid #facc1588; background: linear-gradient(160deg, #3b2a05, var(--card)); }
+.rtrack { position: relative; margin: 8px 12px; border-radius: 14px; overflow: hidden; background: repeating-linear-gradient(90deg, #6b4a2b 0 40px, #74512f 40px 80px); border: 2px solid #3f2a17; }
+.lane { position: relative; height: 38px; border-bottom: 1px dashed #ffffff33; }
+.lane.mine { background: rgba(250, 204, 21, .18); }
+.lane .lno { position: absolute; left: 4px; top: 10px; font-size: 11px; font-weight: 800; color: #fff8; }
+.lane .lname { position: absolute; right: 30px; top: 11px; font-size: 10px; color: #fff9; white-space: nowrap; pointer-events: none; }
+.lane.mine .lname { color: #facc15; font-weight: 800; }
+.hrs { position: absolute; left: 0; top: 2px; font-size: 28px; transform: scaleX(-1); transition: none; margin-left: 14px; }
+.rtrack .finish { position: absolute; right: 22px; top: 0; bottom: 0; width: 6px; background: repeating-linear-gradient(0deg, #fff 0 6px, #000 6px 12px); }
+.racecomm { margin: 6px 12px; padding: 10px 12px; border-radius: 12px; background: var(--card); font-weight: 700; min-height: 42px; }
+.raceres ol { margin: 8px 0 12px 18px; } .raceres li.me { color: #facc15; font-weight: 800; }

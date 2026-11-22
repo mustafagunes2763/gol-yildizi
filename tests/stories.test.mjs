@@ -20,7 +20,8 @@ const { SINGLES, CHAINS } = S._all;
 for (const [id, f] of Object.entries(SINGLES)) {
   const ev = f(s); if (!ev) continue;
   for (let i = 0; i < ev.options.length; i++) {
-    const e2 = { ...f(s), id };
+    const raw = f(s); if (!raw) break;   // tek seferlik koşullu olay (ör. köpek sahiplenildi)
+    const e2 = { ...raw, id };
     check(e2, id);
     s.event = e2;
     const r = Life.resolveEvent(s, i);

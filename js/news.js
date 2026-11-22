@@ -1,5 +1,6 @@
 // Gazete kupürleri: 3 uydurma gazete, abartılı Türk spor basını dili.
-import { overall, pick, randInt, money } from './engine.js';
+import { overall, pick, randInt, money, seasonOffers } from './engine.js';
+import { marketValue } from './contract.js';
 import { isDerby, clubInfo } from './data.js';
 import { headSvg, skinColor, lookOf } from './look.js';
 
@@ -392,17 +393,23 @@ export function maybeRumor(state, recentAvg) {
   if (state.season.week - (state.lastRumorWeek ?? -99) < 5 && state.lastRumorYear === state.season.year) return null;
   if (recentAvg < 7.0 || Math.random() > 0.18) return null;
   const my = state.teams[p.clubId];
-  const bigger = Object.values(state.teams).filter((t) => t.str >= my.str + 4 && t.id !== my.id && t.str <= overall(p) + 30);
-  if (!bigger.length) return null;
-  const t = pick(bigger.sort((a, b) => b.str - a.str).slice(0, 5));
+  // Tek kaynak: Paslaş'taki söylentiler ve sezon sonu teklif verebilecek kulüpler (gazete, Paslaş ve menajer aynı kulübü konuşur)
+  const soc = state.social;
+  const known = (soc?.rumors || []).filter((id) => id !== soc?.fakeRumor && id !== p.clubId && state.teams[id]);
+  let id = known.length ? pick(known) : null;
+  if (!id) { const offs = seasonOffers(state); if (offs.length) id = pick(offs).clubId; }
+  if (!id) return null;
+  const t = state.teams[id];
+  if (soc) soc.rumors = [...new Set([...(soc.rumors || []), id])].slice(-4);
   state.lastRumorWeek = state.season.week;
   state.lastRumorYear = state.season.year;
   const AD = UP(p.surname);
-  const fee = Math.max(0.5, Math.round(((overall(p) - 40) ** 2 * 0.012 + p.fame * 0.06) * 10) / 10);
+  const val = marketValue(p);
+  const fee = val >= 1e9 ? `${(val / 1e9).toLocaleString('tr-TR', { maximumFractionDigits: 1 })} MİLYAR ₺` : `${Math.round(val / 1e6)} MİLYON ₺`;
   return clip(state, 'transfer', {
-    headline: pick([`${UP(t.name)} ${UP(ek(p.surname, 'acc'))} İZLİYOR`, `${UP(ek(t.name, 'abl'))} SÜRPRİZ HAMLE`, `${AD} İÇİN ${String(fee).replace('.', ',')} MİLYON EURO`]),
-    sub: `${ek(t.name, 'gen')} gözü ${ek(my.name, 'gen')} genç forvetinde`,
-    body: `Kulis bilgilerine göre ${t.name} scout ekibi son haftalarda ${p.surname} için tribünde yer aldı. Oyuncunun piyasa değerinin ${String(fee).replace('.', ',')} milyon euroya ulaştığı konuşuluyor. ${my.name} cephesi ise oyuncunun satılık olmadığını açıkladı.`,
+    headline: pick([`${UP(t.name)} ${UP(ek(p.surname, 'acc'))} İZLİYOR`, `${UP(ek(t.name, 'abl'))} SÜRPRİZ HAMLE`, `${AD} İÇİN ${fee}`]),
+    sub: `${ek(t.name, 'gen')} gözü ${ek(my.name, 'gen')} forvetinde`,
+    body: `Kulis bilgilerine göre ${t.name} scout ekibi son haftalarda ${p.surname} için tribünde yer aldı. Oyuncunun piyasa değerinin ${money(val)} civarında olduğu konuşuluyor. ${my.name} cephesi ise oyuncunun satılık olmadığını açıkladı.`,
     caption: `${ek(t.name, 'gen')} ilgilendiği ${p.surname}`,
     pose: 'stand', photo: ph('airport', 'cheer'),
   });
@@ -466,6 +473,17 @@ export function proposalNews(state, place) {
 }
 
 // ---------- imza ----------
+export function loanNews(state, clubId, fromId) {
+  const p = state.player;
+  const t = state.teams[clubId], f = state.teams[fromId];
+  return clip(state, 'transfer', {
+    headline: pick([`${UP(p.surname)} KİRALIK GİTTİ`, `${UP(p.surname)} ${UP(ek(t.name, 'dat'))} KİRALANDI`]),
+    sub: `${ek(f.name, 'gen')} genç forveti sezon sonuna kadar ${ek(t.name, 'loc')}`,
+    body: `${f.name}, forma şansı bulmakta zorlanan ${ek(p.surname, 'acc')} sezon sonuna kadar ${ek(t.name, 'dat')} kiraladı. Oyuncunun sözleşmesi ${ek(f.name, 'loc')} devam ediyor.`,
+    caption: `${p.surname} yeni takımında`, pose: 'stand', photo: ph('airport', 'cheer'),
+  });
+}
+
 export function signingNews(state, clubId, oldClubId) {
   const p = state.player;
   const t = state.teams[clubId];

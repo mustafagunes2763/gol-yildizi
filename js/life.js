@@ -4,6 +4,7 @@ import * as Stories from './stories.js';
 import * as Family from './family.js';
 import * as Betting from './betting.js';
 import * as Social from './social.js';
+import * as Invest from './invest.js';
 
 // ---------- mağaza ----------
 export const CARS = [
@@ -167,6 +168,7 @@ export function breakUp(state) {
 
 // ---------- haftalık ----------
 export function weeklyLife(state, weekIndex) {
+  Invest.weekly(state, weekIndex);
   const p = state.player;
   initLife(p);
   // ev ve araba

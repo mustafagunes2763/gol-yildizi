@@ -3,6 +3,7 @@
 // Kurgusal rakip Ahmet Akyurt: kariyere ezeli rakipte başlar, sen lig değiştirdikçe peşinden gelir.
 // Gerçek oyuncular sadece tarafsız (gol krallığı kıyası) ya da olumlu (emoji yorum) geçer.
 import { clamp, pick, randInt, rand, money, addInbox, leagueOf, leagueStats, overall, sortedTable, seasonOffers, shuffle } from './engine.js';
+import { CELEB_IMAGES } from './celebrate.js';
 import { clubInfo, isDerby } from './data.js';
 import * as Trivia from './trivia.js';
 
@@ -213,6 +214,28 @@ export function startCrisis(state, why) {
   addInbox(state, `🚨 ${APP}'ta linç! ${tag} gündemde. Taraftar tepkili, kulüp rahatsız.`);
   for (let i = 0; i < 3; i++) pushFeed(s, fanAuthor(), pick([`Bu ne ya? ${tag}`, `Kulübümüzü temsil edemezsin! ${tag}`, `Formayı hak etmiyor. ${tag}`, `Bir özrü bile çok görüyor… ${tag}`, `Bu paylaşımı hemen silmesi lazım ${s.crisis?.tag || tag}`, `Taraftarı küstürdün ${tag}`, `Kulüp gereğini yapmalı ${tag}`]), { likes: randInt(200, 3000) });
   pushFeed(s, PAGES.gundem, `Sosyal medyada ${p.name} ${p.surname} krizi! ${tag} etiketi trend oldu.`, { likes: s.followers * 0.02, img: 'backlash' });
+}
+
+// ---------------------------------------------------------------- gol sevinci tepkisi
+const CELEB_POSTS = {
+  taraftar: ['{ad} golden sonra tribünlere koştu, taraftarla kucaklaştı ❤️', 'Bu sevinç tribünle oyuncu arasındaki bağı anlatıyor 🙌'],
+  takim: ['{ad} golü takım arkadaşlarıyla kutladı. Soyunma odası tek yürek 🤝'],
+  forma: ['{ad} formasını çıkarıp salladı, sarı kartı da gördü 👕🟨', 'Forma çıkaran {ad}: "Kartı bilerek göze aldım"'],
+  rakip: ['{ad} rakip tribüne "sus" işareti yaptı! Ortalık karıştı 🤫🔥', 'Maçın konuşulan anı: {ad}\'ın rakip tribüne yaptığı hareket 🤫'],
+  imza: ['{ad}\'ın imza sevinci yine sahnede ⭐ Çocuklar sokakta taklit ediyor', 'O sevinç artık bir marka ⭐ {ad}'],
+  kalp: ['{ad} golü sevdiklerine adadı ❤️ Tribündeki ailesi gözyaşlarını tutamadı'],
+  diz: ['{ad} dizleri üstünde metrelerce kaydı, çimler hâlâ kendine gelemedi 🧎'],
+  sakin: ['{ad} eski takımına gol atıp sevinmedi. Saygı dolu bir hareket 👏'],
+};
+export function onCelebrate(state, ids, crisis) {
+  const s = ensure(state); if (!s || !ids?.length) return;
+  const p = state.player, me = `${p.name} ${p.surname}`;
+  const id = ids[ids.length - 1];
+  const t = pick(CELEB_POSTS[id] || CELEB_POSTS.takim).replace('{ad}', me);
+  pushFeed(s, PAGES.gundem, t, { likes: s.followers * rand(0.04, 0.12), img: CELEB_IMAGES.has(id) ? 'celeb_' + id : null });
+  if (id === 'rakip') pushFeed(s, personaAuthor(crisis ? 'omer' : 'mert'), crisis ? pick(['Bu hareket futbolcuya yakışmadı.', 'Saha içinde kal, tribünle uğraşma.']) : pick(['Rakip tribün çıldırdı 😂🍿', 'Bu sevinç sezon sonu kliplerine girer 😂']), { likes: randInt(400, 6000) });
+  if (id === 'forma') pushFeed(s, personaAuthor('emir'), pick(['Kart da olsa değdi! 👕🔥', 'O formayı çerçeveletin!']), { likes: randInt(300, 4000) });
+  if (crisis) startCrisis(state, 'rakip tribüne yaptığı "sus" işareti');
 }
 
 // ---------------------------------------------------------------- paylaşım şablonları
@@ -523,7 +546,13 @@ export function weekly(state) {
   // gazeteci / kulis
   if (Math.random() < 0.35) {
     const pos = sortedTable(state.season.leagues[leagueOf(state, p.clubId)].table).findIndex((x) => x.id === p.clubId) + 1;
-    pushFeed(s, pick([PAGES.selin, PAGES.kenan, `${p.name} ${p.surname} için antrenmanda en çok çalışan oyuncu diyorlar 👀`, `Kulübün ${p.surname} ile sözleşme uzatmak istediği konuşuluyor ✍️`, `${p.surname}'ın menajeri bu hafta İstanbul'daydı. Bir şeyler oluyor 👀`, `Hoca, ${p.surname}'ın gelişiminden çok memnun.`]), pick([`${myTeam.name} ligde ${pos}. sırada. ${p.surname}'ın formu belirleyici olacak.`, `${p.name} ${p.surname} için Avrupa'dan izleme raporu istendiği konuşuluyor 👀`, `Kulis: ${p.surname} ile ${RIVAL_NAME} arasındaki gerilim soyunma odalarında da konuşuluyor.`]), { likes: randInt(1000, 12000) });
+    // kulis: yazar bir gazeteci, metin oyunun gerçek durumuna dayanır (transfer söylentileri tek kaynaktan: weeklyRumors)
+    const lines = [`${myTeam.name} ligde ${pos}. sırada. ${p.surname}'ın formu belirleyici olacak.`, `${p.name} ${p.surname} için antrenmanda en çok çalışan oyuncu diyorlar 👀`];
+    if ((p.rel?.coach ?? 50) >= 60) lines.push(`Hoca, ${p.surname}'ın gelişiminden çok memnun.`);
+    if ((p.rel?.coach ?? 50) < 40) lines.push(`Hoca ile ${p.surname} arasında soğuk rüzgârlar estiği konuşuluyor.`);
+    if (p.contract?.endsYear <= state.season.year + 1) lines.push(`Kulübün ${p.surname} ile sözleşme uzatmak istediği konuşuluyor ✍️`);
+    if (s.rival && state.social?.rival?.team) lines.push(`Kulis: ${p.surname} ile ${RIVAL_NAME} rekabeti bu sezon da gündemde.`);
+    pushFeed(s, pick([PAGES.selin, PAGES.kenan]), pick(lines), { likes: randInt(1000, 12000) });
   }
   if (p.partner && Math.random() < 0.2) pushFeed(s, PAGES.magazin, `📸 ${p.name} ${p.surname} ve ${p.partner.name} akşam yemeğinde görüntülendi. Mutluluklarına diyecek yok 💕`, { likes: randInt(3000, 30000), img: 'paparazzi' });
   if (Math.random() < 0.2) pushFeed(s, PAGES.kulis, pick([`${RIVAL_NAME} için yurt dışından teklif iddiası! 🚨`, `Sezon sonunda büyük transfer hareketliliği bekleniyor.`, `${p.surname} için menajerine kulüplerden telefon yağıyor.`, `Bu hafta 3 kulüp menajerlerle görüştü 🚨`, `${RIVAL_NAME}'un kardeşi Eren de altyapı seçmelerine katılmış 👀`, `Ara transfer döneminde sürpriz isimler gündemde.`]), { likes: randInt(2000, 25000) });
@@ -829,7 +858,8 @@ function goalOfWeek(state, lm) {
       pushFeed(s, personaAuthor('emir'), pick(['HAFTANIN GOLÜ BİZİM! 🏅📣', 'Oy veren herkese teşekkürler, ben 50 kere oy verdim 😂❤️']), { likes: randInt(300, 4000) });
     } else pushFeed(s, PAGES.gundem, `🏅 Haftanın golü: ${g.winner} (%${g.pct}).`, { likes: randInt(2000, 20000) });
   }
-  if (!lm?.goals || Math.random() > 0.75) return;
+  // aday olmak için özel bir gol ya da iyi bir maç gerekir
+  if (!lm?.goals || !(lm.bicycle || lm.rating >= 7.8 || lm.goals >= 2) || Math.random() > 0.45) return;
   const others = leagueStats(state, leagueOf(state, p.clubId)).filter((x) => !x.me && x.g > 0);
   if (others.length < 2) return;
   const [a, b] = shuffle(others).slice(0, 2);

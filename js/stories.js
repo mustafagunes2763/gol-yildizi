@@ -178,12 +178,13 @@ const SINGLES = {
       ],
     };
   },
-  pet() {
+  pet(state) {
+    if (state.player.hasPet) return null;
     return {
       title: '🐶 Sokak köpeği', photo: 'rain',
       text: 'Antrenman çıkışı yağmurda titreyen bir yavru köpek peşine takıldı.',
       options: [
-        { label: 'Sahiplen', fx: { morale: 6, fans: 4 }, result: 'Adını "Penaltı" koydun. Fotoğrafı internette rekor beğeni aldı.' },
+        { label: 'Sahiplen', fx: { morale: 6, fans: 4, pet: true }, result: 'Adını "Penaltı" koydun. Fotoğrafı internette rekor beğeni aldı.' },
         { label: 'Barınağa götür, masraflarını üstlen', fx: { money: -5_000, fans: 2, morale: 2 }, result: 'Barınak teşekkür mesajı yayınladı.' },
         { label: 'Yoluna devam et', fx: { morale: -2 }, result: 'O gece aklından çıkmadı.' },
       ],
@@ -390,7 +391,9 @@ const SINGLES = {
       text: `${c.name} gece yükselen ateşle hastaneye kaldırıldı. Yarın sabah önemli bir antrenman var.`,
       options: [
         { label: 'Hastanede sabahla', fx: { child: { name: c.name, rel: 8 }, energy: -20, family: 4 }, result: 'Sabah ateşi düştü, ilk gördüğü sendin.' },
-        { label: 'Eşine bırak, antrenmana git', fx: { coach: 3, partner: -6, child: { name: c.name, rel: -3 } }, result: 'Antrenmanda aklın hep hastanedeydi.' },
+        state.player.partner
+          ? { label: 'Eşine bırak, antrenmana git', fx: { coach: 3, partner: -6, child: { name: c.name, rel: -3 } }, result: 'Antrenmanda aklın hep hastanedeydi.' }
+          : { label: 'Bakıcıya bırak, antrenmana git', fx: { coach: 3, child: { name: c.name, rel: -5 } }, result: 'Antrenmanda aklın hep hastanedeydi.' },
       ],
     };
   },
@@ -891,6 +894,23 @@ function build(id, step, state, data) {
   return normalize({ ...ev, id: `${id}_${step}`, story: id }, state);
 }
 
+// Maç / kamp / antrenmana bağlı olaylar: sakat ya da cezalıyken çıkmaz
+const MATCHY = new Set(['bus_late', 'camp_room', 'insomnia', 'cousin_wedding', 'tv_show', 'child_birthday', 'child_school', 'visitation', 'dressing_prank', 'tactic_meeting', 'nightclub', 'extra_training']);
+// Devam eden zincirin sonraki bölümü için gereken durum
+const KEEP = {
+  baby: (s) => !!s.player.partner?.married,
+  marriage_crisis: (s) => !!s.player.partner?.married,
+  paparazzi: (s) => !!s.player.partner,
+  captain: (s) => !!s.player.captain,
+};
+// Transfer olunca eski kulübe bağlı hikâyeler kapanır, kaptanlık düşer
+export function onTransfer(state) {
+  const p = state.player;
+  initStories(p);
+  for (const id of ['rival', 'coach_crisis', 'captain', 'documentary']) delete p.stories[id];
+  p.captain = false;
+}
+
 // Her hafta çağrılır. fallback: eski olay havuzunu döndüren fonksiyon.
 export function weeklyStory(state, fallback) {
   const p = state.player;
@@ -902,10 +922,11 @@ export function weeklyStory(state, fallback) {
     p.seenEv.divorce_ask = now;
     return build('marriage_crisis', 'ask', state);
   }
-  // 1) vadesi gelen hikâye bölümü
+  // 1) vadesi gelen hikâye bölümü (koşulu artık tutmuyorsa sessizce kapanır: ör. boşandıktan sonra bebek haberi gelmez)
   for (const [id, st] of Object.entries(p.stories)) {
     if (st.due <= now) {
       delete p.stories[id];
+      if (KEEP[id] && !KEEP[id](state)) continue;
       return build(id, st.step, state, st.data);
     }
   }
@@ -920,9 +941,10 @@ export function weeklyStory(state, fallback) {
     }
   }
   // 3) tek seferlik olay
-  const singles = Object.entries(SINGLES).filter(([id]) => cool(id, 40)).map(([id, f]) => { const ev = f(state); return ev && { ...ev, id }; }).filter(Boolean);
+  const busy = p.injury > 0 || p.suspended > 0 || state.phase !== 'hub';
+  const singles = Object.entries(SINGLES).filter(([id]) => cool(id, 40) && !(busy && MATCHY.has(id))).map(([id, f]) => { const ev = f(state); return ev && { ...ev, id }; }).filter(Boolean);
   const old = fallback ? fallback(state) : null;
-  const pool = old && cool(old.id, 20) ? [...singles, old] : singles;
+  const pool = old && cool(old.id, 20) && !(busy && MATCHY.has(old.id)) ? [...singles, old] : singles;
   if (!pool.length) return null;
   const ev = pick(pool);
   p.seenEv[ev.id] = now;
@@ -969,6 +991,7 @@ export function applyChoice(state, ev, i, relAdd) {
     }
   }
   if (fx.divorce) { const r = Fam.divorce(state); if (r.ok) parts.push(`Boşandınız · −${money(r.terms.share)}`); }
+  if (fx.pet) p.hasPet = true;
   if (fx.captain === true) { p.captain = true; parts.push('©️ Kaptan'); }
   if (fx.captain === false && p.captain) { p.captain = false; parts.push('Pazubant bırakıldı'); }
   if (next) {

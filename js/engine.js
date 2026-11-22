@@ -5,6 +5,9 @@ import * as Career from './career.js';
 import { KADROLAR } from './kadrolar.js';
 import { weeklyLife, initLife, injuryRoll } from './life.js';
 import { NAME_POOLS, UCL_2026, UEL_2026, UECL_2026 } from './data-europe.js';
+import * as Stories from './stories.js';
+import * as Winter from './winter.js';
+import * as Invest from './invest.js';
 import * as Cup from './cup.js';
 import * as Euro from './europe.js';
 
@@ -320,19 +323,20 @@ export function startingOffers(state) {
   }));
 }
 
-export function acceptOffer(state, offer) {
+export function acceptOffer(state, offer, opts = {}) {
   const p = state.player;
   const old = p.clubId;
   p.clubId = offer.clubId;
-  p.contract = { wage: offer.wage, endsYear: state.season.year + offer.years };
+  if (!opts.loan) { p.contract = { wage: offer.wage, endsYear: state.season.year + offer.years }; p.loan = null; }
   state.offers = [];
   state.phase = 'hub';
   const t = state.teams[offer.clubId];
   const hoca = clubInfo(offer.clubId).teknik_direktor;
-  addInbox(state, old
+  if (!opts.loan) addInbox(state, old
     ? `${t.name} ile ${offer.years} yıllık sözleşme imzaladın. Haftalık ${money(offer.wage)}.${hoca ? ` Hocan ${hoca} seni bekliyor.` : ''}`
     : `${t.name} ailesine hoş geldin! ${hoca ? `Hoca ${hoca}` : 'Hoca'} seni yedekten deneyecek. Antrenmanlara ağırlık ver.`);
   Social.onTransfer(state, old);
+  if (old && old !== offer.clubId) Stories.onTransfer(state);
 }
 
 export function addInbox(state, text) {
@@ -645,7 +649,7 @@ export function advanceWeek(state) {
   p.energy = clamp(p.energy + WEEKLY_ENERGY, 0, ENERGY_MAX);
   p.rested = false;
   if (s.week >= s.totalWeeks) state.phase = 'seasonEnd';
-  else Career.weekly(state);
+  else { Career.weekly(state); Winter.weekly(state); }
   state.updatedAt = Date.now();
 }
 
@@ -718,7 +722,7 @@ export function seasonOffers(state) {
   const ovr = overall(p);
   const avg = p.season.apps ? p.season.ratingSum / p.season.apps : 6;
   const score = ovr + (avg - 6.5) * 6 + p.fame / 5;
-  const all = Object.values(state.teams).filter((t) => t.id !== p.clubId && leagueOf(state, t.id));
+  const all = Object.values(state.teams).filter((t) => t.id !== p.clubId && t.id !== p.loan?.from && leagueOf(state, t.id));
   // Gücü oyuncuya yakın veya biraz üstündeki takımlar ilgilenir
   // sözleşmesi devam ediyorsa: sadece serbest kalma bedelini ödeyebilen kulüpler
   const free = contractExpiring(state) || !p.contract.release || (p.playBreach || 0) >= 4;
@@ -742,7 +746,10 @@ export function endSeason(state) {
   p.career.seasons.push({
     year: sum.year, club: p.clubId, league: sum.myLeague, pos: sum.myPos,
     apps: sum.stats.apps, goals: sum.stats.goals, assists: sum.stats.assists, avg: sum.stats.avg,
+    ...(p.loan ? { loanFrom: p.loan.from } : {}), ...(p.winterFrom ? { winterFrom: p.winterFrom } : {}),
   });
+  p.winterFrom = null;
+  Winter.returnFromLoan(state);
 
   // Yükselme / düşme
   const sl = sum.leagues.SL.map((r) => r.id);
@@ -765,6 +772,7 @@ export function endSeason(state) {
 
   p.bets = [];
   p.playBreach = 0;
+  Invest.seasonEnd(state);
   newSeason(state);
   state.phase = 'hub';
   addInbox(state, `${state.season.year}-${String(state.season.year + 1).slice(2)} sezonu başladı!`);

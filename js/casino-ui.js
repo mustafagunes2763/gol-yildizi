@@ -245,28 +245,50 @@ function barbutBody(stakeBar) {
   const b = ui().barbut;
   const rolls = b ? b.res.rolls.slice(0, b.shown) : [];
   const last = rolls[rolls.length - 1];
-  const done = b && b.shown >= b.res.rolls.length;
+  const done = b && b.done;
+  const next = b && !done ? b.res.rolls[b.shown] : null;      // sıradaki atış kimin
+  const btn = !b || done
+    ? `<button class="btn big" data-act="barbut">🎲 ${b ? 'Yeni el' : 'Oyuna başla'} (${X.money(ui().stake)})</button>`
+    : next?.who === 'sen'
+      ? `<button class="btn big" data-act="barbutRoll">🎲 Zarı at!</button>`
+      : `<button class="btn big" disabled>🏦 Kasa zar atıyor…</button>`;
   return `${stakeBar}<div class="card center barbut">
-    <div class="dice ${b && !done ? 'roll' : ''}" ${b ? `data-k="${b.shown}"` : ''}>${last ? `<span>${DIE[last.d[0]]}</span><span>${DIE[last.d[1]]}</span>` : '<span>⚅</span><span>⚄</span>'}</div>
-    ${last ? `<p class="bwho">${last.who === 'sen' ? '🙋 Sen attın' : '🏦 Kasa attı'}: <b>${last.d[0]}-${last.d[1]}</b>${last.res ? '' : ' · sıra karşıda'}</p>` : ''}
+    <div class="dice ${b?.anim ? 'roll' : ''}" ${b ? `data-k="${b.shown}"` : ''}>${last ? `<span>${DIE[last.d[0]]}</span><span>${DIE[last.d[1]]}</span>` : '<span>⚅</span><span>⚄</span>'}</div>
+    ${last ? `<p class="bwho">${last.who === 'sen' ? '🙋 Sen attın' : '🏦 Kasa attı'}: <b>${last.d[0]}-${last.d[1]}</b>${last.res ? '' : ' · sıra karşıda'}</p>` : b ? `<p class="bwho">${next?.who === 'sen' ? 'İlk atış senin!' : 'İlk atış kasanın.'} Masada ${X.money(b.stake)}</p>` : ''}
     ${done ? `<p class="${b.res.win ? 'win' : 'lose'}">${b.res.win ? `Kazandın! +${X.money(b.stake)}` : `Kaybettin −${X.money(b.stake)}`}</p>` : ''}
     <div class="blog">${rolls.map((r) => `<span class="${r.res ? (r.res === 'win' ? 'w' : 'l') : ''}">${r.who === 'sen' ? 'Sen' : 'Kasa'} ${r.d.join('-')}</span>`).join('')}</div>
-    <button class="btn big" data-act="barbut" ${b && !done ? 'disabled' : ''}>🎲 Zar at (${X.money(ui().stake)})</button>
+    ${btn}
     <p class="muted small">Atan için kazandırır: 3-3, 5-5, 6-6, 6-5 · Kaybettirir: 1-1, 2-2, 4-4, 1-2.<br>Diğer atışlarda sıra karşıya geçer. Kazanç 1:1.</p>
   </div>`;
 }
-function barbutAct(act) {
-  if (act !== 'barbut') return false;
+// Bir atışı göster; sonuç belli olunca parayı öde, sıra kasadaysa kendisi atar
+function barbutStep(b) {
   const s = ui();
-  if (s.barbut && s.barbut.shown < s.barbut.res.rolls.length) return;
+  if (s.barbut !== b || b.done || b.busy) return;
+  b.busy = true; b.anim = true; X.render();
+  setTimeout(() => {
+    if (s.barbut !== b) return;
+    b.busy = false; b.anim = false;
+    b.shown++;
+    const r = b.res.rolls[b.shown - 1];
+    if (r.res || b.shown >= b.res.rolls.length) {
+      b.done = true;
+      if (b.res.win) pay(b.stake * 2);
+    } else if (b.res.rolls[b.shown].who === 'kasa') setTimeout(() => barbutStep(b), 700);
+    X.render();
+  }, 550);
+}
+function barbutAct(act) {
+  if (act !== 'barbut' && act !== 'barbutRoll') return false;
+  const s = ui();
+  if (act === 'barbutRoll') { if (s.barbut && !s.barbut.done && s.barbut.res.rolls[s.barbut.shown]?.who === 'sen') barbutStep(s.barbut); return; }
+  if (s.barbut && !s.barbut.done) return;
   if (s.stake > P().money) return X.toast('Paran yetmiyor.');
   const res = C.playBarbut();
-  const b = s.barbut = { res, shown: 1, stake: s.stake };
-  pay(res.win ? b.stake : -b.stake);
-  const ms = 750;
-  if (res.win) hideUntil(b.stake * 2, ms * res.rolls.length, null);
-  const tick = () => { if (s.barbut !== b) return; if (b.shown < res.rolls.length) { b.shown++; X.render(); setTimeout(tick, ms); } };
-  setTimeout(tick, ms);
+  const b = s.barbut = { res, shown: 0, stake: s.stake, done: false };
+  pay(-b.stake);                       // bahis masaya konur
+  if (res.rolls[0].who === 'kasa') setTimeout(() => barbutStep(b), 600);
+  else barbutStep(b);                   // oyunu başlatan basış ilk zarı da atar
   X.render();
 }
 
@@ -457,14 +479,14 @@ export function body(t, stakeBar) {
 }
 export function handle(act, el) {
   if (act === 'slot') return slotAct(act);
-  if (act === 'barbut') return barbutAct(act);
+  if (act === 'barbut' || act === 'barbutRoll') return barbutAct(act);
   if (act.startsWith('r') && ['rBet', 'rUndo', 'rClear', 'rRepeat', 'rSpin'].includes(act)) return rouletteAct(act, el);
   if (act.startsWith('bj')) return bjAct(act);
   if (act.startsWith('k') && ['kPrice', 'kBuy', 'kAll'].includes(act)) return scratchAct(act, el);
   if (act.startsWith('pk')) return pokerAct(act, el);
   return false;
 }
-export const ACTS = new Set(['slot', 'barbut', 'rBet', 'rUndo', 'rClear', 'rRepeat', 'rSpin', 'bjDeal', 'bjHit', 'bjStand', 'bjDouble', 'kPrice', 'kBuy', 'kAll', 'pkSit', 'pkRebuy', 'pkMove', 'pkNext', 'pkLeave']);
+export const ACTS = new Set(['slot', 'barbut', 'barbutRoll', 'rBet', 'rUndo', 'rClear', 'rRepeat', 'rSpin', 'bjDeal', 'bjHit', 'bjStand', 'bjDouble', 'kPrice', 'kBuy', 'kAll', 'pkSit', 'pkRebuy', 'pkMove', 'pkNext', 'pkLeave']);
 export function afterRender(t) {
   if (t === 'rulet') { if (!rl().spin) drawWheel(rl().wAng || 0, null); }
   else if (t === 'kazi') bindScratch();

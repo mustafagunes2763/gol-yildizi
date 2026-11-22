@@ -95,3 +95,18 @@ Real-estate photo of a fictional home in Istanbul, 4:3, golden hour light, invit
 
 ## Serie A / Bundesliga / Ligue 1
 - 35 takımın kadrosu eklendi (Kasım 2026). 27 transfer çakışması yeni kadro lehine çözüldü.
+
+## Gol sevinçleri (2026-11-22) — 4:3 ✅ (takım: tribün afişindeki logo, imza: Avrupa kupası afişi, taraftar: tribün yazısı bulanıklaştırıldı) → img/news/celeb_<id>.jpg
+Şablon (gazete fotoğraflarıyla aynı stil):
+```
+Sports press photo, 4:3, realistic, shallow depth of field, stadium floodlights at night, crowd blurred in the background. A young footballer in a plain red kit with no logos, no sponsor text and no readable numbers, [SAHNE]. His face is turned away from the camera or hidden by motion blur. Fictional people, no real people, no club badges, no readable text anywhere.
+```
+- [x] taraftar → `sprinting towards the stand with arms wide open, fans leaning over the barrier reaching to hug him`
+- [x] takim → `buried under a pile of celebrating teammates in the same plain red kit, group hug near the corner flag`
+- [x] forma → `swinging his shirt over his head bare-chested, the referee running in from the side reaching for his pocket`
+- [x] rakip → `standing in front of the rival stand with a finger pressed to his lips, rival fans in blue scarves booing behind a fence`
+- [x] imza → `doing a signature pose on one knee, pointing both index fingers up to the sky, camera flashes in the stands`
+- [x] kalp → `making a heart shape with his hands towards the family seats in the stand, a woman and a small child waving back (both blurred)`
+- [x] diz → `knee-sliding on wet grass with arms spread, water spraying from the turf, seen from a low angle`
+- [x] sakin → `walking back to the centre circle with palms raised apologetically, not celebrating, opposing fans applauding respectfully`
+Not: Fotoğraf gelince js/celebrate.js içindeki CELEB_IMAGES setine id eklenir; maç akışında ve Paslaş'ta görünür.

@@ -37,14 +37,21 @@ export function run(stat, onDone) {
     const place = () => { zc = 0.15 + Math.random() * 0.7; zone.style.left = (zc - zw / 2) * 100 + '%'; zone.style.width = zw * 100 + '%'; zv = stat === 'sut' ? (Math.random() < 0.5 ? -0.25 : 0.25) : 0; };
     place();
     info.textContent = `0 / ${tries}`;
+    // faz biriktirilir: hız değişince ibre zıplamaz. Dokunuş anındaki konum, ekranda görünen konumdur.
+    let phase = 0, last = 0, lock = 0;
     loop((t) => {
-      pos = (Math.sin(t * Math.PI * speed) + 1) / 2;
+      const dt = Math.min(0.05, t - last); last = t;
+      if (performance.now() < lock) return;          // sonuç gösterilirken ibre durur
+      phase += dt * Math.PI * speed;
+      pos = (Math.sin(phase) + 1) / 2;
       needle.style.left = pos * 100 + '%';
-      if (zv) { zc += zv / 60; if (zc < zw / 2 || zc > 1 - zw / 2) zv = -zv; zone.style.left = (zc - zw / 2) * 100 + '%'; }
+      if (zv) { zc += zv * dt; if (zc < zw / 2 || zc > 1 - zw / 2) { zv = -zv; zc = Math.min(1 - zw / 2, Math.max(zw / 2, zc)); } zone.style.left = (zc - zw / 2) * 100 + '%'; }
     });
-    stage.querySelector('.dtap').onclick = () => {
-      if (stopped) return;
-      const off = Math.abs(pos - zc) / (zw / 2);
+    stage.querySelector('.dtap').addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      if (stopped || performance.now() < lock) return;
+      lock = performance.now() + 450;
+      const off = Math.abs(pos - zc) / (zw / 2 + 0.012);
       const hit = off <= 1;
       const q = hit ? (off < 0.35 ? 1 : 0.7) : 0;
       pts += q; n++;
@@ -54,8 +61,8 @@ export function run(stat, onDone) {
       if (stat === 'teknik') { zw = Math.max(0.1, zw * 0.85); speed *= 1.1; }
       else speed *= 1.06;
       if (n >= tries) return end(pts / tries);
-      place();
-    };
+      setTimeout(() => { if (!stopped) place(); }, 450);
+    });
   } else if (stat === 'guc') {
     const tries = 4;
     stage.innerHTML = `<div class="tbar vert"><div class="tzone"></div><div class="tfill"></div></div><div class="tinfo"></div><button class="btn big dhold">BASILI TUT</button>`;
