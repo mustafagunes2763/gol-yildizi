@@ -3,7 +3,7 @@
 // Değiştirmek istersen buradaki değerleri düzenlemen yeterli.
 
 import { KULUPLER } from './kulupler.js';
-import { PL_TEAMS, EURO_TEAMS, UECL_TEAMS, LL_NEW, SA_NEW, BL_NEW, FR_NEW, NL_NEW, PT_NEW, BE_NEW } from './data-europe.js';
+import { PL_TEAMS, EURO_TEAMS, UECL_TEAMS, LL_NEW, SA_NEW, BL_NEW, FR_NEW, NL_NEW, PT_NEW, BE_NEW, SCO_NEW, GRE_NEW, AUT_NEW, SUI_NEW, DEN_NEW, NOR_NEW, CZE_NEW, POL_NEW } from './data-europe.js';
 
 export const SEASON_START_YEAR = 2026;
 
@@ -49,7 +49,7 @@ export const TEAMS = {
   ist:  { name: 'İstanbulspor',    short: 'İST', c1: '#FFD200', c2: '#111111', str: 57 },
   bol:  { name: 'Boluspor',        short: 'BOL', c1: '#D71920', c2: '#FFFFFF', str: 56 },
 };
-Object.assign(TEAMS, PL_TEAMS, EURO_TEAMS, UECL_TEAMS, LL_NEW, SA_NEW, BL_NEW, FR_NEW, NL_NEW, PT_NEW, BE_NEW);
+Object.assign(TEAMS, PL_TEAMS, EURO_TEAMS, UECL_TEAMS, LL_NEW, SA_NEW, BL_NEW, FR_NEW, NL_NEW, PT_NEW, BE_NEW, SCO_NEW, GRE_NEW, AUT_NEW, SUI_NEW, DEN_NEW, NOR_NEW, CZE_NEW, POL_NEW);
 
 // Kulüp bilgisi: gerçek ana renk, stadyum, şehir, hoca, ezeli rakipler
 for (const [id, k] of Object.entries(KULUPLER)) {
@@ -89,7 +89,23 @@ export const LEAGUES = {
         teams: ['ben', 'por', 'scp', 'bra', ...Object.keys(PT_NEW)], promote: 0, relegate: 0 },
   BE: { id: 'BE', name: 'Jupiler Pro League', tier: 1, country: 'BEL',
         teams: ['bru', 'usg', 'and', 'gnt', 'stv', ...Object.keys(BE_NEW)], promote: 0, relegate: 0 },
+  SCO: { id: 'SCO', name: 'Scottish Premiership', short: 'Premiership', tier: 1, country: 'SCO', teams: ['clt', 'hea', ...Object.keys(SCO_NEW)], promote: 0, relegate: 0 },
+  GRE: { id: 'GRE', name: 'Super League Yunanistan', short: 'Super League', tier: 1, country: 'GRE', teams: ['aek', 'oly', 'ofi', 'pao', ...Object.keys(GRE_NEW)], promote: 0, relegate: 0 },
+  AUT: { id: 'AUT', name: 'Avusturya Bundesliga', short: 'Bundesliga (AUT)', tier: 1, country: 'AUT', teams: ['rbs', 'rap', 'stg', 'lask', ...Object.keys(AUT_NEW)], promote: 0, relegate: 0 },
+  SUI: { id: 'SUI', name: 'İsviçre Super League', short: 'Super League (SUI)', tier: 1, country: 'SUI', teams: ['bas', 'yb', 'lug', 'thu', ...Object.keys(SUI_NEW)], promote: 0, relegate: 0 },
+  DEN: { id: 'DEN', name: 'Superliga', short: 'Superliga', tier: 1, country: 'DEN', teams: ['fck', 'fcm', 'fcn', 'agf', ...Object.keys(DEN_NEW)], promote: 0, relegate: 0 },
+  NOR: { id: 'NOR', name: 'Eliteserien', short: 'Eliteserien', tier: 1, country: 'NOR', teams: ['bodo', 'vik', 'lil2', 'brn', 'ros', ...Object.keys(NOR_NEW)], promote: 0, relegate: 0 },
+  CZE: { id: 'CZE', name: 'Çekya 1. Liga', short: 'Chance Liga', tier: 1, country: 'CZE', teams: ['sla', 'spa', 'plz', 'jab', ...Object.keys(CZE_NEW)], promote: 0, relegate: 0 },
+  POL: { id: 'POL', name: 'Ekstraklasa', short: 'Ekstraklasa', tier: 1, country: 'POL', teams: ['lch', 'leg', 'jag', 'gor', ...Object.keys(POL_NEW)], promote: 0, relegate: 0 },
 };
+// ülke bayrakları ve adları (lig seçici ve kupalar için)
+export const COUNTRIES = {
+  TUR: { name: 'Türkiye', flag: '🇹🇷' }, ENG: { name: 'İngiltere', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' }, ESP: { name: 'İspanya', flag: '🇪🇸' }, ITA: { name: 'İtalya', flag: '🇮🇹' },
+  GER: { name: 'Almanya', flag: '🇩🇪' }, FRA: { name: 'Fransa', flag: '🇫🇷' }, NED: { name: 'Hollanda', flag: '🇳🇱' }, POR: { name: 'Portekiz', flag: '🇵🇹' },
+  BEL: { name: 'Belçika', flag: '🇧🇪' }, SCO: { name: 'İskoçya', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿' }, GRE: { name: 'Yunanistan', flag: '🇬🇷' }, AUT: { name: 'Avusturya', flag: '🇦🇹' },
+  SUI: { name: 'İsviçre', flag: '🇨🇭' }, DEN: { name: 'Danimarka', flag: '🇩🇰' }, NOR: { name: 'Norveç', flag: '🇳🇴' }, CZE: { name: 'Çekya', flag: '🇨🇿' }, POL: { name: 'Polonya', flag: '🇵🇱' },
+};
+export const leagueShort = (lid) => LEAGUES[lid]?.short || LEAGUES[lid]?.name || lid;
 
 // Takım arkadaşı / rakip isimleri (gerçek kadrolar sonraki aşamada js/kadrolar.js ile gelecek)
 export const FIRST_NAMES = ['Emre','Burak','Arda','Kerem','Mert','Yusuf','Ozan','Barış','Kaan','Can','Efe','Ali','Umut','Hakan','Serdar','Onur','Cenk','Eren','Berkay','Oğuz','Semih','Yunus','Doğukan','Furkan','İsmail','Abdülkadir','Mehmet','Enes','Tolga','Halil','Lucas','Mateo','Victor','Joao','Moussa','Ivan','Luka','Nikola','David','Kevin'];

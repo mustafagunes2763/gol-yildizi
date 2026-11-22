@@ -4,7 +4,7 @@ import * as Social from './social.js';
 import * as Career from './career.js';
 import { KADROLAR } from './kadrolar.js';
 import { weeklyLife, initLife, injuryRoll } from './life.js';
-import { NAME_POOLS, UCL_2026, UEL_2026, UECL_2026 } from './data-europe.js';
+import { NAME_POOLS, NAME_POOLS_2, UCL_2026, UEL_2026, UECL_2026 } from './data-europe.js';
 import * as Stories from './stories.js';
 import * as Winter from './winter.js';
 import * as Invest from './invest.js';
@@ -36,7 +36,21 @@ export function poisson(lambda) {
   do { k++; p *= Math.random(); } while (p > L);
   return k - 1;
 }
-export const money = (n) => '₺' + Math.round(n).toLocaleString('tr-TR');
+// Para birimi: oyunun içinde tüm tutarlar TL tutulur; gösterim varsayılan olarak euro (ayarlardan TL seçilebilir)
+// Kur: 1 € ≈ 55,5 ₺ (TCMB / serbest piyasa, 19 Kasım 2026)
+export const EUR_RATE = 55.5;
+const CUR_KEY = 'golyildizi.currency';
+export const CUR = { mode: (() => { try { return globalThis.localStorage?.getItem(CUR_KEY) || 'EUR'; } catch { return 'EUR'; } })() };
+export function setCurrency(m) { CUR.mode = m === 'TRY' ? 'TRY' : 'EUR'; try { globalThis.localStorage?.setItem(CUR_KEY, CUR.mode); } catch {} }
+export const curSym = () => (CUR.mode === 'EUR' ? '€' : '₺');
+export const conv = (n) => (CUR.mode === 'EUR' ? n / EUR_RATE : n);
+export const money = (n) => { const v = conv(n); return (v < 0 ? '−' : '') + curSym() + Math.round(Math.abs(v)).toLocaleString('tr-TR'); };
+// kısa gösterim: 1,2 Mn / 350 B (sembolsüz istenirse sym=false)
+export function moneyShort(n, sym = true) {
+  const v = conv(n), a = Math.abs(v);
+  const t = a >= 1e9 ? (a / 1e9).toLocaleString('tr-TR', { maximumFractionDigits: 1 }) + ' Mr' : a >= 1e6 ? (a / 1e6).toLocaleString('tr-TR', { maximumFractionDigits: 1 }) + ' Mn' : a >= 1e3 ? Math.round(a / 1e3) + ' B' : String(Math.round(a));
+  return (v < 0 ? '−' : '') + (sym ? curSym() : '') + t;
+}
 export const randomName = () => `${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`;
 
 // ---------- oyuncu ----------
@@ -72,7 +86,7 @@ export const emptySeasonStats = () => ({ apps: 0, starts: 0, goals: 0, assists: 
 function genSquad(t = {}) {
   // Kadrosu gelmeyen takım: ülkeye uygun uydurma isimler, güce uygun reytingler (Gemini kadrosu gelince değişir)
   const positions = ['KL','DF','DF','DF','DF','OS','OS','OS','FV','FV','FV','KL','DF','DF','OS','OS','FV','FV'];
-  const pool = t.country ? (NAME_POOLS[t.country] || NAME_POOLS.GEN) : null;
+  const pool = t.country ? (NAME_POOLS[t.country] || NAME_POOLS_2[t.country] || NAME_POOLS.GEN) : null;
   const avg = 66 + ((t.str || 66) - 56) / 1.8;
   const used = new Set();
   return positions.map((pos, i) => {
@@ -223,7 +237,7 @@ const ASSIST_W = { FV: 2.2, OS: 4, DF: 1.5, KL: 0.1 };
 function pickBy(squad, W, not) {
   const list = squad.filter((x) => x.name !== not && (W[x.pos] || 0) > 0);
   if (!list.length) return null;
-  const w = list.map((x) => W[x.pos] * ((x.ovr || 60) / 70) ** 5);
+  const w = list.map((x) => W[x.pos] * ((x.ovr || 60) / 70) ** 5 * (x.rival ? 2.4 : 1));
   let r = Math.random() * w.reduce((a, b) => a + b, 0);
   for (let i = 0; i < list.length; i++) if ((r -= w[i]) < 0) return list[i];
   return list[list.length - 1];
@@ -246,6 +260,20 @@ export function addStat(state, teamId, name, g, a, me = false) {
   const r = (S[k] ||= [0, 0]);
   r[0] += g; r[1] += a;
   if (me) r[2] = 1;
+  // bu haftanın golleri (gazete ve Paslaş'taki "ligden notlar" için)
+  if (g) {
+    let W = state.season.wkStats;
+    if (!W || W.w !== state.season.week) W = state.season.wkStats = { w: state.season.week, m: {} };
+    W.m[k] = (W.m[k] || 0) + g;
+  }
+}
+// Geçen haftanın lig golcüleri: [{ team, name, g, total, me }]
+export function lastWeekScorers(state, lid, back = 1) {
+  const W = state.season.wkStats;
+  if (!W || W.w !== state.season.week - back) return [];
+  const teams = new Set(state.leagues[lid] || []);
+  return Object.entries(W.m).map(([k, g]) => { const [team, name] = k.split('|'); const r = state.season.ps?.[k] || [0, 0]; return { team, name, g, total: r[0], me: !!r[2] }; })
+    .filter((x) => teams.has(x.team)).sort((a, b) => b.g - a.g || b.total - a.total);
 }
 function simGoals(state, teamId, n) {
   const t = state.teams[teamId];
@@ -366,7 +394,13 @@ export function selection(state) {
   if (p.suspended > 0) return 'suspended';
   const rel = p.rel ? (p.rel.coach - 50) / 8 : 0;
   const promise = (p.weekFlags?.coachPromise ? 5 : 0) - (p.weekFlags?.benched ? 12 : 0) + (p.contract?.play || 0) * 3;
-  const ovr = overall(p) + (p.morale - 50) / 10 + (p.energy < 30 ? -5 : 0) + rel + promise;
+  // form: son maç notları ve sezon golleri hocanın kararını belirgin biçimde etkiler
+  const rec = p.recent?.length ? p.recent.reduce((a, b) => a + b, 0) / p.recent.length : 6.6;
+  const apps = p.season?.apps || 0, gpa = apps ? p.season.goals / apps : 0;
+  const form = clamp((rec - 6.6) * 4, -6, 8) + (apps >= 3 ? clamp(gpa * 8, 0, 9) : 0) + clamp((p.recentG || []).reduce((a, b) => a + b, 0) * 1.2, 0, 5);
+  const ovr = overall(p) + (p.morale - 50) / 10 + (p.energy < 30 ? -5 : 0) + rel + promise + form;
+  // takımın golcüsü kulübede oturmaz (hoca cezası yoksa)
+  if (!p.weekFlags?.benched && apps >= 5 && p.season.goals >= 6 && gpa >= 0.5 && rec >= 6.8) return 'starter';
   const fvs = t.squad.filter((x) => x.pos === 'FV' && x.ovr).map((x) => x.ovr).sort((a, b) => b - a);
   if (fvs.length >= 3) {
     // ilk 11 için 3. en iyi forveti, kadro için en zayıf forveti geçmelisin
@@ -619,6 +653,7 @@ export function finishMatch(state, plan, res) {
   if (plan.injured) p.backFrom = 'injury';
   else if (plan.suspended && p.suspended === 0) p.backFrom = 'ban';
   p.form = [...(p.form || []), res.result].slice(-5);
+  if (res.played) { p.recentG = [...(p.recentG || []), res.goals || 0].slice(-5); p.recent = [...(p.recent || []), res.rating].slice(-5); }
   p.lastMatch = { abs: state.season.year * 60 + state.season.week, opp: fx.opp, home: !!fx.home, myG, opG, goals: res.goals || 0, assists: res.assists || 0,
     rating, result: res.result, played: !!res.played, comp: fx.comp || null, derby: isDerby(p.clubId, fx.opp),
     oppScorers: plan.events.filter((e) => e.type === 'oppGoal').map((e) => e.scorer), bicycle: !!res.bicycle, fx: fx.comp || null };

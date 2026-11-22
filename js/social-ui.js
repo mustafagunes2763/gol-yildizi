@@ -48,6 +48,19 @@ function feedTab(s) {
   return `${storiesBar(s)}${crisis}${trends}${posts || '<p class="muted center pad">Akış boş. Bir hafta oyna, herkes senden bahsetsin!</p>'}`;
 }
 
+function exploreTab(s) {
+  const E2 = S.explore(st()), ui = X.ui;
+  const tag = ui.socTag;
+  const trends = `<div class="card trendbox"><b>🔥 Gündem</b>${E2.trends.map((t, i) => `<button class="trow ${tag === t.tag ? 'on' : ''} ${s.crisis?.tag === t.tag ? 'hot' : ''}" data-act="socTag" data-t="${esc(t.tag)}"><span class="tno">${i + 1}</span><span class="grow"><b>${esc(t.tag)}</b><small>${S.fmtF(t.count)} gönderi</small></span></button>`).join('')}</div>`;
+  const list = E2.posts.filter((x) => !tag || x.tag === tag);
+  const posts = list.map((x) => { const cm = S.EX_CMTS[x.kind] || S.EX_CMTS.any; return `<div class="spost">${head(x.author)}
+      <p class="stext">${fmtText(x.text)}</p>${image(x.img)}
+      <div class="sbar xbar"><button class="${x.liked ? 'liked' : ''}" data-act="socLike" data-id="${x.id}" ${x.liked ? 'disabled' : ''}>${x.liked ? '❤️' : '🤍'} ${S.fmtF(x.likes)}</button><span class="htag">${esc(x.tag)}</span></div>
+      ${x.cmt ? `<div class="ans">↳ <b>Sen:</b> ${esc(x.cmt)}</div>` : `<div class="ropts">${cm.map(([l], i) => `<button data-act="socCmt" data-id="${x.id}" data-o="${i}">${esc(l)}</button>`).join('')}</div>`}
+    </div>`; }).join('');
+  return `${trends}${tag ? `<button class="btn ghost sm" data-act="socTag" data-t="">✕ ${esc(tag)} filtresini kaldır</button>` : ''}${posts || '<p class="muted center pad">Bu etikette bu hafta paylaşım yok.</p>'}`;
+}
+
 function composeTab(s) {
   const opts = S.composeOptions(st());
   const left = S.POSTS_PER_WEEK - s.weekPosts;
@@ -132,16 +145,19 @@ export function screen() {
   const s = S.ensure(state);
   const t = ui.socTab ||= 'akis';
   const unread = s.dms.filter((d) => !d.done && d.options).length;
-  const body = s.live ? liveView(s) : ui.socProfile ? personaProfile(ui.socProfile) : t === 'yaz' ? composeTab(s) : t === 'profil' ? profileTab(s) : t === 'dm' ? dmTab(s) : feedTab(s);
+  const body = s.live ? liveView(s) : ui.socProfile ? personaProfile(ui.socProfile) : t === 'yaz' ? composeTab(s) : t === 'profil' ? profileTab(s) : t === 'dm' ? dmTab(s) : t === 'kesfet' ? exploreTab(s) : feedTab(s);
   if (t === 'dm') s.dms.forEach((d) => { d.read = true; });
   return `<header class="top paslas"><button class="back" data-go="hub">‹</button><img class="plogoimg" src="img/social/logo96.png" alt="" width="30" height="30"><h2 class="plogo">${S.APP}</h2><span class="grow"></span><span class="fchip">👥 ${S.fmtF(s.followers)}</span></header>
-    <div class="tabs stabs">${[['akis', '🏠 Akış'], ['yaz', '✍️ Paylaş'], ['profil', '👤 Profil'], ['dm', `✉️ Mesaj${unread ? ` <em class="nb">${unread}</em>` : ''}`]].map(([k, l]) => `<button class="${t === k ? 'on' : ''}" data-act="socTab" data-t="${k}">${l}</button>`).join('')}</div>
+    <div class="tabs stabs">${[['akis', '🏠 Akış'], ['kesfet', '🔍 Keşfet'], ['yaz', '✍️ Paylaş'], ['profil', '👤 Profil'], ['dm', `✉️ Mesaj${unread ? ` <em class="nb">${unread}</em>` : ''}`]].map(([k, l]) => `<button class="${t === k ? 'on' : ''}" data-act="socTab" data-t="${k}">${l}</button>`).join('')}</div>
     ${body}${ui.socStory ? storyOverlay(s, ui.socStory) : ''}`;
 }
 
-export const ACTS = new Set(['socTab', 'socPost', 'socReply', 'socDm', 'socProf', 'socProfClose', 'socStory', 'socStoryClose', 'socStoryPost', 'socLive', 'socLiveAns', 'socLiveEnd', 'socVote']);
+export const ACTS = new Set(['socLike', 'socCmt', 'socTag', 'socTab', 'socPost', 'socReply', 'socDm', 'socProf', 'socProfClose', 'socStory', 'socStoryClose', 'socStoryPost', 'socLive', 'socLiveAns', 'socLiveEnd', 'socVote']);
 export function handle(act, el) {
   const state = st(), ui = X.ui;
+  if (act === 'socTag') { ui.socTag = el.dataset.t || null; return X.render(); }
+  if (act === 'socLike') { const r = S.exploreLike(state, el.dataset.id); if (r.ok) { X.persist(); X.toast(r.msg); } return X.render(); }
+  if (act === 'socCmt') { const r = S.exploreComment(state, el.dataset.id, +el.dataset.o); if (r.ok) { X.persist(); X.toast(r.msg); } return X.render(); }
   if (act === 'socTab') { ui.socTab = el.dataset.t; ui.socProfile = null; X.render(); return window.scrollTo(0, 0); }
   if (act === 'socProf') { ui.socProfile = el.dataset.k; X.render(); return window.scrollTo(0, 0); }
   if (act === 'socProfClose') { ui.socProfile = null; return X.render(); }

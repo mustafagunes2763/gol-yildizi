@@ -1,7 +1,9 @@
 // Röportajlar: kendine has tarzı olan muhabirler, duruma göre sorular,
 // 4 tonda cevap (mütevazı / iddialı / esprili / sert) + konuşmayı reddetme.
 // Cevaplar hoca, takım, taraftar, sevgili ve basınla ilişkiyi etkiler; bazıları ertesi gün gazetede.
-import { clamp, pick, sortedTable } from './engine.js';
+import { clamp, pick, sortedTable, money, leagueOf } from './engine.js';
+import { LEAGUES } from './data.js';
+import * as Press from './press.js';
 import { clip, ek } from './news.js';
 import { isDerby, clubInfo } from './data.js';
 import * as Social from './social.js';
@@ -42,6 +44,10 @@ export const REPORTERS = {
     react: { humble: 'Nur stüdyoya döndü: "Olgun bir açıklama!"', bold: 'Nur kameraya döndü: "Duydunuz mu?!"', witty: 'Nur gülerek: "Stüdyo da kırıldı gülmekten!"', sharp: 'Nur gergin bir gülümsemeyle: "Yayına dönelim…"', refuse: 'Nur kameraya döndü: "Oyuncumuz konuşmak istemedi."' },
   },
 };
+// yabancı basın da muhabir listesine eklenir (soru havuzu "as" alanındaki Türk muhabirden gelir)
+for (const list of Object.values(Press.FOREIGN)) for (const j of list) REPORTERS[j.id] = j;
+const countryOf = (state) => LEAGUES[leagueOf(state, state.player.clubId)]?.country || 'TUR';
+
 export const TONES = {
   humble: { label: 'Mütevazı', icon: '🙏' },
   bold: { label: 'İddialı', icon: '💪' },
@@ -600,9 +606,18 @@ function vars(state, plan, res) {
   };
 }
 function build(state, plan, ctxKey, when, res) {
-  const c = C[ctxKey];
+  const country = countryOf(state);
+  const c = ctxKey === 'abroadPre'
+    ? { q: { selin: Press.ABROAD_Q[country] || ['Yeni ülkene alıştın mı?'] }, a: Press.ABROAD_A }
+    : C[ctxKey];
   const p = state.player;
-  const rid = pick(Object.keys(c.q));
+  // yurt dışında çoğunlukla o ülkenin gazetecileri soru sorar; Türk basını da peşinde
+  const locals = Press.forCountry(country);
+  const keys = Object.keys(c.q);
+  const localKeys = locals ? keys.filter((k) => locals.some((j) => j.as.includes(k))) : [];
+  const base = localKeys.length && Math.random() < 0.8 ? pick(localKeys) : pick(keys);
+  const local = locals && (ctxKey === 'abroadPre' || Math.random() < 0.7) ? locals.find((j) => j.as.includes(base)) || (ctxKey === 'abroadPre' ? locals[0] : null) : null;
+  const rid = local ? local.id : base;
   const R = REPORTERS[rid];
   const v = vars(state, plan, res);
   p.press ||= {};
@@ -615,7 +630,7 @@ function build(state, plan, ctxKey, when, res) {
   return {
     when, ctx: ctxKey, rid, reporter: R.name, outlet: R.outlet, icon: R.icon, style: R.style,
     hello: mood < 35 ? 'Geçen sefer pek konuşkan değildin… Bakalım bu sefer?' : mood > 70 ? 'Seninle konuşmak her zaman keyifli!' : pick(R.hello),
-    q: fill(pick(c.q[rid]), v), answers, partnerFx: c.partner,
+    q: fill(pick(c.q[base]), v), answers, partnerFx: c.partner, foreign: !!R.foreign,
   };
 }
 
@@ -638,6 +653,7 @@ export function preInterview(state, plan) {
   if (P && week >= 8 && P.pos > P.n - 4) opts.push(['relegation', 10]);
   if ((p.fame || 0) >= 40) opts.push(['rumor', 7]);
   if (p.partner || (p.owned || []).some((id) => id.startsWith('car'))) opts.push(['magazin', 6]);
+  if (countryOf(state) !== 'TUR' && Press.ABROAD_Q[countryOf(state)]) opts.push(['abroadPre', 9]);
   if ((p.casinoWeek || 0) < -500000) opts.push(['casino', 12]);
   if (opp.str >= me.str + 4) opts.push(['stronger', 8]);
   if (opp.str <= me.str - 4) opts.push(['weaker', 8]);
@@ -843,7 +859,7 @@ function effectSummary(fx) {
   if (fx.coach) parts.push(`Hoca ${sg(fx.coach)}`);
   if (fx.team) parts.push(`Takım ${sg(fx.team)}`);
   if (fx.partner) parts.push(`Sevgili ${sg(fx.partner)}`);
-  if (fx.money) parts.push(`Ceza ₺${Math.abs(fx.money).toLocaleString('tr-TR')}`);
+  if (fx.money) parts.push(`Ceza ${money(Math.abs(fx.money))}`);
   return parts.join(' · ');
 }
 export const _C = C;

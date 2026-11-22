@@ -108,6 +108,12 @@ export function nextParticipants(state, sum) {
     const need = 36 - quals.filter((q) => q.comp === c).length;
     for (const id of base[c]) { if (lists[c].length >= need) break; if (FOREIGN(id)) add(c, id); }
     for (const id of QUAL_RESERVE) { if (lists[c].length >= need) break; add(c, id); }
+    // yeni liglerle sabit havuz azaldıysa: önce lig dışı yabancılar, sonra yabancı liglerin güçlü takımları
+    if (lists[c].length < need) {
+      const tr = new Set([...(state.leagues.SL || []), ...(state.leagues.L1 || [])]);
+      const rest = Object.keys(state.teams).filter((id) => !used.has(id) && !tr.has(id)).sort((x, y) => (inLeague.has(x) - inLeague.has(y)) || ((state.teams[y].str || 0) - (state.teams[x].str || 0)));
+      for (const id of rest) { if (lists[c].length >= need) break; add(c, id); }
+    }
     lists[c] = lists[c].slice(0, need);
   }
   // eleme rakipleri: bir alt kupanın (ŞL için AL, AL için KL) yabancı takımlarından, KL için yedek havuzdan
@@ -116,6 +122,9 @@ export function nextParticipants(state, sum) {
     const pool = (low ? lists[low] : QUAL_RESERVE.filter((id) => !used.has(id))).filter((id) => FOREIGN(id) && !quals.some((o) => o.opps?.includes(id)));
     const strong = pool.map((id) => [id, state.teams[id]?.str || 70]).sort((a, b) => b[1] - a[1]).slice(0, 14).map((x) => x[0]);
     q.opps = shuffle(strong).slice(0, q.rounds.length);
+    // havuz küçükse (yeni ligler sabit havuzdan takım çekti) herhangi bir yabancı takımla tamamla
+    const trSet = new Set([...(state.leagues.SL || []), ...(state.leagues.L1 || [])]);
+    if (q.opps.length < q.rounds.length) { const extra = shuffle(Object.keys(state.teams).filter((id) => !trSet.has(id) && !used.has(id) && !q.opps.includes(id) && !quals.some((o) => o.opps?.includes(id)) && id !== q.team)); while (q.opps.length < q.rounds.length && extra.length) q.opps.push(extra.pop()); }
     lists[q.comp].push(q.team);     // şimdilik lig aşamasında; elenirse yer değiştirir
   }
   return { ...lists, quals, super: [last.UCL, last.UEL] };

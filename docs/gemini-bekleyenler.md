@@ -110,3 +110,46 @@ Sports press photo, 4:3, realistic, shallow depth of field, stadium floodlights 
 - [x] diz → `knee-sliding on wet grass with arms spread, water spraying from the turf, seen from a low angle`
 - [x] sakin → `walking back to the centre circle with palms raised apologetically, not celebrating, opposing fans applauding respectfully`
 Not: Fotoğraf gelince js/celebrate.js içindeki CELEB_IMAGES setine id eklenir; maç akışında ve Paslaş'ta görünür.
+
+## Gazete + Paslaş görselleri (2026-11-22) — 4:3 → img/news/<id>.jpg
+Şablon A (gazete/maç):
+```
+Sports press photo, 4:3, realistic, natural light or stadium floodlights, shallow depth of field. [SAHNE]. Fictional people only, faces turned away, blurred or out of frame. No logos, no sponsor text, no club badges, no readable text or numbers anywhere.
+```
+- [x] hattrick_ball → `a footballer in a plain white kit walking off the pitch from behind with the match ball tucked under his arm, teammates patting his back`
+- [x] striker_other → `a striker in a plain blue kit sliding on his knees after scoring, seen from behind, fans celebrating in the stand`
+- [x] scoreboard → `a big stadium scoreboard at night, digits deliberately blurred, floodlights and mist`
+- [x] bus → `a team bus arriving at a stadium at dusk, fans with scarves and red flares lining the road`
+- [x] tifo → `a huge colourful fan choreography covering a whole stand, abstract shapes and stripes, no letters`
+- [x] analysis → `a football analyst desk with two laptops showing abstract heatmaps and passing networks, coffee cup, tactics board behind`
+- [x] medical → `a footballer doing a medical test on a treadmill with sensors and a breathing mask, doctors' backs in the foreground`
+- [x] awayfans → `a small away section in heavy rain, fans in hooded jackets holding scarves above their heads`
+
+Şablon B (Paslaş, telefon fotoğrafı havası):
+```
+Smartphone social media photo, 4:3, candid, warm natural colours, slightly imperfect framing. [SAHNE]. Fictional people only, faces hidden, turned away or cropped. No logos, no brand names, no readable text.
+```
+- [x] soc_mirror → `a mirror selfie in a modern locker room, the phone covering the face, plain training kit`
+- [x] soc_challenge → `a football flying into a metal rubbish bin on a training pitch, shot from low angle, players cheering in the background`
+- [x] soc_kidfan → `a small boy seen from behind in a plain red football shirt holding up a signed shirt in a stadium stand`
+- [x] soc_charity → `a footballer from behind handing a teddy bear to a child in a bright hospital playroom, nurses smiling (faces blurred)`
+- [x] soc_portrait → `a pencil portrait drawing of a young footballer pinned on an easel in a small art studio, pencils and eraser shavings on the table`
+- [x] soc_tickets → `a hand holding two football match tickets in front of a stadium entrance (no text on the tickets)`
+- [x] soc_dinner → `a romantic restaurant table for two by a window with city lights, candles and wine glasses, couple's hands only`
+- [ ] soc_boat → `a small private boat on the Bosphorus at sunset, a couple seen from behind on the deck`
+- [x] soc_paris → `a couple seen from behind in front of the Eiffel Tower at night, holding hands`
+- [ ] soc_balloon → `hot air balloons over the fairy chimneys of Cappadocia at sunrise, taken from inside a balloon basket`
+- [ ] soc_movie → `a cosy sofa with a blanket, a pizza box and a TV glowing in a dark living room`
+
+## Ahmet Akyurt paylaşımları (2026-11-22) — 4:3 → img/news/ahmet_<id>.jpg
+Gemini'ye img/people/ahmet.jpg dosyasını referans olarak ekle. Şablon:
+```
+Smartphone social media photo, 4:3, realistic. The same young man as in the reference photo: about 19, Turkish, dark brown curly hair styled up on top with short faded sides, thick dark eyebrows, light stubble, brown eyes, slim athletic build, confident half-smile. [SAHNE]. No logos, no brand names, no club badges, no readable text.
+```
+- [ ] ahmet_gym → `lifting a heavy dumbbell in a modern gym, sweaty, serious look in the mirror`
+- [ ] ahmet_goal → `celebrating a goal with a finger on his lips, wearing a plain navy blue kit, stadium floodlights behind`
+- [ ] ahmet_training → `alone on a training pitch at dusk, a row of footballs lined up, taking a shot`
+- [ ] ahmet_car → `leaning against a shiny black sports car with no visible logo, sunglasses, evening city street`
+- [ ] ahmet_yacht → `relaxing on a yacht deck in summer with sunglasses, turquoise sea`
+- [ ] ahmet_trophy → `kissing a generic silver trophy with no text, confetti falling, plain navy blue kit`
+- [ ] ahmet_mirror → `a locker room mirror selfie, phone in hand, smug smile, plain navy blue training top`

@@ -206,6 +206,8 @@ export function weeklyLife(state, weekIndex) {
   if (p.captain) { p.morale = clamp(p.morale + 0.5, 0, 100); p.fame = clamp(p.fame + 0.1, 0, 100); }
   // sosyal medya (Paslaş)
   Social.weekly(state);
+  Social.weeklyScenario(state);
+  Social.weeklyLeaguePosts(state);
   // hikâye bölümü ya da rastgele olay
   if (!state.event) state.event = Stories.weeklyStory(state, randomEvent);
 }

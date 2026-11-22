@@ -2,7 +2,7 @@
 // Akış, profil + paylaşımlar, yorumlar ve cevaplar, DM kutusu, sponsorlu paylaşımlar, kriz/linç, takipçi.
 // Kurgusal rakip Ahmet Akyurt: kariyere ezeli rakipte başlar, sen lig değiştirdikçe peşinden gelir.
 // Gerçek oyuncular sadece tarafsız (gol krallığı kıyası) ya da olumlu (emoji yorum) geçer.
-import { clamp, pick, randInt, rand, money, addInbox, leagueOf, leagueStats, overall, sortedTable, seasonOffers, shuffle } from './engine.js';
+import { clamp, pick, randInt, rand, money, addInbox, leagueOf, leagueStats, overall, sortedTable, seasonOffers, shuffle, lastWeekScorers } from './engine.js';
 import { CELEB_IMAGES } from './celebrate.js';
 import { clubInfo, isDerby } from './data.js';
 import * as Trivia from './trivia.js';
@@ -250,7 +250,7 @@ export const TEMPLATES = [
   { id: 'loss', label: 'Mağlubiyet sonrası', emoji: '🙏', img: 'sad', when: (st, c) => c.lm && c.lm.result === 'L',
     text: () => pick([`Bugün olmadı. Sorumluluk hepimizin, kafamızı kaldıracağız.`, `Taraftarımızdan özür dileriz. Daha çok çalışacağız.`, `Kötü günler de geçer. Hep birlikte! 🙏`, `Kimse bizden daha üzgün değil. Telafi edeceğiz.`, `Mağlubiyet ağır ama ders çıkaracağız. Başımız dik 🙏`, `Bu formayı taşımanın sorumluluğunu biliyoruz. Daha iyisi gelecek.`, `Bu akşam uyku yok. Hataları izleyip düzelteceğiz.`, `Düşmek değil, kalkmamak ayıp. Kalkacağız 💪`, `Taraftarımız her şeyin en iyisini hak ediyor. Söz, toparlanacağız.`]),
     fx: { fans: 3, coach: 1 }, reach: 0.9 },
-  { id: 'training', label: 'Antrenman', emoji: '💪', img: 'gym', when: () => true,
+  { id: 'training', label: 'Antrenman', emoji: '💪', img: () => pick(['gym', 'soc_mirror']), when: () => true,
     text: () => pick([`Ekstra mesai 💪 Kimse görmezken çalışmak…`, `Sabah 7, saha, ben. ⏰⚽`, `Bitirici vuruşlar üzerinde çalıştık 🎯`, `Yağmur, çamur, fark etmez 🌧️⚽`, `Başarı tesadüf değil 💪`, `Bugün 200 şut. Yarın 201 🎯`, `Ter dökmeden gol gelmez 💦`, `Kondisyon günü… bacaklar beni affetsin 😅`, `Spor salonu → saha → buz banyosu → tekrar 🔁`, `Sol ayak çalışması: yavaş yavaş oturuyor 🦶`]),
     fx: { coach: 1, fans: 1 }, reach: 0.8 },
   { id: 'fans', label: 'Taraftara teşekkür', emoji: '❤️', img: 'fans', when: () => true,
@@ -314,7 +314,7 @@ export function post(state, tplId) {
   const res = applyFx(state, fx);
   if (t.endsCrisis && s.crisis) { s.crisis = null; addInbox(state, `🙇 Özür paylaşımı karşılık buldu, linç dindi.`); }
   const text = t.text(state, c);
-  const pst = { id: id(), abs: ABS(state), tpl: t.id, emoji: t.emoji, img: t.img, text, likes: Math.round(reach), comments: makeComments(state, t, res.crisis), sponsored: null };
+  const pst = { id: id(), abs: ABS(state), tpl: t.id, emoji: t.emoji, img: typeof t.img === 'function' ? t.img() : t.img, text, likes: Math.round(reach), comments: makeComments(state, t, res.crisis), sponsored: null };
   s.posts.unshift(pst); s.posts = s.posts.slice(0, 30);
   s.weekPosts++;
   if (t.id === 'jab') rivalAnswer(state);
@@ -412,9 +412,18 @@ export function answerDm(state, dmId, oi) {
   if (fx.money && fx.money < 0 && state.player.money < -fx.money) return { ok: false, msg: 'Paran yetmiyor.' };
   const r = applyFx(state, fx);
   if (sponsor) sponsoredPost(state, sponsor, fx.money);
+  const fpost = o.odds !== undefined ? (text === o.win?.result ? o.win.post : null) : o.post;
+  if (fpost) photoPost(state, fpost.img, fpost.text);
   d.done = { label: o.label, text, summary: r.summary };
   d.read = true;
   return { ok: true, text, summary: r.summary };
+}
+// Senaryo sonrası kendi paylaşımın (fotoğraflı)
+function photoPost(state, img, text) {
+  const s = state.social;
+  const pst = { id: id(), abs: ABS(state), tpl: 'scn', emoji: '📸', img, text, likes: Math.round(s.followers * rand(0.05, 0.12)), sponsored: null,
+    comments: [{ who: fanAuthor(), text: pick(PRAISE), tone: 'praise' }, { who: fanAuthor(), text: pick(['❤️❤️', 'Helal olsun 👏', 'Örnek insan 🙌']), tone: 'praise' }] };
+  s.posts.unshift(pst); s.posts = s.posts.slice(0, 30);
 }
 function sponsoredPost(state, brand, pay) {
   const s = state.social;
@@ -485,6 +494,9 @@ export function weekly(state) {
   if (s.lastWeek === now) return;
   s.lastWeek = now;
   const c = ctx(state), lm = c.lm && c.lm.abs === now ? c.lm : null, r = s.rival;
+  // Ahmet de seninle birlikte gelişir (güç farkı sabit kalır)
+  const rv = state.teams[r?.team]?.squad.find((x) => x.rival);
+  if (rv) { rv.ovr = clamp(Math.round(overall(p) + (r.edge ?? 1)), 45, 95); rv.age = p.age; r.ovr = rv.ovr; }
   const rg = rivalGoals(state);
   const me = meAuthor(state), myTeam = state.teams[p.clubId];
   // rakip senkron: senin gücüne yakın, bazen öne geçer
@@ -643,13 +655,13 @@ function coachReaction(state, t, c, crisis) {
 
 // ================================================================ HİKÂYELER (1 hafta = "24 saat")
 export const STORY_TPL = [
-  { id: 'matchday', label: 'Maç günü', emoji: '⚽', img: 'locker', text: 'Maç günü 🔥 Hazırız!', fx: { fans: 1 } },
+  { id: 'matchday', label: 'Maç günü', emoji: '⚽', img: () => pick(['locker', 'soc_mirror']), text: 'Maç günü 🔥 Hazırız!', fx: { fans: 1 } },
   { id: 'gym', label: 'Spor salonu', emoji: '🏋️', img: 'gym', text: 'Ekstra mesai 💪', fx: { coach: 1 } },
   { id: 'food', label: 'Maç öncesi yemek', emoji: '🍝', img: null, text: 'Karbonhidrat yüklemesi 🍝', fx: {} },
   { id: 'music', label: 'Isınma müziği', emoji: '🎧', img: null, text: 'Bugünün şarkısı 🎧🔥', fx: { morale: 1 } },
   { id: 'car', label: 'Araba', emoji: '🏎️', img: 'car', text: 'Yola çıktık 🏁', fx: { fame: 1 }, when: (st) => st.player.owned?.some((x) => x.startsWith('car')) },
   { id: 'holiday', label: 'Tatil', emoji: '🏖️', img: 'holiday', text: 'Kısa bir nefes 🌊', fx: { morale: 2, coach: -1 } },
-  { id: 'date', label: 'Sevgiliyle akşam', emoji: '💕', img: 'date', text: '❤️', fx: { partner: 3 }, when: (st) => !!st.player.partner },
+  { id: 'date', label: 'Sevgiliyle akşam', emoji: '💕', img: () => pick(['date', 'soc_dinner']), text: '❤️', fx: { partner: 3 }, when: (st) => !!st.player.partner },
 ];
 export function storyOptions(state) { return STORY_TPL.filter((t) => !t.when || t.when(state)); }
 export function postStory(state, tplId) {
@@ -659,7 +671,7 @@ export function postStory(state, tplId) {
   const fx = { ...t.fx, followersPct: Math.round(rand(0.2, 0.7) * 10) / 10 };
   const res = applyFx(state, fx);
   s.stories = (s.stories || []).filter((x) => !x.mine);
-  s.stories.unshift({ id: id(), mine: true, who: meAuthor(state), text: t.text, img: t.img, emoji: t.emoji, abs: ABS(state), views: Math.round(s.followers * rand(0.15, 0.35)), seen: true });
+  s.stories.unshift({ id: id(), mine: true, who: meAuthor(state), text: t.text, img: typeof t.img === 'function' ? t.img() : t.img, emoji: t.emoji, abs: ABS(state), views: Math.round(s.followers * rand(0.15, 0.35)), seen: true });
   s.weekStory = 1;
   return { ok: true, summary: res.summary };
 }
@@ -898,4 +910,145 @@ function agentDms(state) {
       { label: 'Gerek yok', fx: { morale: -1 }, result: '"Sen bilirsin evlat."' },
     ], { abs: now, kind: 'agent' });
   }
+}
+
+// ================================================================ KEŞFET & GÜNDEM
+// Haftalık keşfet akışı: kulüp hesapları, istatistik sayfaları, taraftar sayfaları, takım arkadaşları ve Ahmet.
+// Gerçek futbolcular yalnızca tarafsız/olumlu içerikte geçer.
+const tagOf = (t) => '#' + String(t).replace(/[^\wçğıöşüÇĞİÖŞÜ]/g, '');
+export function explore(state) {
+  const s = ensure(state); if (!s) return null;
+  const now = ABS(state);
+  if (s.explore?.abs === now) return s.explore;
+  const p = state.player, lid = leagueOf(state, p.clubId), myTeam = state.teams[p.clubId];
+  const posts = [];
+  const add = (author, text, tag, o = {}) => posts.push({ id: id(), author, text, tag, likes: o.likes ?? randInt(800, 40_000), liked: false, cmt: null, kind: o.kind || '', img: o.img || null });
+  // ligin son sonuçları (kulüp hesapları)
+  const teams = state.leagues[lid] || [];
+  for (const id2 of shuffle(teams.filter((t) => t !== p.clubId)).slice(0, 3)) {
+    const t = state.teams[id2];
+    const star = (t.squad || []).filter((x) => x.pos === 'FV' && !x.rival).sort((a, b) => (b.ovr || 0) - (a.ovr || 0))[0];
+    add({ name: t.name, handle: tr(t.name), club: id2, verified: true }, pick([
+      `Antrenmanda tempo yüksek 💪 Haftaya hazırız!`, `Taraftarımıza teşekkürler, desteğiniz bizim gücümüz ❤️`,
+      star ? `${star.name} antrenmanda formda 🔥` : `Yeni haftaya odaklandık ⚽`, `Altyapımızdan gençler A takım antrenmanında 🌱`, `Bilet satışları başladı! Tribünleri dolduralım 🎟️`,
+    ]), tagOf(t.name));
+    if (/Bilet/.test(posts.at(-1).text)) posts.at(-1).img = 'soc_tickets';
+  }
+  // istatistik: ligin golcüleri
+  const top = leagueStats(state, lid).sort((a, b) => b.g - a.g).slice(0, 3);
+  if (top.length) add(PAGES.istatistik, `⚽ Gol krallığı yarışı:\n${top.map((x, i) => `${i + 1}. ${x.me ? `${p.name} ${p.surname}` : x.name} – ${x.g}`).join('\n')}`, '#GolKrallığı', { likes: randInt(5_000, 60_000) });
+  // takım arkadaşları
+  const mates = (myTeam.squad || []).filter((x) => !x.rival && x.pos !== 'KL');
+  if (mates.length) { const m = pick(mates); add({ name: m.name, handle: tr(m.name), av: '⚽', mate: true }, pick(['Bugün antrenmanda harika bir gündü 💪', 'Yeni kramponlar 👟', 'Ailemle güzel bir hafta sonu ❤️', 'Hazırız 🔥 #Maçgünü', 'Toparlanma günü 🧊']), tagOf(myTeam.name), { kind: 'mate' }); }
+  // Ahmet
+  const r = s.rival;
+  if (r) add({ name: RIVAL_NAME, handle: tr(RIVAL_NAME), rival: true, verified: true }, pick([`Sessizce çalışıyoruz. Konuşmayı sahaya bırakıyoruz 🤫`, `${rivalSeasonGoals(state)} gol. Daha bitmedi 😎`, `Bazıları sadece Paslaş'ta forvet 😏`, `Antrenman sonrası ekstra şut çalışması 🎯`, `Hedef büyük, yol uzun 🏁`]), '#AhmetAkyurt', { kind: 'rival', likes: Math.max(randInt(2_000, 15_000), Math.round(r.followers * rand(0.03, 0.09))) });
+  // taraftar sayfası ve gündem
+  add({ name: `${myTeam.name} Taraftar`, handle: tr(myTeam.name) + 'taraftar', av: '📣' }, pick([`Bu hafta stadı dolduruyoruz! Herkes tribüne 📣`, `${p.surname} için yeni tezahürat hazırlıyoruz 🎶`, `Deplasman otobüsleri doldu bile 🚌`, `Tribün koreografisi için gönüllüler aranıyor 🎨`]), tagOf(myTeam.name), { kind: 'fan' });
+  { const fp = posts.at(-1); fp.img = /koreografi|stadı/.test(fp.text) ? 'tifo' : /otobüs/.test(fp.text) ? 'bus' : Math.random() < 0.4 ? 'awayfans' : null; }
+  add(PAGES.gundem, pick(['Haftanın en çok konuşulan maçı hangisi? 👇', 'Transfer dönemi yaklaşırken kulüpler kesenin ağzını açıyor 💸', 'VAR kararları yine gündemde 📺', 'Genç oyuncular bu sezon ligi sırtlıyor 🌟']), '#Gündem');
+  // trendler: sayılarla
+  const tags = [...new Set([...(s.trends || []), ...posts.map((x) => x.tag)])].slice(0, 8);
+  const trends = tags.map((t) => ({ tag: t, count: Math.round(rand(2, 80) * 1000 * (t === s.crisis?.tag ? 3 : 1)) })).sort((a, b) => b.count - a.count);
+  s.explore = { abs: now, posts: shuffle(posts), trends, likes: 0 };
+  return s.explore;
+}
+export const EX_CMTS = {
+  any: [['👏 Tebrikler', { fans: 0 }], ['🔥🔥🔥', {}]],
+  mate: [['💪 Kardeşim!', { team: 2 }], ['😂 Kramponlar sana yakışmamış', { team: -1, followersPct: 0.2 }]],
+  rival: [['😏 "Sahada görüşürüz."', { heat: 8, fame: 0.5, crisis: 0.08, crisisWhy: "Ahmet'e laf sokması" }], ['👏 "Başarılar Ahmet."', { heat: -6, fans: 1 }]],
+  fan: [['❤️ "Sizinle gurur duyuyorum!"', { fans: 2 }]],
+};
+export function exploreLike(state, pid) {
+  const s = ensure(state), E2 = s?.explore; if (!E2) return { ok: false };
+  const x = E2.posts.find((y) => y.id === pid); if (!x || x.liked) return { ok: false };
+  x.liked = true; x.likes++;
+  let msg = 'Beğendin ❤️';
+  if (x.kind === 'mate' && state.player.rel) { state.player.rel.team = clamp(state.player.rel.team + 1, 0, 100); msg = 'Takım arkadaşın beğenini gördü (Takım +1)'; }
+  if (x.kind === 'rival' && s.rival) { s.rival.heat = clamp(s.rival.heat - 2, 0, 100); msg = 'Ahmet\'in paylaşımını beğendin… taraftarlar şaşkın 👀'; state.player.fans = clamp((state.player.fans ?? 50) - 1, 0, 100); }
+  if (x.kind === 'fan') { state.player.fans = clamp((state.player.fans ?? 50) + 1, 0, 100); msg = 'Taraftar sayfası beğenini fark etti (Taraftar +1)'; }
+  return { ok: true, msg };
+}
+export function exploreComment(state, pid, oi) {
+  const s = ensure(state), E2 = s?.explore; if (!E2) return { ok: false };
+  const x = E2.posts.find((y) => y.id === pid); if (!x || x.cmt) return { ok: false };
+  const list = EX_CMTS[x.kind] || EX_CMTS.any;
+  const o = list[oi]; if (!o) return { ok: false };
+  x.cmt = o[0];
+  const r = applyFx(state, o[1]);
+  return { ok: true, msg: r.summary || 'Yorum yapıldı' };
+}
+
+// ================================================================ SENARYOLAR (haftalık, mesaj kutusuna)
+const SCN = [
+  (st) => ({ img: null, from: { name: 'Mert Can (12)', handle: 'kucukmert', av: '🧒' }, text: `Abi ben senin en büyük hayranınım! Okulda herkese senin gol sevincini yapıyorum. Maça gelebilir miyim? 🥺`, options: [
+    { label: 'Ailesiyle maça davet et, imzalı forma hazırla', fx: { fans: 3, followersPct: 1, money: -20_000 }, result: 'Mert maçta tribünden el salladı, video viral oldu!', post: { img: 'soc_kidfan', text: 'Küçük Mert bugün tribündeydi ❤️ İmzalı forma artık senin şampiyon!' } },
+    { label: 'Sevimli bir sesli mesaj gönder', fx: { fans: 1 }, result: 'Mert sesli mesajı bütün sınıfa dinletti.' },
+    { label: 'Görmezden gel', fx: { fans: -1 }, result: '' }] }),
+  (st) => ({ from: { name: 'Paslaş Güvenlik', handle: 'paslasguvenlik', av: '🔐', verified: true }, text: 'Hesabına yabancı bir cihazdan giriş denemesi yapıldı. Biri adına sahte bir hesap da açmış görünüyor.', options: [
+    { label: 'Şifreyi değiştir, sahte hesabı şikâyet et', fx: { followersPct: 0.5 }, result: 'Sahte hesap kapatıldı, takipçilerin uyarıyı paylaştı.' },
+    { label: 'Boş ver', odds: 0.5, win: { fx: {}, result: 'Bir şey olmadı… şimdilik.' }, lose: { fx: { followersPct: -3, fans: -2 }, result: 'Hesabından garip reklamlar paylaşıldı! Takipçiler şaşkın.' } }] }),
+  (st) => ({ from: { name: 'Lara Ses', handle: 'laraseslemagazin', av: '📸', verified: true }, text: 'Seninle ortak bir "bir gün benimle" videosu çekmek istiyorum. Milyonlarca izlenme garanti! 🎥', options: [
+    { label: 'Kabul et', odds: 0.65, win: { fx: { followersPct: 6, fame: 1, energy: -8 }, result: 'Video patladı, herkes konuşuyor!' }, lose: { fx: { followersPct: 2, fans: -2, energy: -8 }, result: 'Videodaki bir şaka yanlış anlaşıldı, taraftar kızgın.' } },
+    { label: 'Kibarca reddet, futbola odaklan', fx: { coach: 2 }, result: 'Hoca bu tavrını beğendi.' }] }),
+  (st) => ({ img: 'soc_challenge', from: { name: '#GolChallenge', handle: 'golchallenge', av: '🎯' }, text: 'Herkes çöp kutusuna uzaktan şut atıp videosunu paylaşıyor. Seni de etiketlediler! 🗑️⚽', options: [
+    { label: 'Videoyu çek, ilk denemede at!', odds: 0.5, win: { fx: { followersPct: 4, fame: 0.5 }, result: 'İlk denemede! Video milyonları geçti.', post: { img: 'soc_challenge', text: 'İlk denemede 🎯🗑️ #GolChallenge sırası sizde!' } }, lose: { fx: { followersPct: 1 }, result: '17. denemede attın; blooper videosu daha çok izlendi 😂' } },
+    { label: 'Takım arkadaşlarıyla birlikte çek', fx: { team: 3, followersPct: 2 }, result: 'Soyunma odası kahkahaya boğuldu.', post: { img: 'soc_challenge', text: 'Takımca #GolChallenge 😂🗑️ Kim attı tahmin edin!' } },
+    { label: 'Katılma', fx: {}, result: '' }] }),
+  (st) => ({ from: { name: 'Umut Vakfı', handle: 'umutvakfi', av: '💚', verified: true }, text: 'Lösemili çocuklar için bağış kampanyası başlattık. Destek olur musun?', options: [
+    { label: 'Büyük bağış yap ve duyur', post: { img: 'soc_charity', text: 'Bugün çocuklarla birlikteydik. Asıl kahramanlar onlar 💚 @umutvakfi' }, fx: { money: -Math.max(200_000, Math.round(st.player.contract.wage * 3)), fans: 4, fame: 1 }, result: 'Kampanya hedefini aştı, çocuklar sana teşekkür videosu gönderdi.' },
+    { label: 'Sessizce bağış yap', fx: { money: -Math.max(200_000, Math.round(st.player.contract.wage * 3)), morale: 5 }, result: 'Kimse bilmedi ama içinin rahatladığını hissettin.' },
+    { label: 'Paylaşımı yeniden paylaş', fx: { fans: 1 }, result: 'Paylaşımın bağışları artırdı.' }] }),
+  (st) => ({ from: { name: 'Mizah Dünyası', handle: 'mizahdunyasi', av: '🤣' }, text: `Senin kaçırdığın pozisyonu "kedi kovalayan forvet" diye montajlayıp paylaştık 😂 Ne dersin?`, options: [
+    { label: 'Esprili cevap ver ve paylaş', fx: { followersPct: 3, fans: 2 }, result: 'Kendinle dalga geçebilmen herkesin hoşuna gitti.' },
+    { label: 'Kaldırmalarını iste', fx: { fans: -1 }, result: 'Kaldırdılar ama ekran görüntüleri dolaşmaya devam etti.' },
+    { label: 'Avukatını devreye sok', fx: { fans: -3, money: -50_000 }, result: '"Espriden anlamıyor" yorumları yağdı.' }] }),
+  (st) => ({ from: { name: 'Eski bir paylaşım', handle: 'arsiv', av: '🗂️' }, text: `Biri senin 14 yaşındayken yazdığın "${st.social?.rival ? st.teams[st.social.rival.team].name : 'rakip takım'} benim hayalim" paylaşımını buldu ve gündem yaptı 😬`, options: [
+    { label: '"Çocukluk işte 😅" diye cevap ver', fx: { fans: 1, followersPct: 1 }, result: 'Samimi cevabın krizi önledi.' },
+    { label: 'Paylaşımı sil', odds: 0.5, win: { fx: {}, result: 'Konu kapandı.' }, lose: { fx: { fans: -3 }, result: '"Sildi!" diye ekran görüntüleri paylaşıldı.', } },
+    { label: 'Hiç cevap verme', fx: { fans: -1 }, result: 'Birkaç gün konuşulup unutuldu.' }] }),
+  (st) => ({ img: 'soc_portrait', from: { name: 'Çizer Ayşe', handle: 'cizerayse', av: '🎨' }, text: 'Senin için bir portre çizdim! Paylaşırsan çok mutlu olurum 🥹', options: [
+    { label: 'Paylaş ve teşekkür et', fx: { fans: 2, followersPct: 0.5 }, result: 'Ayşe\'nin takipçileri on katına çıktı.', post: { img: 'soc_portrait', text: 'Ellerine sağlık @cizerayse 🎨🥹' } },
+    { label: 'Satın alıp evine as', fx: { money: -15_000, morale: 3 }, result: 'Portre salonunda yerini aldı.' }] }),
+  (st) => ({ from: { name: 'Takım WhatsApp grubu', handle: 'soyunmaodasi', av: '💬' }, text: 'Kaptan doğum günü için ortak bir paylaşım istiyor. Herkes bir video gönderiyor.', options: [
+    { label: 'Komik bir video gönder', fx: { team: 4 }, result: 'Videon soyunma odasında en çok güldüren oldu.' },
+    { label: 'Kısa bir "iyi ki doğdun" yaz', fx: { team: 1 }, result: '' },
+    { label: 'Unut', fx: { team: -3 }, result: 'Kaptan bir şey demedi ama fark etti.' }] }),
+];
+export function weeklyScenario(state) {
+  const s = ensure(state); if (!s) return;
+  const now = ABS(state);
+  if (now - (s.lastScn ?? -99) < 3 || Math.random() > 0.55) return;
+  s.lastScn = now;
+  const used = new Set(s.scnUsed || []);
+  let pool = SCN.map((f, i) => i).filter((i) => !used.has(i));
+  if (!pool.length) { s.scnUsed = []; pool = SCN.map((f, i) => i); }
+  const i = pick(pool);
+  s.scnUsed = [...(s.scnUsed || []), i].slice(-6);
+  const sc = SCN[i](state);
+  dm(s, sc.from, sc.text, sc.options, { kind: 'scn', img: sc.img || null });
+}
+
+// ================================================================ LİGDEN OYUNCULAR (haftalık)
+// Ligdeki diğer oyuncular hakkında istatistik ve gündem paylaşımları. Gerçek oyuncular yalnızca olumlu/tarafsız.
+export function weeklyLeaguePosts(state) {
+  const s = ensure(state); if (!s) return;
+  const p = state.player, lid = leagueOf(state, p.clubId);
+  const list = lastWeekScorers(state, lid, 0).filter((x) => !x.me && x.name !== RIVAL_NAME);
+  if (!list.length || Math.random() > 0.7) return;
+  const T = (x) => state.teams[x.team]?.name || '';
+  const hat = list.find((x) => x.g >= 3), two = list.filter((x) => x.g >= 2);
+  const MIL = [10, 15, 20, 25, 30];
+  const mil = list.find((x) => MIL.some((m) => x.total >= m && x.total - x.g < m));
+  if (hat) pushFeed(s, PAGES.gundem, `🎩 HAT-TRICK! ${hat.name} (${T(hat)}) bu hafta ${hat.g} gol attı ve sezondaki gol sayısını ${hat.total} yaptı. #HaftanınOyuncusu`, { likes: randInt(8_000, 90_000) });
+  else if (mil) pushFeed(s, PAGES.istatistik, `📊 ${mil.name} (${T(mil)}) sezonun ${mil.total}. golünü attı. Gol krallığı yarışında iddiasını sürdürüyor.`, { likes: randInt(3_000, 40_000) });
+  else if (two.length) pushFeed(s, PAGES.istatistik, `⚽ Haftanın çift golcüleri:\n${two.slice(0, 3).map((x) => `${x.name} (${T(x)}) ×${x.g}`).join('\n')}`, { likes: randInt(2_000, 25_000) });
+  else {
+    const top = list.slice(0, 3);
+    pushFeed(s, PAGES.istatistik, `⚽ Haftanın golcüleri:\n${top.map((x) => `${x.name} (${T(x)}) – sezonda ${x.total}`).join('\n')}`, { likes: randInt(2_000, 20_000) });
+  }
+  // gol krallığında oyuncuyu geçen biri varsa
+  const tbl = leagueStats(state, lid).sort((a, b) => b.g - a.g);
+  const meRow = tbl.find((x) => x.me), first = tbl[0];
+  if (meRow && first && !first.me && first.g > meRow.g && Math.random() < 0.3) pushFeed(s, personaAuthor('akif'), `📊 Gol krallığında zirve: ${first.name} ${first.g} gol. ${p.name} ${p.surname} ${meRow.g} golle takipte. Fark ${first.g - meRow.g}.`, { likes: randInt(1_000, 9_000) });
 }

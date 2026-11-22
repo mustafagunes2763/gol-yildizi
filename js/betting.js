@@ -10,7 +10,7 @@ const odd = (q) => Math.max(1.03, Math.min(250, Math.round((MARGIN / Math.max(q,
 export const MARKETS = {
   MS: 'Maç sonucu', CS: 'Çifte şans', AU: 'Alt / Üst 2,5', AU35: 'Alt / Üst 3,5', KG: 'Karşılıklı gol', IY: 'İlk yarı sonucu', SK: 'Kesin skor',
 };
-export const LG = { SL: 'Süper Lig', L1: '1. Lig', PL: 'Premier Lig', LL: 'La Liga', SA: 'Serie A', BL: 'Bundesliga', FR: 'Ligue 1', NL: 'Eredivisie', PT: 'Liga Portugal', BE: 'Pro League' };
+export const LG = { SL: 'Süper Lig', L1: '1. Lig', PL: 'Premier Lig', LL: 'La Liga', SA: 'Serie A', BL: 'Bundesliga', FR: 'Ligue 1', NL: 'Eredivisie', PT: 'Liga Portugal', BE: 'Pro League', SCO: 'Premiership', GRE: 'Super League (GRE)', AUT: 'Bundesliga (AUT)', SUI: 'Super League (SUI)', DEN: 'Superliga', NOR: 'Eliteserien', CZE: 'Chance Liga', POL: 'Ekstraklasa' };
 
 // skor matrisi -> tüm pazarlar
 function markets(xh, xa) {

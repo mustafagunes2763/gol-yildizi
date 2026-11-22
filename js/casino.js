@@ -1,5 +1,5 @@
 // Gazino oyunları: rulet (gerçek masa), barbut, kazı kazan, Texas Hold'em poker. (Slot ve 21 life.js'te.)
-import { randInt, pick, shuffle } from './engine.js';
+import { randInt, pick, shuffle, money } from './engine.js';
 
 // ---------------------------------------------------------------- RULET
 // Avrupa ruleti: çarktaki gerçek sıra
@@ -140,7 +140,7 @@ export function newTable(buyIn) {
     dealer: randInt(0, 3), hand: null, log: [], hands: 0,
   };
 }
-const fmt = (n) => Math.round(n).toLocaleString('tr-TR');
+const fmt = (n) => money(n);
 const active = (h) => h.ps.filter((p) => !p.folded);
 const canAct = (p) => !p.folded && !p.allIn;
 

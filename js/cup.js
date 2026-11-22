@@ -13,6 +13,14 @@ export const CUPS = {
   NED: { name: 'Hollanda Kupası', short: 'HK', icon: '🏆', flag: '🇳🇱', fame: 7, prize: 6_000_000 },
   POR: { name: 'Portekiz Kupası', short: 'PK', icon: '🏆', flag: '🇵🇹', fame: 7, prize: 6_000_000 },
   BEL: { name: 'Belçika Kupası', short: 'BK', icon: '🏆', flag: '🇧🇪', fame: 6, prize: 5_000_000 },
+  SCO: { name: 'İskoçya Kupası', short: 'İK', icon: '🏆', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', fame: 6, prize: 4000000 },
+  GRE: { name: 'Yunanistan Kupası', short: 'YK', icon: '🏆', flag: '🇬🇷', fame: 6, prize: 4000000 },
+  AUT: { name: 'Avusturya Kupası', short: 'AK', icon: '🏆', flag: '🇦🇹', fame: 5, prize: 3500000 },
+  SUI: { name: 'İsviçre Kupası', short: 'İK', icon: '🏆', flag: '🇨🇭', fame: 5, prize: 3500000 },
+  DEN: { name: 'Danimarka Kupası', short: 'DK', icon: '🏆', flag: '🇩🇰', fame: 5, prize: 3000000 },
+  NOR: { name: 'Norveç Kupası', short: 'NK', icon: '🏆', flag: '🇳🇴', fame: 5, prize: 3000000 },
+  CZE: { name: 'Çekya Kupası', short: 'ÇK', icon: '🏆', flag: '🇨🇿', fame: 5, prize: 3000000 },
+  POL: { name: 'Polonya Kupası', short: 'PK', icon: '🏆', flag: '🇵🇱', fame: 5, prize: 3000000 },
 };
 const ROUND_NAMES = { 64: '1. tur', 32: 'Son 32', 16: 'Son 16', 8: 'Çeyrek final', 4: 'Yarı final', 2: 'Final' };
 

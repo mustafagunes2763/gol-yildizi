@@ -15,6 +15,14 @@ export const TROPHY = {
   champ_NL: { name: 'Eredivisie Şampiyonluğu', icon: '🇳🇱' },
   champ_PT: { name: 'Liga Portugal Şampiyonluğu', icon: '🇵🇹' },
   champ_BE: { name: 'Pro League Şampiyonluğu', icon: '🇧🇪' },
+  champ_SCO: { name: 'Premiership Şampiyonluğu', icon: '🏴󠁧󠁢󠁳󠁣󠁴󠁿' },
+  champ_GRE: { name: 'Super League (GRE) Şampiyonluğu', icon: '🇬🇷' },
+  champ_AUT: { name: 'Bundesliga (AUT) Şampiyonluğu', icon: '🇦🇹' },
+  champ_SUI: { name: 'Super League (SUI) Şampiyonluğu', icon: '🇨🇭' },
+  champ_DEN: { name: 'Superliga Şampiyonluğu', icon: '🇩🇰' },
+  champ_NOR: { name: 'Eliteserien Şampiyonluğu', icon: '🇳🇴' },
+  champ_CZE: { name: 'Chance Liga Şampiyonluğu', icon: '🇨🇿' },
+  champ_POL: { name: 'Ekstraklasa Şampiyonluğu', icon: '🇵🇱' },
   ucl: { name: 'Şampiyonlar Ligi', icon: '⭐' },
   uel: { name: 'Avrupa Ligi', icon: '🟠' },
   uecl: { name: 'Konferans Ligi', icon: '🟢' },
@@ -28,6 +36,14 @@ export const TROPHY = {
   cup_NED: { name: 'Hollanda Kupası', icon: '🏆' },
   cup_POR: { name: 'Portekiz Kupası', icon: '🏆' },
   cup_BEL: { name: 'Belçika Kupası', icon: '🏆' },
+  cup_SCO: { name: 'İskoçya Kupası', icon: '🏆' },
+  cup_GRE: { name: 'Yunanistan Kupası', icon: '🏆' },
+  cup_AUT: { name: 'Avusturya Kupası', icon: '🏆' },
+  cup_SUI: { name: 'İsviçre Kupası', icon: '🏆' },
+  cup_DEN: { name: 'Danimarka Kupası', icon: '🏆' },
+  cup_NOR: { name: 'Norveç Kupası', icon: '🏆' },
+  cup_CZE: { name: 'Çekya Kupası', icon: '🏆' },
+  cup_POL: { name: 'Polonya Kupası', icon: '🏆' },
   promo_L1: { name: "Süper Lig'e Yükselme", icon: '⬆️' },
   golkrali: { name: 'Gol Kralı', icon: '👟' },
   asistkrali: { name: 'Asist Kralı', icon: '🎯' },
@@ -61,7 +77,7 @@ export function seasonAwards(state, sum) {
 
   // takım kupaları
   const team = [];
-  if (sum.myPos === 1) team.push({ SL: 'champ_SL', L1: 'champ_L1', PL: 'champ_PL', LL: 'champ_LL', SA: 'champ_SA', BL: 'champ_BL', FR: 'champ_FR', NL: 'champ_NL', PT: 'champ_PT', BE: 'champ_BE' }[lid]);
+  if (sum.myPos === 1) team.push('champ_' + lid);
   else if (lid === 'L1' && sum.myPos <= LEAGUES.L1.promote) team.push('promo_L1');
 
   p.trophies ||= [];
@@ -70,7 +86,7 @@ export function seasonAwards(state, sum) {
   for (const a of out) if (a.winner.me) won.push(a.key);
   for (const k of won) {
     p.trophies.push({ key: k, year: sum.year, club: p.clubId, league: lid });
-    const bonus = { golkrali: 12, yilin: 15, asistkrali: 8, genc: 8, champ_SL: 20, champ_L1: 10, promo_L1: 6, champ_PL: 25, champ_LL: 25, champ_SA: 25, champ_BL: 25, champ_FR: 22, champ_NL: 16, champ_PT: 16, champ_BE: 14 }[k] || 0;
+    const bonus = { golkrali: 12, yilin: 15, asistkrali: 8, genc: 8, champ_SL: 20, champ_L1: 10, promo_L1: 6, champ_PL: 25, champ_LL: 25, champ_SA: 25, champ_BL: 25, champ_FR: 22, champ_NL: 16, champ_PT: 16, champ_BE: 14, champ_SCO: 12, champ_GRE: 12, champ_AUT: 12, champ_SUI: 12, champ_DEN: 11, champ_NOR: 11, champ_CZE: 11, champ_POL: 11 }[k] || 0;
     p.fame = clamp((p.fame || 0) + bonus / 6, 0, 100);
     p.money += Math.round(p.contract.wage * bonus / 2);
     if (k.startsWith('champ') && p.contract.champ) { p.money += p.contract.champ; addInbox(state, `Sözleşmendeki şampiyonluk primi yattı: ${money(p.contract.champ)}.`); }

@@ -1,5 +1,5 @@
 import * as E from './engine.js';
-import { STAT_LABELS, LEAGUES, clubInfo, isDerby } from './data.js';
+import { STAT_LABELS, LEAGUES, COUNTRIES, clubInfo, isDerby } from './data.js';
 import { playMoment, OUTCOME_TEXT } from './moment.js';
 import * as Cloud from './cloud.js';
 import * as News from './news.js';
@@ -20,6 +20,7 @@ import * as Cup from './cup.js';
 import * as Winter from './winter.js';
 import * as Celeb from './celebrate.js';
 import * as Inv from './invest.js';
+import * as Cp from './couple.js';
 import * as Soc from './social.js';
 import * as Fam from './family.js';
 import * as Bet from './betting.js';
@@ -61,7 +62,7 @@ function toast(msg) {
   setTimeout(() => { if (ui.toast === msg) { ui.toast = null; render(); } }, 2200);
 }
 function persist() { Cloud.save(state); }
-CUI.init({ st: () => state, ui, persist, render: () => render(), toast: (m) => toast(m), money: E.money, esc });
+CUI.init({ st: () => state, ui, persist, render: () => render(), toast: (m) => toast(m), money: E.money, moneyShort: E.moneyShort, cur: () => E.CUR.mode, esc });
 SUI.init({ st: () => state, ui, persist, render: () => render(), toast: (m) => toast(m), money: E.money, esc, badge: (t, n) => badge(t, n), face: (n, z, c) => face(n, z, c) });
 function addNews(list, showNow = true) {
   list = list.filter(Boolean);
@@ -79,6 +80,9 @@ const face = (name, size = 44, cls = '') => `<img class="face ${cls}" src="img/p
 const EVENT_FACE = { family_money: 'mother', extra_training: 'coach' };
 // Gemini'den gelen muhabir portreleri (img/people/<id>.jpg)
 const REPORTER_FACES = new Set(['selin', 'kenan', 'duygu']);
+function eventArea() {
+  return state.event ? eventCard(state.event) : ui.evResult ? `<div class="card event evresult"><b>${esc(ui.evResult.title)}</b>${ui.evResult.img ? `<img class="celimg" src="img/news/${ui.evResult.img}.jpg" alt="">` : ''}${ui.evResult.result ? `<p>${esc(ui.evResult.result)}</p>` : ''}${ui.evResult.summary ? `<p class="small evsum">${esc(ui.evResult.summary)}</p>` : ''}<button class="btn ghost" data-act="evOk">Tamam</button></div>` : '';
+}
 function eventCard(ev) {
   const fk = ev.face || EVENT_FACE[ev.id] || (ev.id === 'partner_trip' ? 'partner' + (state.player.partner?.portrait ?? 0) : null);
   const story = ev.story ? '<span class="evtag">Hikâye</span>' : '';
@@ -133,6 +137,26 @@ async function animateRace(R) {
   say(R.place === 1 ? `${R.horse} çizgiyi ilk geçti!` : `${R.order[0].name} kazandı. ${R.horse} ${R.place}. oldu.`);
   await sleep(800);
   R.shown = true; render();
+}
+
+function coupleBox(p) {
+  const pt = Cp.ensure(p), n = pt.name.split(' ')[0];
+  const tab = ['plan', 'gift', 'trip'].includes(ui.cpTab) ? ui.cpTab : null;
+  const tr = Cp.tripReady(state), tk = Cp.talkReady(state), ch = Cp.childReady(state);
+  const row = (x, cost, act, dis) => `<div class="cprow"><span class="cpemo">${x.emoji}</span><div class="grow"><b>${esc(x.name)}</b><div class="muted small">${cost ? E.money(cost) : 'Ücretsiz'}${x.energy ? ` · Enerji ${x.energy > 0 ? '+' : ''}${x.energy}` : ''}</div></div><button class="btn sm" data-act="${act}" data-id="${x.id}" ${dis || p.money < cost ? 'disabled' : ''}>Seç</button></div>`;
+  const list = tab === 'plan' ? Cp.PLANS.map((x) => row(x, Cp.planCost(p, x), 'cpPlan', p.weekFlags.date)).join('') + (p.weekFlags.date ? '<p class="muted small">Bu haftaki planınızı yaptınız.</p>' : '')
+    : tab === 'gift' ? Cp.GIFTS.map((x) => row(x, Cp.planCost(p, x), 'cpGift', p.weekFlags.gift)).join('') + (p.weekFlags.gift ? '<p class="muted small">Bu hafta zaten bir sürpriz yaptın.</p>' : '')
+    : tab === 'trip' ? Cp.TRIPS.map((x) => row(x, x.cost, 'cpTrip', !tr.ok)).join('') + `<p class="muted small">${tr.ok ? 'Tatil enerji verir ama bir antrenmanı kaçırırsın (hocayla ilişki −3).' : esc(tr.why)}</p>` : '';
+  return `<p class="muted small mt">💡 ${esc(n)}: ${esc(Cp.TASTES[pt.taste].hint)}</p>
+    <div class="chips cptabs">
+      <button class="${tab === 'plan' ? 'on' : ''}" data-act="cpTab" data-t="plan">💕 Plan yap</button>
+      <button class="${tab === 'gift' ? 'on' : ''}" data-act="cpTab" data-t="gift">🎁 Sürpriz</button>
+      <button class="${tab === 'trip' ? 'on' : ''}" data-act="cpTab" data-t="trip">✈️ Tatil</button>
+      <button data-act="cpTalk" ${tk.ok ? '' : 'disabled'}>💬 Dertleş</button>
+      <button data-act="cpChild" ${ch.ok ? '' : 'disabled'}>👶 Çocuk iste</button>
+    </div>
+    ${!ch.ok && ch.why ? `<p class="muted small">👶 ${esc(ch.why)}</p>` : ''}
+    ${list ? `<div class="cplist">${list}</div>` : ''}`;
 }
 
 function winterCard() {
@@ -258,7 +282,7 @@ const screens = {
       ${Career.campAvailable(state) ? `<div class="card campcard"><b>🏕️ Sezon öncesi kamp</b><p class="muted small">Kamp yerini ve antrenman odağını seç, hazırlık maçlarına çık, forma numaranı al.</p><button class="btn" data-go="camp">Kampa git</button></div>` : ''}
       ${Winter.isOpen(state) && state.winter.offers.length ? winterCard() : ''}
       ${state.natMatch ? natCard(state.natMatch) : ''}
-      ${state.event ? eventCard(state.event) : ui.evResult ? `<div class="card event evresult"><b>${esc(ui.evResult.title)}</b>${ui.evResult.result ? `<p>${esc(ui.evResult.result)}</p>` : ''}${ui.evResult.summary ? `<p class="small evsum">${esc(ui.evResult.summary)}</p>` : ''}<button class="btn ghost" data-act="evOk">Tamam</button></div>` : ''}
+      ${eventArea()}
       ${state.phase === 'seasonEnd' ? `
         <div class="card next"><b>Sezon bitti!</b><p class="muted small">Sezon özetini ve teklifleri gör.</p>
         <button class="btn big" data-go="seasonEnd">Sezon sonu</button></div>` :
@@ -354,7 +378,9 @@ const screens = {
     }
     return `
       <header class="top"><button class="back" data-go="hub">‹</button><h2>Ligler</h2><button class="hdrbtn" data-go="europe">🏆 Avrupa</button></header>
-      <div class="lgpick">${Object.values(LEAGUES).map((x) => `<button class="${x.id === lid ? 'on' : ''}" data-act="tab" data-tab="${x.id}"><span class="flag">${{ ENG: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', ESP: '🇪🇸', ITA: '🇮🇹', GER: '🇩🇪', FRA: '🇫🇷', NED: '🇳🇱', POR: '🇵🇹', BEL: '🇧🇪' }[x.country] || '🇹🇷'}</span><b>${x.name.replace('Trendyol ', '')}</b>${x.id === myL ? '<small>Senin ligin</small>' : '<small>&nbsp;</small>'}</button>`).join('')}</div>
+      ${(() => { const cty = (x) => x?.country || 'TUR'; const myC = cty(LEAGUES[myL]), curC = cty(L); const cs = [...new Set(Object.values(LEAGUES).map(cty))].sort((a, b) => (b === myC) - (a === myC)); const subs = Object.values(LEAGUES).filter((x) => cty(x) === curC);
+        return `<div class="ctpick">${cs.map((c) => { const first = Object.values(LEAGUES).find((x) => cty(x) === c); return `<button class="${c === curC ? 'on' : ''} ${c === myC ? 'mine' : ''}" data-act="tab" data-tab="${c === myC ? myL : first.id}"><span class="flag">${COUNTRIES[c]?.flag || '🏳️'}</span><small>${COUNTRIES[c]?.name || c}</small></button>`; }).join('')}</div>
+        ${subs.length > 1 ? `<div class="lgpick">${subs.map((x) => `<button class="${x.id === lid ? 'on' : ''}" data-act="tab" data-tab="${x.id}"><b>${x.name.replace('Trendyol ', '')}</b>${x.id === myL ? '<small>Senin ligin</small>' : '<small>&nbsp;</small>'}</button>`).join('')}</div>` : ''}`; })()}
       <div class="lghead card"><div><b>${L.name}</b><div class="muted small">${seasonLabel()} · ${played}/${SL.fixtures.length} hafta</div></div>${myIdx >= 0 ? `<div class="mypos"><span>${myIdx + 1}.</span><small>${rows[myIdx].pts} puan</small></div>` : ''}</div>
       <div class="seg">${[['puan', 'Tablo'], ['fikstur', 'Maçlar'], ['gol', 'Goller'], ['asist', 'Asistler']].map(([v, l]) => `<button class="${v === view ? 'on' : ''}" data-act="tview" data-v="${v}">${l}</button>`).join('')}</div>
       ${body}`;
@@ -550,6 +576,7 @@ const screens = {
       <header class="top"><button class="back" data-go="${back}">‹</button><h2>Ayarlar</h2></header>
       ${musicCard()}
       ${Voice.supported() ? `<div class="card"><div class="row"><b>🎙️ Sesli maç anlatımı</b><button class="btn sm ${Voice.isOn() ? '' : 'ghost'}" data-act="voice">${Voice.isOn() ? '🔊 Açık' : '🔇 Kapalı'}</button></div><p class="muted small">Spiker ${Spiker.SPIKER_NAME} ve yorumcu ${Trivia.NAME} maçı sesli anlatır.${Voice.clipCount() ? ` ${Voice.clipCount()} kayıtlı ses dosyası kullanılıyor.` : ''} Telefonun Türkçe sesini kullanır${Voice.hasTurkish() ? '' : ' (bu cihazda Türkçe ses bulunamadı, varsayılan ses kullanılır)'}.</p></div>` : ''}
+      <div class="card"><div class="row"><b>💶 Para birimi</b><div class="chips"><button class="${E.CUR.mode === 'EUR' ? 'on' : ''}" data-act="currency" data-c="EUR">€ Euro</button><button class="${E.CUR.mode === 'TRY' ? 'on' : ''}" data-act="currency" data-c="TRY">₺ TL</button></div></div><p class="muted small">Tüm tutarlar seçtiğin para biriminde gösterilir. Kur: 1 € = ${E.EUR_RATE.toLocaleString('tr-TR')} ₺.</p></div>
       <div class="card"><div class="row"><b>Ses efektleri</b><button class="btn sm ${Sfx.soundOn() ? '' : 'ghost'}" data-act="sound">${Sfx.soundOn() ? '🔊 Açık' : '🔇 Kapalı'}</button></div></div>
       <div class="card"><h3>☁️ Bulut yedeği</h3>${cloud}</div>
       <div class="card"><h3>💾 Dosya yedeği</h3>
@@ -597,9 +624,8 @@ const screens = {
     } else {
       love = `<div class="cand">${face('partner' + (partner.portrait ?? 0), 56, 'round love')}<div class="grow"><b>${esc(partner.name)}</b><div class="muted small">${esc(partner.job)} · ${partner.married ? 'Eşin 💍' : 'Sevgilin'} · ${partner.weeks} hafta</div></div><b>${Math.round(partner.value)}</b></div>
         ${bar(partner.value, 100, 'pink')}
+        ${coupleBox(p)}
         <div class="evbtns mt">
-          <button class="btn" data-act="date">Buluş (${E.money(Life.dateCost(p))})</button>
-          <button class="btn ghost" data-act="gift">Hediye al (${E.money(Life.giftCost(p))})</button>
           ${Fam.canPropose(p) ? `<button class="btn" data-go="propose">💍 Evlilik teklifi</button>` : ''}
           ${partner.engaged ? `<button class="btn" data-go="wedding">💒 Düğünü planla</button>` : ''}
           ${!partner.married ? `<button class="btn ghost" data-act="breakup">Ayrıl</button>` : `<button class="btn ghost" data-act="divorceAsk">Boşan</button>`}
@@ -611,6 +637,7 @@ const screens = {
     const car = Life.CARS.filter((x) => p.owned.includes(x.id)).pop(), house = Life.HOUSES.filter((x) => p.owned.includes(x.id)).pop();
     return `
       <header class="top"><button class="back" data-go="hub">‹</button><h2>İlişkiler</h2></header>
+      ${eventArea()}
       ${relRow('coach', `<button class="btn ghost sm" data-act="talkCoach" ${p.weekFlags.coach ? 'disabled' : ''}>Hocayla konuş</button>`)}
       ${relRow('team', `<button class="btn ghost sm" data-act="treatTeam" ${p.weekFlags.team ? 'disabled' : ''}>Takıma yemek ısmarla (${E.money(Life.teamCost(p))})</button>`)}
       ${relRow('family', `<button class="btn ghost sm" data-act="callFamily" ${p.weekFlags.family ? 'disabled' : ''}>Aileni ara</button>`)}
@@ -684,9 +711,12 @@ const screens = {
   casino() {
     const p = state.player;
     const t = ui.casinoTab;
-    const stakes = [10_000, 50_000, 250_000, 1_000_000, 5_000_000, 25_000_000].filter((x) => x <= Math.max(10_000, p.money));
-    if (ui.stake > p.money) ui.stake = stakes.filter((x) => x <= p.money).pop() || 10_000;
-    const stakeBar = `<div class="stakes">${stakes.map((x) => `<button class="${x === ui.stake ? 'on' : ''}" data-act="stake" data-v="${x}">${E.money(x).replace('₺', '')}</button>`).join('')}</div>`;
+    // euro modunda yuvarlak euro tutarları (içeride TL tutulur)
+    const base = E.CUR.mode === 'EUR' ? [200, 1000, 5000, 20_000, 100_000, 500_000].map((x) => x * E.EUR_RATE) : [10_000, 50_000, 250_000, 1_000_000, 5_000_000, 25_000_000];
+    const stakes = base.filter((x) => x <= Math.max(base[0], p.money));
+    if (!base.includes(ui.stake)) ui.stake = base[0];
+    if (ui.stake > p.money) ui.stake = stakes.filter((x) => x <= p.money).pop() || base[0];
+    const stakeBar = `<div class="stakes">${stakes.map((x) => `<button class="${x === ui.stake ? 'on' : ''}" data-act="stake" data-v="${x}">${E.moneyShort(x, false)}</button>`).join('')}</div>`;
     let body = '';
     if (t === 'bahis') { body = betScreen(stakeBar);
     } else body = CUI.body(t, stakeBar);
@@ -766,7 +796,7 @@ const screens = {
         ${row('years', 'Süre', (v) => v + ' yıl')}
         ${row('sign', 'İmza parası', E.money)}
         ${row('goal', 'Gol primi', E.money)}
-        ${row('release', 'Serbest kalma', (v) => v >= 10_000_000 ? '₺' + (v / 1e6).toLocaleString('tr-TR', { maximumFractionDigits: 1 }) + ' Mn' : E.money(v))}
+        ${row('release', 'Serbest kalma', (v) => v >= 10_000_000 ? E.moneyShort(v) : E.money(v))}
         ${row('champ', 'Şampiyonluk primi', E.money)}
         ${row('play', 'Forma garantisi', (v) => K.PLAY_TEXT[v || 0])}
       </div>
@@ -965,6 +995,7 @@ function leagueZones(lid, n) {
   if (lid === 'FR') { for (let i = 0; i < 4; i++) out[i] = Z.ucl; out[4] = Z.uel; out[5] = Z.uecl; }
   if (lid === 'NL' || lid === 'PT') { out[0] = out[1] = Z.ucl; out[2] = Z.uel; out[3] = Z.uecl; }
   if (lid === 'BE') { out[0] = Z.ucl; out[1] = Z.uel; out[2] = Z.uecl; }
+  if (['SCO', 'GRE', 'AUT', 'SUI', 'DEN', 'NOR', 'CZE', 'POL'].includes(lid)) { out[0] = Z.uclq; out[1] = Z.uelq; out[2] = Z.ueclq; out[3] = Z.ueclq; }
   const L = LEAGUES[lid];
   for (let i = 0; i < (L.promote || 0); i++) out[i] = Z.up;
   for (let i = 0; i < (L.relegate || 0); i++) out[n - 1 - i] = Z.down;
@@ -1300,13 +1331,13 @@ async function runMatch() {
   if (m.res.red) plan.onTo = Math.max(plan.onFrom, m.res.redMin);
   E.finishMatch(state, plan, m.res);
   if (m.res.celebs?.length) Soc.onCelebrate(state, m.res.celebs, !!m.res.celebCrisis);
-  if (m.res.played) { p.recent = [...(p.recent || []), m.res.rating].slice(-5); }
+  // p.recent artık engine.finishMatch içinde güncelleniyor
   const recentAvg = p.recent?.length ? p.recent.reduce((a, b) => a + b, 0) / p.recent.length : 0;
   const lidMe = E.leagueOf(state, p.clubId);
   addNews([
     ...(m.res.played && p.career.apps === 1 ? [News.debutNews(state, plan)] : []),
     ...News.matchNews(state, plan, m.res), ...Iv.promiseResult(state, plan, m.res), News.maybeRumor(state, recentAvg), News.cardNews(state, plan, m.res),
-    ...(plan.fx.cup ? [News.cupNews(state, plan, m.res)] : plan.fx.comp ? [News.euroNews(state, plan, m.res)] : [...News.weeklyExtras(state, plan, m.res, E.leagueStats(state, lidMe)), News.leagueNews(state)]),
+    ...(plan.fx.cup ? [News.cupNews(state, plan, m.res)] : plan.fx.comp ? [News.euroNews(state, plan, m.res)] : [...News.weeklyExtras(state, plan, m.res, E.leagueStats(state, lidMe)), News.leagueNews(state), News.leaguePlayerNews(state)]),
   ], false);
   if (m.res.injury) {
     m.feed.push({ min: 90, text: `Maçın sonunda sakatlandın! ${m.res.injury} hafta yoksun.`, cls: 'bad' });
@@ -1388,7 +1419,7 @@ app.addEventListener('click', async (e) => {
       const r = E.rest(state); persist();
       return toast(r.ok ? 'Dinlendin: +25 enerji' : r.msg);
     }
-    case 'skipWeek': E.advanceWeek(state); addNews([News.leagueNews(state)], false); persist(); return render();
+    case 'skipWeek': E.advanceWeek(state); addNews([News.leagueNews(state), News.leaguePlayerNews(state)], false); persist(); return render();
     case 'tab': ui.tableTab = el.dataset.tab; ui.fxWeek = null; return render();
     case 'tview': ui.tableView = el.dataset.v; return render();
     case 'tableFull': ui.tableFull = !ui.tableFull; return render();
@@ -1431,6 +1462,18 @@ app.addEventListener('click', async (e) => {
     case 'meetCancel': ui.candidates = null; return render();
     case 'meet': { Life.startDating(state, ui.candidates[+el.dataset.i]); ui.candidates = null; persist(); return render(); }
     case 'date': case 'gift': { const r = Life.datePartner(state, act); persist(); return toast(r.msg || ''); }
+    case 'cpTab': ui.cpTab = ui.cpTab === el.dataset.t ? null : el.dataset.t; return render();
+    case 'cpPlan': case 'cpGift': case 'cpTrip': {
+      const r = act === 'cpPlan' ? Cp.doPlan(state, el.dataset.id) : act === 'cpGift' ? Cp.doGift(state, el.dataset.id) : Cp.doTrip(state, el.dataset.id);
+      if (!r.ok) return toast(r.msg || 'Olmadı.');
+      E.addInbox(state, r.msg); ui.cpTab = null; ui.evResult = { title: '💕 ' + (state.player.partner?.name.split(' ')[0] || ''), result: r.msg, img: r.img };
+      persist(); return render();
+    }
+    case 'cpTalk': case 'cpChild': {
+      const ev = act === 'cpTalk' ? (Cp.talkReady(state).ok && Cp.talkEvent(state)) : (Cp.childReady(state).ok && Cp.childEvent(state));
+      if (!ev) return toast('Şu an olmaz.');
+      state.event = ev; persist(); return render();
+    }
     case 'pickRing': ui.ring = el.dataset.id; return render();
     case 'pickPlace': ui.place = el.dataset.id; return render();
     case 'proposeGo': {
@@ -1447,13 +1490,14 @@ app.addEventListener('click', async (e) => {
     case 'divorce': { ui.divorceAsk = false; Fam.divorce(state, 'senin isteğinle'); persist(); return render(); }
     case 'kidsTime': { const r = Life.kidsTime(state); persist(); return toast(r.msg || ''); }
     case 'breakup': Life.breakUp(state); persist(); return render();
-    case 'socTab': case 'socPost': case 'socReply': case 'socDm': case 'socProf': case 'socProfClose': case 'socStory': case 'socStoryClose':
+    case 'socLike': case 'socCmt': case 'socTag': case 'socTab': case 'socPost': case 'socReply': case 'socDm': case 'socProf': case 'socProfClose': case 'socStory': case 'socStoryClose':
     case 'socStoryPost': case 'socLive': case 'socLiveAns': case 'socLiveEnd': case 'socVote': SUI.handle(act, el); return;
     case 'casinoTab': ui.casinoTab = el.dataset.t; return render();
     case 'slot': case 'barbut': case 'barbutRoll': case 'rBet': case 'rUndo': case 'rClear': case 'rRepeat': case 'rSpin': case 'bjDeal': case 'bjHit': case 'bjStand': case 'bjDouble':
     case 'kPrice': case 'kBuy': case 'kAll': case 'pkSit': case 'pkRebuy': case 'pkMove': case 'pkNext': case 'pkLeave':
       Sfx.unlock(); CUI.handle(act, el); return;
     case 'stake': ui.stake = +el.dataset.v; return render();
+    case 'currency': E.setCurrency(el.dataset.c); toast(el.dataset.c === 'EUR' ? 'Tutarlar artık euro' : 'Tutarlar artık TL'); return render();
     case 'betView': ui.betView = el.dataset.v; return render();
     case 'betLg': ui.betLg = el.dataset.v; return render();
     case 'betOpen': ui.betOpen = ui.betOpen === el.dataset.key ? null : el.dataset.key; return render();
@@ -1685,7 +1729,7 @@ function render() {
   }
   if (lastScreen !== screen) {
     // yeni ekranda seçili sekme görünür olsun
-    requestAnimationFrame(() => app.querySelectorAll('.chips .on, .lgpick .on, .tabs .on, .ctabs .on, .stakes .on').forEach((el) => { const box = el.parentElement; if (box.scrollWidth > box.clientWidth) box.scrollLeft = Math.max(0, el.offsetLeft - box.clientWidth / 2 + el.offsetWidth / 2); }));
+    requestAnimationFrame(() => app.querySelectorAll('.chips .on, .lgpick .on, .ctpick .on, .tabs .on, .ctabs .on, .stakes .on').forEach((el) => { const box = el.parentElement; if (box.scrollWidth > box.clientWidth) box.scrollLeft = Math.max(0, el.offsetLeft - box.clientWidth / 2 + el.offsetWidth / 2); }));
   }
   lastScreen = screen;
   if (screen === 'casino') CUI.afterRender(ui.casinoTab);

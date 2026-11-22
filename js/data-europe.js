@@ -172,7 +172,7 @@ export const UEL_2026 = ['cry', 'bou', 'sun', 'mil', 'juv', 'rso', 'cel', 'hof',
   'lyo', 'nec', 'oly', 'spa', 'stg', 'usg', 'and', 'ara', 'ben', 'bjk', 'fer', 'jag', 'lch', 'lil2', 'ofi', 'omo', 'rbs', 'plz'];
 // Kontenjan: Türkiye UCL 2 / UEL 1, İngiltere UCL 5 / UEL 3
 // Kontenjan (lig sırası): doğrudan katılanlar. Türkiye'nin elemeli yolları QUAL_PATHS'te.
-export const EURO_SLOTS = { TUR: { UCL: 1, UEL: 0, UECL: 0, league: 'SL' }, ENG: { UCL: 5, UEL: 2, UECL: 1, league: 'PL' }, ESP: { UCL: 5, UEL: 2, UECL: 1, league: 'LL' }, ITA: { UCL: 4, UEL: 2, UECL: 1, league: 'SA' }, GER: { UCL: 4, UEL: 2, UECL: 1, league: 'BL' }, FRA: { UCL: 4, UEL: 1, UECL: 1, league: 'FR' }, NED: { UCL: 2, UEL: 1, UECL: 1, league: 'NL' }, POR: { UCL: 2, UEL: 1, UECL: 1, league: 'PT' }, BEL: { UCL: 1, UEL: 1, UECL: 1, league: 'BE' } };
+export const EURO_SLOTS = { TUR: { UCL: 1, UEL: 0, UECL: 0, league: 'SL' }, ENG: { UCL: 5, UEL: 2, UECL: 1, league: 'PL' }, ESP: { UCL: 5, UEL: 2, UECL: 1, league: 'LL' }, ITA: { UCL: 4, UEL: 2, UECL: 1, league: 'SA' }, GER: { UCL: 4, UEL: 2, UECL: 1, league: 'BL' }, FRA: { UCL: 4, UEL: 1, UECL: 1, league: 'FR' }, NED: { UCL: 2, UEL: 1, UECL: 1, league: 'NL' }, POR: { UCL: 2, UEL: 1, UECL: 1, league: 'PT' }, BEL: { UCL: 1, UEL: 1, UECL: 1, league: 'BE' }, GRE: { UCL: 1, UEL: 1, UECL: 1, league: 'GRE' }, CZE: { UCL: 1, UEL: 1, UECL: 1, league: 'CZE' }, DEN: { UCL: 1, UEL: 1, UECL: 1, league: 'DEN' }, NOR: { UCL: 1, UEL: 1, UECL: 1, league: 'NOR' }, SCO: { UCL: 0, UEL: 1, UECL: 1, league: 'SCO' }, AUT: { UCL: 0, UEL: 1, UECL: 1, league: 'AUT' }, SUI: { UCL: 0, UEL: 1, UECL: 1, league: 'SUI' }, POL: { UCL: 0, UEL: 1, UECL: 1, league: 'POL' } };
 // TFF 2026-27 erişim listesi (Türkiye Kupası oyunda yok: kupa şampiyonunun yerini lig 3.'sü alır).
 // 2. ön eleme Temmuz'da oynandığı için oyunda 3. ön elemeden başlanır.
 export const QUAL_PATHS = [
@@ -288,4 +288,84 @@ export const BE_NEW = {
   bev:  { name: 'Beveren',          short: 'BEV', c1: '#FFD100', c2: '#0055A4', str: 67, country: 'BEL' },
   kor:  { name: 'Kortrijk',         short: 'KOR', c1: '#E30613', c2: '#FFFFFF', str: 67, country: 'BEL' },
   lom:  { name: 'Lommel',           short: 'LOM', c1: '#00A651', c2: '#FFFFFF', str: 66, country: 'BEL' },
+};
+
+// ================================================================ YENİ LİGLER (2026-27; Norveç 2026 sezonu)
+// Kadrolar şimdilik ülkeye göre uydurma isimlerle doluyor; gerçek kadrolar CSV ile eklenecek.
+const T = (name, short, c1, c2, str, country) => ({ name, short, c1, c2, str, country });
+// İskoçya Premiership (Celtic, Hearts zaten var). Yükselen: St Johnstone.
+export const SCO_NEW = {
+  rng: T('Rangers', 'RAN', '#1B458F', '#FFFFFF', 75, 'SCO'), abd: T('Aberdeen', 'ABE', '#E30613', '#FFFFFF', 68, 'SCO'),
+  hib: T('Hibernian', 'HIB', '#00703C', '#FFFFFF', 67, 'SCO'), dun: T('Dundee', 'DUN', '#1B2A5C', '#FFFFFF', 63, 'SCO'),
+  ddu: T('Dundee United', 'DDU', '#F47A20', '#111111', 64, 'SCO'), fal: T('Falkirk', 'FAL', '#1B2A5C', '#FFFFFF', 62, 'SCO'),
+  kil: T('Kilmarnock', 'KIL', '#1B458F', '#FFFFFF', 63, 'SCO'), mot: T('Motherwell', 'MOT', '#FFB81C', '#8B1A2B', 64, 'SCO'),
+  sjo: T('St Johnstone', 'STJ', '#0A3D91', '#FFFFFF', 61, 'SCO'), smi: T('St Mirren', 'STM', '#111111', '#FFFFFF', 63, 'SCO'),
+};
+// Yunanistan Super League (AEK, Olympiakos, OFI, Panathinaikos var). Yükselenler: Iraklis, Kalamata.
+export const GRE_NEW = {
+  paok: T('PAOK', 'PAO', '#111111', '#FFFFFF', 76, 'GRE'), ari: T('Aris', 'ARI', '#FFD200', '#111111', 70, 'GRE'),
+  ast: T('Asteras Tripolis', 'AST', '#FFD200', '#111111', 64, 'GRE'), kif: T('Kifisia', 'KIF', '#1B4B9C', '#FFFFFF', 63, 'GRE'),
+  atr: T('Atromitos', 'ATR', '#1E5AA8', '#FFFFFF', 65, 'GRE'), ira: T('Iraklis', 'IRA', '#1B4B9C', '#FFFFFF', 63, 'GRE'),
+  lvd: T('Levadiakos', 'LEV', '#00703C', '#FFFFFF', 64, 'GRE'), kal: T('Kalamata', 'KLM', '#111111', '#FFFFFF', 62, 'GRE'),
+  pan: T('Panetolikos', 'PNE', '#FFD200', '#1B4B9C', 63, 'GRE'), vol: T('Volos', 'VOL', '#E30613', '#1B4B9C', 64, 'GRE'),
+};
+// Avusturya Bundesliga (Salzburg, Rapid, Sturm, LASK var). Yükselen: Austria Lustenau.
+export const AUT_NEW = {
+  auw: T('Austria Viyana', 'AUW', '#5B2C83', '#FFFFFF', 70, 'AUT'), wac: T('Wolfsberger AC', 'WAC', '#111111', '#FFFFFF', 67, 'AUT'),
+  gak: T('Grazer AK', 'GAK', '#E30613', '#FFFFFF', 64, 'AUT'), alt: T('Altach', 'ALT', '#111111', '#FFFFFF', 64, 'AUT'),
+  rie: T('Ried', 'RIE', '#00703C', '#111111', 63, 'AUT'), har: T('Hartberg', 'HAR', '#1B4B9C', '#FFFFFF', 64, 'AUT'),
+  wsg: T('WSG Tirol', 'WSG', '#00703C', '#FFFFFF', 63, 'AUT'), lus: T('Austria Lustenau', 'LUS', '#00703C', '#FFFFFF', 62, 'AUT'),
+};
+// İsviçre Super League (Basel, Young Boys, Lugano, Thun var). Yükselen: Vaduz.
+export const SUI_NEW = {
+  ser: T('Servette', 'SER', '#8B1A2B', '#FFFFFF', 68, 'SUI'), stg2: T('St. Gallen', 'STG', '#00703C', '#FFFFFF', 67, 'SUI'),
+  luz: T('Luzern', 'LUZ', '#1B4B9C', '#FFFFFF', 66, 'SUI'), zur: T('Zürih', 'ZUR', '#FFFFFF', '#1B4B9C', 66, 'SUI'),
+  gc: T('Grasshopper', 'GC', '#1B4B9C', '#FFFFFF', 64, 'SUI'), sio: T('Sion', 'SIO', '#FFFFFF', '#E30613', 65, 'SUI'),
+  lau: T('Lausanne-Sport', 'LAU', '#1B2A5C', '#FFFFFF', 65, 'SUI'), vad: T('Vaduz', 'VAD', '#E30613', '#1B4B9C', 62, 'SUI'),
+};
+// Danimarka Superliga (FCK, Midtjylland, Nordsjælland, Aarhus var). Yükselenler: Lyngby, Horsens.
+export const DEN_NEW = {
+  bro: T('Brøndby', 'BRØ', '#FFD200', '#1B4B9C', 70, 'DEN'), ran: T('Randers', 'RAN', '#1B4B9C', '#FFFFFF', 65, 'DEN'),
+  sil: T('Silkeborg', 'SIL', '#E30613', '#FFFFFF', 65, 'DEN'), vib: T('Viborg', 'VIB', '#00703C', '#FFFFFF', 64, 'DEN'),
+  ob: T('OB', 'OB', '#1B4B9C', '#FFFFFF', 64, 'DEN'), soe: T('Sønderjyske', 'SØN', '#1B4B9C', '#FFFFFF', 62, 'DEN'),
+  lyn: T('Lyngby', 'LYN', '#1B4B9C', '#FFFFFF', 63, 'DEN'), hor: T('Horsens', 'HOR', '#FFD200', '#111111', 61, 'DEN'),
+};
+// Norveç Eliteserien 2026 (Bodø/Glimt, Viking, Lillestrøm, Brann, Rosenborg var). Yükselenler: Start, Aalesund (+Lillestrøm).
+export const NOR_NEW = {
+  trm: T('Tromsø', 'TRO', '#E30613', '#FFFFFF', 67, 'NOR'), mol: T('Molde', 'MOL', '#1B4B9C', '#FFFFFF', 68, 'NOR'),
+  sp08: T('Sarpsborg 08', 'SAR', '#1B4B9C', '#FFFFFF', 64, 'NOR'), ham: T('HamKam', 'HAM', '#00703C', '#FFFFFF', 63, 'NOR'),
+  vif: T('Vålerenga', 'VÅL', '#1B2A5C', '#E30613', 65, 'NOR'), fre: T('Fredrikstad', 'FRE', '#E30613', '#FFFFFF', 63, 'NOR'),
+  san: T('Sandefjord', 'SAN', '#1B4B9C', '#FFFFFF', 62, 'NOR'), kfu: T('KFUM Oslo', 'KFU', '#1B4B9C', '#E30613', 61, 'NOR'),
+  aal: T('Aalesund', 'AAL', '#FF6600', '#1B4B9C', 61, 'NOR'), kri: T('Kristiansund', 'KRI', '#1B4B9C', '#FFFFFF', 61, 'NOR'),
+  ikst: T('Start', 'STA', '#FFD200', '#111111', 61, 'NOR'),
+};
+// Çekya 1. Liga (Slavia, Sparta, Plzeň, Jablonec var). Yükselenler: Zbrojovka Brno, Artis Brno.
+export const CZE_NEW = {
+  hrk: T('Hradec Králové', 'HRK', '#111111', '#FFFFFF', 66, 'CZE'), bos: T('Baník Ostrava', 'BAN', '#1B4B9C', '#FFFFFF', 66, 'CZE'),
+  boh: T('Bohemians 1905', 'BOH', '#00703C', '#FFFFFF', 63, 'CZE'), lib: T('Slovan Liberec', 'LIB', '#FFFFFF', '#1B4B9C', 64, 'CZE'),
+  mbo: T('Mladá Boleslav', 'MBO', '#1B4B9C', '#FFFFFF', 63, 'CZE'), olo: T('Sigma Olomouc', 'OLO', '#1B4B9C', '#FFFFFF', 64, 'CZE'),
+  pdb: T('Pardubice', 'PAR', '#E30613', '#FFFFFF', 62, 'CZE'), slc: T('Slovácko', 'SLC', '#FFFFFF', '#1B4B9C', 63, 'CZE'),
+  tep: T('Teplice', 'TEP', '#FFD200', '#1B4B9C', 62, 'CZE'), zli: T('Zlín', 'ZLÍ', '#FFD200', '#1B4B9C', 61, 'CZE'),
+  zbr: T('Zbrojovka Brno', 'ZBR', '#E30613', '#FFFFFF', 61, 'CZE'), art: T('Artis Brno', 'ART', '#1B4B9C', '#FFD200', 60, 'CZE'),
+};
+// Polonya Ekstraklasa (Lech, Legia, Jagiellonia, Górnik var). Yükselenler: Wisła Kraków, Śląsk Wrocław, Wieczysta Kraków.
+export const POL_NEW = {
+  rak: T('Raków', 'RAK', '#E30613', '#1B4B9C', 70, 'POL'), pog: T('Pogoń Szczecin', 'POG', '#1B2A5C', '#8B1A2B', 67, 'POL'),
+  cra: T('Cracovia', 'CRA', '#E30613', '#FFFFFF', 65, 'POL'), wid: T('Widzew Łódź', 'WID', '#E30613', '#FFFFFF', 65, 'POL'),
+  zag: T('Zagłębie Lubin', 'ZAG', '#FF6600', '#00703C', 65, 'POL'), pia: T('Piast Gliwice', 'PIA', '#1B4B9C', '#E30613', 64, 'POL'),
+  kki: T('Korona Kielce', 'KOR', '#FFD200', '#E30613', 63, 'POL'), mtr: T('Motor Lublin', 'MTR', '#FFD200', '#1B4B9C', 63, 'POL'),
+  rad: T('Radomiak', 'RAD', '#00703C', '#FFFFFF', 63, 'POL'), gks: T('GKS Katowice', 'GKS', '#FFD200', '#00703C', 63, 'POL'),
+  wpl: T('Wisła Płock', 'WPŁ', '#1B4B9C', '#FFFFFF', 63, 'POL'), wkr: T('Wisła Kraków', 'WKR', '#E30613', '#FFFFFF', 64, 'POL'),
+  sla2: T('Śląsk Wrocław', 'ŚLĄ', '#00703C', '#FFFFFF', 64, 'POL'), wie: T('Wieczysta Kraków', 'WIE', '#FFD200', '#111111', 62, 'POL'),
+};
+// isim havuzları (uydurma geçici isimler)
+export const NAME_POOLS_2 = {
+  SCO: [['Callum', 'Lewis', 'Ross', 'Euan', 'Fraser', 'Kieran', 'Jamie', 'Craig', 'Scott', 'Lyall', 'Finlay', 'Rory'], ['MacLeod', 'Fraser', 'Campbell', 'Murray', 'Stewart', 'Robertson', 'McKenzie', 'Paterson', 'Kerr', 'Henderson', 'Ritchie', 'Boyd']],
+  GRE: [['Giorgos', 'Dimitris', 'Kostas', 'Nikos', 'Giannis', 'Christos', 'Vasilis', 'Panagiotis', 'Thanasis', 'Stelios', 'Andreas', 'Manolis'], ['Papadopoulos', 'Nikolaou', 'Georgiou', 'Karagiannis', 'Pappas', 'Vlachos', 'Dimitriou', 'Stavrou', 'Kotsis', 'Mavros', 'Alexiou', 'Lambrou']],
+  AUT: [['Lukas', 'Florian', 'David', 'Tobias', 'Michael', 'Stefan', 'Philipp', 'Dominik', 'Matthias', 'Julian', 'Fabian', 'Marco'], ['Gruber', 'Huber', 'Wagner', 'Pichler', 'Moser', 'Steiner', 'Hofer', 'Leitner', 'Berger', 'Fuchs', 'Eder', 'Brunner']],
+  SUI: [['Noah', 'Luca', 'Nico', 'Levin', 'Jan', 'Fabian', 'Silvan', 'Cédric', 'Yannick', 'Loris', 'Gian', 'Andrin'], ['Müller', 'Meier', 'Keller', 'Frei', 'Graf', 'Baumann', 'Roth', 'Favre', 'Rossi', 'Bühler', 'Steiner', 'Gerber']],
+  DEN: [['Mads', 'Mikkel', 'Rasmus', 'Jonas', 'Frederik', 'Mathias', 'Oliver', 'Magnus', 'Kasper', 'Andreas', 'Lucas', 'Emil'], ['Jensen', 'Nielsen', 'Hansen', 'Pedersen', 'Andersen', 'Christensen', 'Larsen', 'Sørensen', 'Rasmussen', 'Poulsen', 'Kristensen', 'Madsen']],
+  NOR: [['Ola', 'Henrik', 'Sander', 'Magnus', 'Jonas', 'Eirik', 'Kristian', 'Sindre', 'Håkon', 'Vegard', 'Even', 'Torbjørn'], ['Hansen', 'Johansen', 'Olsen', 'Larsen', 'Berg', 'Haugen', 'Bakken', 'Solberg', 'Lund', 'Strand', 'Dahl', 'Moen']],
+  CZE: [['Jakub', 'Tomáš', 'Jan', 'Lukáš', 'Ondřej', 'Martin', 'David', 'Matěj', 'Petr', 'Adam', 'Vojtěch', 'Filip'], ['Novák', 'Svoboda', 'Dvořák', 'Černý', 'Procházka', 'Kučera', 'Veselý', 'Horák', 'Němec', 'Pokorný', 'Marek', 'Král']],
+  POL: [['Jakub', 'Kacper', 'Mateusz', 'Bartosz', 'Michał', 'Kamil', 'Piotr', 'Szymon', 'Dawid', 'Paweł', 'Patryk', 'Łukasz'], ['Nowak', 'Kowalski', 'Wiśniewski', 'Wójcik', 'Kamiński', 'Lewandowicz', 'Zieliński', 'Szymański', 'Woźniak', 'Kozłowski', 'Mazur', 'Krawczyk']],
 };

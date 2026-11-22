@@ -7,7 +7,7 @@ let X = null;   // { st(), ui, persist, render, toast, money, esc }
 export function init(ctx) { X = ctx; }
 const ui = () => X.ui;
 const P = () => X.st().player;
-const short = (n) => n >= 1e6 ? (n / 1e6).toLocaleString('tr-TR', { maximumFractionDigits: 1 }) + 'M' : n >= 1e3 ? Math.round(n / 1e3) + 'B' : String(n);
+const short = (n) => X.moneyShort ? X.moneyShort(n, false) : String(n);
 // animasyon bitene kadar kazanç tepedeki bakiyede görünmesin
 export const hidden = () => ui().casHide || 0;
 function pay(delta) { Life.casinoResult(X.st(), delta); X.persist(); }
@@ -293,15 +293,20 @@ function barbutAct(act) {
 }
 
 // =============================================================== KAZI KAZAN
-const TICKETS = [[10_000, 'Bronz'], [100_000, 'Gümüş'], [1_000_000, 'Altın'], [10_000_000, 'Elmas']];
+const TICKETS_TRY = [[10_000, 'Bronz'], [100_000, 'Gümüş'], [1_000_000, 'Altın'], [10_000_000, 'Elmas']];
+const TICKETS_EUR = [[200, 'Bronz'], [2_000, 'Gümüş'], [20_000, 'Altın'], [200_000, 'Elmas']].map(([v, n]) => [v * 55.5, n]);
+let TICKETS = TICKETS_EUR;
+const tickets = () => (TICKETS = X?.cur?.() === 'TRY' ? TICKETS_TRY : TICKETS_EUR);
 function scratchBody() {
   const k = ui().kazi;
-  const price = ui().kaziPrice ??= 10_000;
-  const tiers = `<div class="stakes">${TICKETS.map(([v, n]) => `<button class="${v === price ? 'on' : ''}" data-act="kPrice" data-v="${v}" ${v > Math.max(P().money, 10_000) ? 'disabled' : ''}>${n} ${short(v)}</button>`).join('')}</div>`;
+  tickets();
+  if (!TICKETS.some((t) => t[0] === ui().kaziPrice)) ui().kaziPrice = TICKETS[0][0];
+  const price = ui().kaziPrice;
+  const tiers = `<div class="stakes">${TICKETS.map(([v, n]) => `<button class="${v === price ? 'on' : ''}" data-act="kPrice" data-v="${v}" ${v > Math.max(P().money, TICKETS[0][0]) ? 'disabled' : ''}>${n} ${short(v)}</button>`).join('')}</div>`;
   if (!k) return `${tiers}<div class="card center"><div class="ticket blank"><b>GOL YILDIZI</b><span>KAZI KAZAN</span><small>3 aynı sembol = ikramiye</small></div>
     <button class="btn big" data-act="kBuy">Bilet al (${X.money(price)})</button>${prizeList(price)}</div>`;
   return `${tiers}<div class="card center">
-    <div class="ticket"><div class="tk-head"><b>GOL YILDIZI · ${TICKETS.find((t) => t[0] === k.price)?.[1] || ''}</b><small>Parmağınla kazı</small></div>
+    <div class="ticket"><div class="tk-head"><b>GOL YILDIZI · ${TICKETS_TRY.concat(TICKETS_EUR).find((t) => t[0] === k.price)?.[1] || ''}</b><small>Parmağınla kazı</small></div>
       <div class="tk-grid" id="tkGrid">${k.cells.map((s, i) => `<div class="tk-cell ${k.done && s === k.sym ? 'hit' : ''}">${s}</div>`).join('')}<canvas id="tkCanvas"></canvas></div></div>
     ${k.done ? `<p class="${k.win ? 'win' : 'lose'}">${k.win ? `${k.sym}${k.sym}${k.sym} Kazandın ${X.money(k.price * k.win)}!` : 'Boş çıktı'}</p>
       <button class="btn big" data-act="kBuy">Yeni bilet (${X.money(price)})</button>`

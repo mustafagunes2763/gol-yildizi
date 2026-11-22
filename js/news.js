@@ -1,5 +1,5 @@
 // Gazete kupürleri: 3 uydurma gazete, abartılı Türk spor basını dili.
-import { overall, pick, randInt, money, seasonOffers } from './engine.js';
+import { overall, pick, randInt, money, moneyShort, seasonOffers, sortedTable, lastWeekScorers } from './engine.js';
 import { marketValue } from './contract.js';
 import { isDerby, clubInfo } from './data.js';
 import { headSvg, skinColor, lookOf } from './look.js';
@@ -22,6 +22,14 @@ function lastWord(s) { return s.trim().split(/\s+/).pop(); }
 /** ek: loc (-de), abl (-den), acc (-i), dat (-e), gen (-in) */
 // Kısaltmaların okunuşu (FK → "fe-ka", SK → "se-ka", AŞ → "a-şe")
 const LETTER = { A: 'a', B: 'be', C: 'ce', Ç: 'çe', D: 'de', E: 'e', F: 'fe', G: 'ge', Ğ: 'yumuşak ge', H: 'he', I: 'ı', İ: 'i', J: 'je', K: 'ka', L: 'le', M: 'me', N: 'ne', O: 'o', Ö: 'ö', P: 'pe', R: 're', S: 'se', Ş: 'şe', T: 'te', U: 'u', Ü: 'ü', V: 've', Y: 'ye', Z: 'ze' };
+// sayıya yönelme eki: 14'e, 27'ye, 30'a
+export function numDat(n) {
+  const v = Math.abs(Math.round(n));
+  const ones = { 1: 'e', 2: 'ye', 3: 'e', 4: 'e', 5: 'e', 6: 'ya', 7: 'ye', 8: 'e', 9: 'a' };
+  const tens = { 10: 'a', 20: 'ye', 30: 'a', 40: 'a', 50: 'ye', 60: 'a', 70: 'e', 80: 'e', 90: 'a' };
+  const suf = v % 10 ? ones[v % 10] : v % 100 ? tens[v % 100] : v % 1000 ? 'e' : 'e';
+  return `${v}'${suf}`;
+}
 export function ek(name, type) {
   let w = lastWord(name);
   if (w.length <= 4 && w === w.toLocaleUpperCase('tr-TR') && /^[A-ZÇĞİÖŞÜ]+$/.test(w) && name.trim() !== w) w = LETTER[w[w.length - 1]] || w;
@@ -70,7 +78,8 @@ export function clip(state, paper, data) {
 // Gemini fotoğrafları (img/news). Yeni gelen fotoğraf buraya eklenir.
 export const NEWS_PHOTOS = new Set(['cheer', 'slide', 'sad', 'trophy', 'sign', 'penmiss', 'injury', 'press', 'training', 'referee', 'tunnel', 'bicycle',
   'fans', 'coach', 'airport', 'header', 'freekick', 'wedding', 'empty', 'paparazzi', 'gambler', 'protest', 'rain', 'champions',
-  'proposal', 'baby', 'divorce', 'family', 'radio', 'captain', 'documentary', 'podcast']);
+  'proposal', 'baby', 'divorce', 'family', 'radio', 'captain', 'documentary', 'podcast',
+  'hattrick_ball', 'striker_other', 'scoreboard', 'bus', 'tifo', 'analysis', 'medical', 'awayfans']);
 // Adaylardan mevcut olanlardan birini seç
 export const ph = (...c) => pick(c.filter((x) => NEWS_PHOTOS.has(x))) || null;
 // 'stand' pozunda çizim kullanılır.
@@ -105,14 +114,57 @@ export function matchNews(state, plan, res) {
   const kinds = res.goalKinds || [];
   const goalPhoto = kinds.includes('rovasata') ? 'bicycle' : kinds.some((k) => k === 'kafa' || k === 'korner') && Math.random() < 0.8 ? 'header'
     : kinds.includes('serbest') && Math.random() < 0.8 ? 'freekick' : null;
+  // ---- çeşitlilik: bağlam cümleleri, oyuncu sözleri, ek manşetler ----
+  const lid = Object.keys(state.leagues).find((l) => state.leagues[l].includes(T.id));
+  let pos = null;
+  try { pos = sortedTable(state.season.leagues[lid].table).findIndex((r) => r.id === T.id) + 1 || null; } catch { pos = null; }
+  const W = res.result;
+  const streak = (() => { const f = p.form || []; let n = 0; for (let i = f.length - 1; i >= 0 && f[i] === W; i--) n++; return n; })();
+  const rg = state.social?.rival ? (state.season.ps?.[`${state.social.rival.team}|Ahmet Akyurt`]?.[0] || 0) : 0;
+  const ctxLines = [];
+  if (pos && plan.fx && !plan.fx.comp) ctxLines.push(pick([`Bu sonuçla ${T.name} ligde ${pos}. sırada.`, `${T.name} puan tablosunda ${pos}. basamakta yer alıyor.`, pos <= 3 ? `${T.name} zirve yarışında iddiasını sürdürüyor.` : pos >= 15 ? `${T.name} alt sıralardan kurtulmanın yollarını arıyor.` : `${T.name} orta sıralarda yukarıya bakıyor.`]));
+  if (res.goals > 0 && seasonG >= 5) ctxLines.push(pick([`${SUR} sezondaki gol sayısını ${numDat(seasonG)} yükseltti.`, `Bu, ${ek(SUR, 'gen')} sezondaki ${seasonG}. golüydü.`, `${seasonG} gole ulaşan ${SUR}, gol krallığı yarışında iddialı.`]));
+  if (streak >= 3) ctxLines.push(W === 'W' ? pick([`${T.name} üst üste ${streak}. galibiyetini aldı.`, `Seri ${streak} maça çıktı: ${T.name} kazanmayı alışkanlık haline getirdi.`]) : W === 'L' ? `${T.name} üst üste ${streak}. kez yenildi; alarm zilleri çalıyor.` : `${T.name} son ${streak} maçta galibiyet yüzü göremedi.`);
+  if (rg > 0 && res.goals > 0 && Math.random() < 0.35) ctxLines.push(pick([`Akademiden rakibi Ahmet Akyurt'un bu sezonki gol sayısı ise ${rg}.`, `Gözler yine iki eski akademi arkadaşının gol yarışında: ${SUR} ${seasonG}, Ahmet Akyurt ${rg}.`]));
+  if (plan.fx.home && Math.random() < 0.4) ctxLines.push(pick(['İç sahada oynanan maçta tribünler doluydu.', 'Ev sahibi taraftar takımını 90 dakika boyunca yalnız bırakmadı.']));
+  if (!plan.fx.home && Math.random() < 0.4) ctxLines.push(pick(['Deplasmandaki zorlu atmosfere rağmen takım geri adım atmadı.', 'Deplasman tribünündeki küçük ama gürültülü grup sesini duyurdu.']));
+  const quotes = res.goals > 0
+    ? [`Maç sonu konuşan ${SUR}: "Golü takım arkadaşlarımla birlikte attık, onların payı büyük."`, `${SUR}: "Gol atmak güzel ama önemli olan kazanmak."`, `${SUR} maç sonunda "Bu golü aileme armağan ediyorum" dedi.`, `${SUR}: "Hocamın güvenine gollerle cevap vermek istiyorum."`, `Genç golcü, "Daha yolun başındayım, çok çalışmam gerek" diye konuştu.`]
+    : W === 'L' ? [`${SUR}: "Bu yenilgiyi hak etmedik ama ders çıkaracağız."`, `${SUR} maç sonunda kısa konuştu: "Taraftarımızdan özür dileriz."`]
+    : [`${SUR}: "Önemli olan takımın kazanması."`, `${SUR}, "Her maçta biraz daha iyiye gidiyoruz" dedi.`];
+  const extraH = {
+    W: [`${TAKIM} YOLUNA DEVAM`, `${TAKIM} GÜLDÜ`, `${RAKIP} ÇARESİZ`, 'ÜÇ PUAN CEPTE'],
+    D: ['PUANLAR PAYLAŞILDI', `${TAKIM} TAKILDI`, 'KAZANAN ÇIKMADI'],
+    L: [`${TAKIM} YARALI`, `${RAKIP} SÜRPRİZİ`, 'ACI YENİLGİ'],
+  };
+  const enrich = (body) => {
+    const extra = [];
+    for (const l of ctxLines.slice().sort(() => Math.random() - 0.5)) if (extra.length < 2 && Math.random() < 0.6) extra.push(l);
+    if (Math.random() < 0.4) extra.push(pick(quotes));
+    return [body, ...extra].join(' ');
+  };
   const add = (paper, pools, extra) => {
     const x = pools[paper] || pools.golsporu;
-    const auto = !extra && res.goals > 0 ? (goalPhoto || (paper === 'tribun' && Math.random() < 0.5 ? 'fans' : undefined)) : undefined;
-    out.push(clip(state, paper, { headline: pick(x.h), sub: pick(x.s), body: pick(x.b), caption: pick(x.c), ...(auto ? { photo: auto } : {}), ...extra }));
+    let auto = !extra && res.goals > 0 ? (goalPhoto || (paper === 'tribun' && Math.random() < 0.5 ? (plan.fx.home ? 'fans' : 'awayfans') : undefined)) : undefined;
+    if (!auto && !extra && res.goals > 0 && paper === 'aksam' && Math.random() < 0.35) auto = 'analysis';
+    if (!auto && !extra && res.goals >= 3 && Math.random() < 0.6) auto = 'hattrick_ball';
+    const headline = paper !== 'tribun' && Math.random() < 0.2 ? pick(extraH[W] || extraH.D) : pick(x.h);
+    out.push(clip(state, paper, { headline, sub: pick(x.s), body: enrich(pick(x.b)), caption: pick(x.c), ...(auto ? { photo: auto } : {}), ...extra }));
   };
 
   // ---------- olumlu ----------
-  if (res.goals >= 3) {
+  if (res.goals >= 3 && W === 'L') {
+    add(pick(['golsporu', 'aksam']), {
+      golsporu: { h: [`${AD} ${res.goals} ATTI, YETMEDİ`, 'HAT-TRICK BİLE KURTARMADI', `${AD} YALNIZ KALDI`],
+        s: [`${SUR} ${res.goals} golle parladı ama ${T.name} kaybetti`],
+        b: [`${mac}. ${SUR} tek başına mücadele etti, ancak savunmadaki hatalar ${ek(T.name, 'acc')} yıktı.`, `${mac}. Hat-trick yapan ${SUR} sahadan başı önde ayrıldı. Takım arkadaşları ona yeterince destek olamadı.`],
+        c: [`${SUR} maç sonunda hayal kırıklığı içinde`] },
+      aksam: { h: ['BİREYSEL PARILTI, TAKIM HÜSRANI'],
+        s: [`${SUR}: ${res.goals} gol, 0 puan`],
+        b: [`${mac}. Bir forvetin yapabileceğinin fazlasını yapan ${SUR}, savunmanın kırılganlığı yüzünden mağlup tarafta kaldı.`],
+        c: [`${SUR} maç sonunda`] },
+    }, { pose: 'sad' });
+  } else if (res.goals >= 3) {
     add(P3(), {
       golsporu: { h: [`${AD} ŞOV!`, `${UP(ek(SUR, 'abl'))} GOL YAĞMURU`, `HAT-TRICK'LE TARİH YAZDI`, `${AD} DURDURULAMIYOR!`, `${RAKIP} ${UP(ek(SUR, 'gen'))} KURBANI`],
         s: [`${FULL} ${res.goals} gol attı, ${T.name} rakibini darmadağın etti`, `Genç golcü ${O.name} savunmasını paramparça etti`],
@@ -123,7 +175,7 @@ export function matchNews(state, plan, res) {
         b: [`${mac}. Biz bu çocuğu ilk günden sevmiştik! ${res.goals} gol attı, tribünleri ayağa kaldırdı. Bu forma ona emanet!`, `Kale arkasındaki taraftarlar maçtan sonra da gitmedi: "${SUR}, ${SUR}!" ${mac}.`],
         c: ['Tribünler hat-trick sonrası tek ses oldu', `${SUR} taraftarı selamlıyor`] },
       aksam: { h: [`${AD}: ${res.goals} ŞUT, ${res.goals} GOL`, 'SOĞUKKANLI BİR BİTİRİCİ', `${UP(ek(SUR, 'gen'))} KUSURSUZ GECESİ`],
-        s: [`${SUR} sezondaki gol sayısını ${seasonG}'e çıkardı`, `Maçın en yüksek notu ${note} ile ${ek(SUR, 'dat')}`],
+        s: [`${SUR} sezondaki gol sayısını ${numDat(seasonG)} çıkardı`, `Maçın en yüksek notu ${note} ile ${ek(SUR, 'dat')}`],
         b: [`${mac}. ${SUR}, pozisyona girişleri ve bitiriciliğiyle maçın kaderini belirledi. İstatistikler oyuncunun ceza sahasındaki etkinliğinin ligin üst sıralarında olduğunu gösteriyor.`],
         c: [`${SUR} üçüncü golünü atarken`] },
     });
@@ -231,7 +283,7 @@ export function matchNews(state, plan, res) {
         b: [`${mac}. Takım savunmasındaki kopukluk ve geçiş anlarındaki yavaşlık skoru açıklıyor.`],
         c: ['Maç sonu boş tribünler'] },
     }, { pose: 'sad', photo: ph('protest', 'empty') });
-  } else if (res.goals >= 2 && Math.random() < 0.3) {
+  } else if (res.goals >= 2 && W !== 'L' && Math.random() < 0.12) {
     out.push(clip(state, 'sertsut', {
       headline: pick([`${AD} ABARTILIYOR MU?`, 'O KADAR DA DEĞİL!']), sub: 'Herkes övüyor, biz soruyoruz',
       body: `${mac}. Gollerini attı, evet. Ama ${O.name} gibi bir rakibe karşı... ${SUR} gerçek sınavı büyük maçlarda verecek.`,
@@ -258,7 +310,7 @@ export function derbyPreview(state, plan) {
     headline: pick(['DERBİ GÜNÜ!', `${UP(T.name)} - ${UP(O.name)}: DEV RANDEVU`, 'ŞEHİR NEFESİNİ TUTTU', 'BU MAÇ BAŞKA!']),
     sub: `${ci.stadyum || 'Stat'} tıklım tıklım dolacak`,
     body: `${T.name} ile ${O.name} arasındaki derbi öncesi heyecan doruğa çıktı. Biletler saatler içinde tükendi. Gözler genç forvet ${state.player.surname} üzerinde olacak.`,
-    caption: 'Derbi öncesi tribünler', photo: ph('fans', 'tunnel'),
+    caption: pick(['Derbi öncesi tribünler', 'Takım otobüsü stada ulaşırken']), photo: ph('tifo', 'bus', 'fans'),
   });
 }
 
@@ -329,7 +381,7 @@ export function leagueNews(state) {
   for (const [lid, L] of Object.entries(s.leagues)) {
     const round = L.fixtures[wk];
     if (!round) continue;
-    const lname = ({ SL: 'Süper Lig', L1: '1. Lig', PL: 'Premier Lig', LL: 'La Liga', SA: 'Serie A', BL: 'Bundesliga', FR: 'Ligue 1', NL: 'Eredivisie', PT: 'Liga Portugal', BE: 'Pro League' })[lid] || lid;
+    const lname = ({ SL: 'Süper Lig', L1: '1. Lig', PL: 'Premier Lig', LL: 'La Liga', SA: 'Serie A', BL: 'Bundesliga', FR: 'Ligue 1', NL: 'Eredivisie', PT: 'Liga Portugal', BE: 'Pro League', SCO: 'Premiership', GRE: 'Super League (GRE)', AUT: 'Bundesliga (AUT)', SUI: 'Super League (SUI)', DEN: 'Superliga', NOR: 'Eliteserien', CZE: 'Chance Liga', POL: 'Ekstraklasa' })[lid] || lid;
     for (const m of round) {
       if (m.hg == null) continue;
       const H = state.teams[m.h], A = state.teams[m.a];
@@ -368,7 +420,7 @@ export function leagueNews(state) {
   if (kind === 'derby') return clip(state, pick(['golsporu', 'tribun', 'sertsut']), {
     headline: d.w ? pick([`DERBİ ${UP(ek(d.w.name, 'gen'))}`, `${UP(d.w.name)} DERBİDE GÜLDÜ`]) : pick(['DERBİDE KAZANAN YOK', 'DERBİDE PUANLAR PAYLAŞILDI']),
     sub: d.sk, body: `${d.lname}'de haftanın derbisi ${d.sk} sona erdi. ${d.w ? `${d.w.name} taraftarı gece boyunca kutlama yaptı.` : 'İki takım da sahadan bir puanla ayrıldı.'}`,
-    caption: 'Derbiden bir kare', photo: d.w ? ph('fans', 'cheer') : 'tunnel',
+    caption: 'Derbiden bir kare', photo: d.w ? ph('fans', 'cheer', 'tifo') : ph('tunnel', 'scoreboard'),
   });
   if (kind === 'leader') return clip(state, 'golsporu', {
     headline: pick([`ZİRVEDE YENİ İSİM: ${UP(d.t.name)}`, 'LİDERLİK EL DEĞİŞTİRDİ', `${UP(d.t.name)} ZİRVEYE OTURDU`]),
@@ -382,6 +434,53 @@ export function leagueNews(state) {
       sub: `Kötü gidişat sonrası ${d.t.name} teknik direktörle anlaştı`,
       body: `${d.lname}'de alt sıralarda bulunan ${d.t.name}, teknik direktörüyle karşılıklı anlaşarak yollarını ayırdı. Yeni hoca için görüşmeler başladı.`,
       caption: `${d.t.name} taraftarı stat önünde`, photo: ph('coach', 'protest'),
+    });
+  }
+  return null;
+}
+
+
+// ---------- ligden oyuncu haberleri (gerçek oyuncular: yalnızca olumlu/tarafsız) ----------
+const LNAME = { SL: 'Süper Lig', L1: '1. Lig', PL: 'Premier Lig', LL: 'La Liga', SA: 'Serie A', BL: 'Bundesliga', FR: 'Ligue 1', NL: 'Eredivisie', PT: 'Liga Portugal', BE: 'Pro League', SCO: 'Premiership', GRE: 'Super League (GRE)', AUT: 'Bundesliga (AUT)', SUI: 'Super League (SUI)', DEN: 'Superliga', NOR: 'Eliteserien', CZE: 'Chance Liga', POL: 'Ekstraklasa' };
+// yabancı isimlerde Türkçe büyük İ kullanılmaz
+const UPN = (n) => (/[ğışçöüĞİŞÇÖÜ]/.test(n) ? UP(n) : n.toUpperCase());
+export function leaguePlayerNews(state) {
+  const p = state.player;
+  const lid = Object.keys(state.leagues).find((l) => state.leagues[l].includes(p.clubId));
+  const list = lastWeekScorers(state, lid).filter((x) => !x.me);
+  if (!list.length || Math.random() > 0.5) return null;
+  const ln = LNAME[lid] || 'Lig';
+  const MIL = [10, 15, 20, 25, 30, 35, 40];
+  const hat = list.find((x) => x.g >= 3);
+  const mil = list.find((x) => MIL.some((m) => x.total >= m && x.total - x.g < m));
+  const brace = list.find((x) => x.g === 2);
+  const tm = (x) => state.teams[x.team];
+  if (hat) {
+    const T = tm(hat);
+    return clip(state, pick(['golsporu', 'aksam']), {
+      headline: pick([`${UPN(hat.name)} ŞOV YAPTI`, `${UPN(hat.name)}: HAT-TRICK!`, `GECENİN YILDIZI: ${UPN(hat.name)}`]),
+      sub: `${ln}'de haftanın oyuncusu ${ek(T.name, 'gen')} golcüsü`,
+      body: pick([`${T.name} formasıyla ${hat.g} gol atan ${hat.name}, sezondaki gol sayısını ${numDat(hat.total)} çıkardı. ${ln}'de haftanın en çok konuşulan ismi oldu.`,
+        `${hat.name} ${hat.g} golle takımını sırtladı. Teknik heyet, oyuncunun formundan memnun.`]),
+      caption: `${hat.name} gol sevincinde`, photo: ph('striker_other', 'scoreboard'),
+    });
+  }
+  if (mil) {
+    const T = tm(mil);
+    return clip(state, 'golsporu', {
+      headline: pick([`${UPN(mil.name)} ${mil.total} GOLE ULAŞTI`, `${UPN(mil.name)} DURMUYOR`, `GOL YARIŞINDA ${UPN(mil.name)}`]),
+      sub: `${ek(T.name, 'gen')} golcüsü ${ln} gol krallığı yarışında`,
+      body: `${mil.name} bu hafta attığı golle sezonda ${mil.total} gole ulaştı. ${p.surname} ile ${ln} gol krallığı yarışının da konuşulduğu sezonda gözler bu isimde.`,
+      caption: `${T.name} maçından bir kare`, photo: ph('scoreboard', 'striker_other', 'fans'),
+    });
+  }
+  if (brace && Math.random() < 0.6) {
+    const T = tm(brace);
+    return clip(state, pick(['golsporu', 'aksam']), {
+      headline: pick([`${UPN(brace.name)} İKİ ATTI`, `${UPN(brace.name)} FARK YARATTI`]),
+      sub: `${ln}'de haftanın öne çıkan isimlerinden`,
+      body: `${T.name} formasıyla iki gol atan ${brace.name}, sezonda ${brace.total} gole ulaştı. Haftanın en etkili hücum oyuncularından biri oldu.`,
+      caption: `${brace.name} gol sevincinde`, photo: ph('striker_other', 'fans'),
     });
   }
   return null;
@@ -405,7 +504,7 @@ export function maybeRumor(state, recentAvg) {
   state.lastRumorYear = state.season.year;
   const AD = UP(p.surname);
   const val = marketValue(p);
-  const fee = val >= 1e9 ? `${(val / 1e9).toLocaleString('tr-TR', { maximumFractionDigits: 1 })} MİLYAR ₺` : `${Math.round(val / 1e6)} MİLYON ₺`;
+  const fee = moneyShort(val).replace(' Mr', ' MİLYAR').replace(' Mn', ' MİLYON').replace(' B', ' BİN');
   return clip(state, 'transfer', {
     headline: pick([`${UP(t.name)} ${UP(ek(p.surname, 'acc'))} İZLİYOR`, `${UP(ek(t.name, 'abl'))} SÜRPRİZ HAMLE`, `${AD} İÇİN ${fee}`]),
     sub: `${ek(t.name, 'gen')} gözü ${ek(my.name, 'gen')} forvetinde`,
@@ -419,17 +518,23 @@ export function maybeRumor(state, recentAvg) {
 export function injuryNews(state, weeks) {
   const p = state.player, T = state.teams[p.clubId];
   return clip(state, 'golsporu', {
-    headline: weeks >= 4 ? `${UP(ek(T.name, 'dat'))} ŞOK: ${UP(p.surname)} SAKAT` : `${UP(p.surname)} SAKATLANDI`,
-    sub: `Genç forvet ${weeks} hafta sahalardan uzak kalacak`,
-    body: `Maçın son bölümünde yerde kalan ${p.surname}, sağlık ekibinin müdahalesiyle oyundan çıktı. Yapılan kontrollerde ${weeks} haftalık sakatlık tespit edildi. Taraftarlar hızlı iyileşme diliyor.`,
+    headline: weeks >= 4 ? pick([`${UP(ek(T.name, 'dat'))} ŞOK: ${UP(p.surname)} SAKAT`, `${UP(p.surname)} AYLARCA YOK MU?`, `KÖTÜ HABER: ${UP(p.surname)}`]) : pick([`${UP(p.surname)} SAKATLANDI`, `${UP(p.surname)} KISA SÜRE YOK`, `${UP(ek(T.name, 'dat'))} SAKATLIK DARBESİ`]),
+    sub: pick([`Genç forvet ${weeks} hafta sahalardan uzak kalacak`, `${p.surname} için ${weeks} haftalık tedavi süreci başladı`, `Sağlık ekibi: "${weeks} hafta dinlenmesi gerekiyor"`]),
+    body: pick([`Maçın son bölümünde yerde kalan ${p.surname}, sağlık ekibinin müdahalesiyle oyundan çıktı. Yapılan kontrollerde ${weeks} haftalık sakatlık tespit edildi. Taraftarlar hızlı iyileşme diliyor.`,
+      `İkili mücadelede kötü düşen ${p.surname} sedyeyle oyundan alındı. Kulüp açıklamasında oyuncunun ${weeks} hafta forma giyemeyeceği belirtildi.`,
+      `${T.name} cephesinde canları sıkan haber: ${p.surname} ${weeks} hafta yok. Teknik heyet, hücum hattında alternatif arayışına girdi.`,
+      `Antrenman sonrası ağrı hisseden ${ek(p.surname, 'gen')} MR sonuçları açıklandı. Genç forvet ${weeks} hafta tedavi görecek. Sosyal medyada "Geçmiş olsun" mesajları yağdı.`]),
     caption: `${p.surname} sağlık ekibinin müdahalesi sırasında`, pose: 'sad', photo: 'injury',
   });
 }
 export function casinoNews(state) {
   const p = state.player;
   return clip(state, 'sertsut', {
-    headline: `${UP(p.surname)} GAZİNODA GÖRÜNTÜLENDİ`, sub: 'Masada büyük paralar kaybettiği iddia edildi',
-    body: `Gece geç saatlerde bir gazinoda görüntülenen ${ek(p.surname, 'gen')} yüklü miktarda kaybettiği öne sürüldü. Taraftarlar tepkili: "Önce sahada konuş!"`,
+    headline: pick([`${UP(p.surname)} GAZİNODA GÖRÜNTÜLENDİ`, `${UP(p.surname)} MASADA KAYBETTİ`, 'GECE YARISI KUMAR İDDİASI', `${UP(p.surname)} FİŞLERE DALDI`]),
+    sub: pick(['Masada büyük paralar kaybettiği iddia edildi', 'Taraftar sosyal medyada tepkili', 'Kulüp yönetiminin olaydan rahatsız olduğu konuşuluyor']),
+    body: pick([`Gece geç saatlerde bir gazinoda görüntülenen ${ek(p.surname, 'gen')} yüklü miktarda kaybettiği öne sürüldü. Taraftarlar tepkili: "Önce sahada konuş!"`,
+      `${p.surname} hafta içi bir gazinoda saatlerce kaldı. Görgü tanıklarına göre genç oyuncu masadan oldukça gergin ayrıldı.`,
+      `Maç haftasında gazinoya giden ${p.surname} için kulüpte soru işaretleri var. Teknik heyetin oyuncuyla görüşeceği iddia ediliyor.`]),
     caption: `${p.surname} gazinodan çıkarken`, pose: 'stand', photo: ph('gambler', 'paparazzi'),
   });
 }
@@ -480,20 +585,24 @@ export function loanNews(state, clubId, fromId) {
     headline: pick([`${UP(p.surname)} KİRALIK GİTTİ`, `${UP(p.surname)} ${UP(ek(t.name, 'dat'))} KİRALANDI`]),
     sub: `${ek(f.name, 'gen')} genç forveti sezon sonuna kadar ${ek(t.name, 'loc')}`,
     body: `${f.name}, forma şansı bulmakta zorlanan ${ek(p.surname, 'acc')} sezon sonuna kadar ${ek(t.name, 'dat')} kiraladı. Oyuncunun sözleşmesi ${ek(f.name, 'loc')} devam ediyor.`,
-    caption: `${p.surname} yeni takımında`, pose: 'stand', photo: ph('airport', 'cheer'),
+    ...(Math.random() < 0.5 ? { caption: `${p.surname} sağlık kontrolünde`, photo: 'medical' } : { caption: `${p.surname} yeni takımında`, photo: ph('airport', 'cheer') }), pose: 'stand',
   });
 }
 
 export function signingNews(state, clubId, oldClubId) {
+  let sgBody = '';
   const p = state.player;
   const t = state.teams[clubId];
   return clip(state, 'transfer', {
-    headline: `${UP(p.surname)} RESMEN ${UP(ek(t.name, 'loc'))}!`,
+    headline: pick([`${UP(p.surname)} RESMEN ${UP(ek(t.name, 'loc'))}!`, `${UP(t.name)} BOMBAYI PATLATTI`, `HOŞ GELDİN ${UP(p.surname)}`, `${UP(p.surname)} İMZAYI ATTI`]),
     sub: `${oldClubId ? ek(state.teams[oldClubId].name, 'abl') + ' ayrılan' : 'Genç'} forvet imzayı attı`,
-    body: `${t.name}, ${p.age} yaşındaki forvet ${p.name} ${ek(p.surname, 'acc')} kadrosuna kattığını resmen duyurdu. ${p.surname}, imza töreninde "Burada şampiyonluklar kazanmak için varım" dedi.`,
-    caption: `${p.surname} yeni formasıyla poz verdi`,
+    body: (sgBody = pick([`${t.name}, ${p.age} yaşındaki forvet ${p.name} ${ek(p.surname, 'acc')} kadrosuna kattığını resmen duyurdu. ${p.surname}, imza töreninde "Burada şampiyonluklar kazanmak için varım" dedi.`,
+      `${p.name} ${p.surname} yeni takımı ${ek(t.name, 'gen')} tesislerinde sağlık kontrolünden geçti ve sözleşmeyi imzaladı. Genç golcü, "Taraftarı gollerimle sevindireceğim" diye konuştu.`,
+      `Uzun süren görüşmeler sonuç verdi: ${p.surname} artık ${ek(t.name, 'loc')}. Havalimanında taraftarlar tarafından karşılanan oyuncu, formayı ilk kez giydiği anı "Unutulmaz" diye anlattı.`,
+      `${t.name} hücum hattını ${p.surname} ile güçlendirdi. Kulüp yetkilileri, oyuncunun potansiyeline çok güvendiklerini açıkladı.`])),
+    caption: sgBody.includes('sağlık kontrol') ? `${p.surname} sağlık kontrolünde` : `${p.surname} yeni formasıyla poz verdi`,
     kit: [t.c1, t.c2],
-    pose: 'stand', photo: 'sign',
+    pose: 'stand', photo: sgBody.includes('sağlık kontrol') ? 'medical' : 'sign',
   });
 }
 
@@ -509,7 +618,7 @@ export function seasonNews(state, sum) {
   if (sum.myPos === 1) {
     out.push(clip(state, 'golsporu', {
       headline: `ŞAMPİYON ${UP(T.name)}!`,
-      sub: `${({ SL: 'Süper Lig', L1: '1. Lig', PL: 'Premier Lig', LL: 'La Liga', SA: 'Serie A', BL: 'Bundesliga', FR: 'Ligue 1', NL: 'Eredivisie', PT: 'Liga Portugal', BE: 'Pro League' })[lid]} kupası ${ek(T.name, 'gen')} müzesinde`,
+      sub: `${({ SL: 'Süper Lig', L1: '1. Lig', PL: 'Premier Lig', LL: 'La Liga', SA: 'Serie A', BL: 'Bundesliga', FR: 'Ligue 1', NL: 'Eredivisie', PT: 'Liga Portugal', BE: 'Pro League', SCO: 'Premiership', GRE: 'Super League (GRE)', AUT: 'Bundesliga (AUT)', SUI: 'Super League (SUI)', DEN: 'Superliga', NOR: 'Eliteserien', CZE: 'Chance Liga', POL: 'Ekstraklasa' })[lid]} kupası ${ek(T.name, 'gen')} müzesinde`,
       body: `Sezon boyunca istikrarlı bir grafik çizen ${T.name}, ligi zirvede tamamladı. ${p.surname} sezonu ${s.goals} gol ve ${s.assists} asistle kapattı.`,
       caption: `${p.surname} şampiyonluk kupasını havaya kaldırdı`, pose: 'trophy',
     }));
@@ -719,7 +828,7 @@ export function euroNews(state, plan, res) {
     headline: O.str >= 88 ? pick([`DEV AVRUPA GECESİ!`, `${TK} ${UP(O.name)} DEVİRDİ`]) : pick([`AVRUPA'DA ŞOV`, `${TK} AVRUPA'DA FARK ATTI`]),
     sub: `${CN} ${fx.round} · ${sk}`,
     body: `${CN} lig aşamasında ${T.name}, ${O.name} karşısında önemli bir galibiyet aldı. ${res.goals ? `${p.surname} ${res.goals} golle sahnedeydi.` : ''}`,
-    caption: `${T.name} Avrupa gecesinde`, photo: ph('fans', 'cheer'),
+    caption: `${T.name} Avrupa gecesinde`, photo: ph('fans', 'cheer', 'tifo', 'scoreboard'),
   });
   return null;
 }

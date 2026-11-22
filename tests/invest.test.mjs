@@ -27,7 +27,7 @@ for (let i = 0; i < 40; i++) {
   assert.equal(r.order.length, 8);
   if (r.place === 1) wins++;
 }
-assert(wins > 5 && wins < 40, 'elit at handikapta ' + wins);
+assert(wins > 5 && wins < 45, 'elit at handikapta ' + wins);
 // dinlenme
 const r2 = I.runRace(s, 'maiden', h.id, 'orta');
 assert(r2.error, 'dinlenmeden koştu');

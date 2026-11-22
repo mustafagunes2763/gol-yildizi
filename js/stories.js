@@ -898,7 +898,7 @@ function build(id, step, state, data) {
 const MATCHY = new Set(['bus_late', 'camp_room', 'insomnia', 'cousin_wedding', 'tv_show', 'child_birthday', 'child_school', 'visitation', 'dressing_prank', 'tactic_meeting', 'nightclub', 'extra_training']);
 // Devam eden zincirin sonraki bölümü için gereken durum
 const KEEP = {
-  baby: (s) => !!s.player.partner?.married,
+  baby: (s) => !!s.player.partner,
   marriage_crisis: (s) => !!s.player.partner?.married,
   paparazzi: (s) => !!s.player.partner,
   captain: (s) => !!s.player.captain,
